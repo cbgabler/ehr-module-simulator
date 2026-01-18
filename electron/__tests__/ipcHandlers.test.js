@@ -39,6 +39,11 @@ async function loadMainWithScenarioMocks() {
     deleteSessionNote: jest.fn(),
   };
 
+  const sessionLogMocks = {
+    getSessionSummaryBySessionId: jest.fn(),
+    getUserSessionSummaries: jest.fn(),
+  };
+
   await jest.unstable_mockModule("electron", () => ({
     app: mockApp,
     BrowserWindow: mockBrowserWindow,
@@ -67,6 +72,11 @@ async function loadMainWithScenarioMocks() {
   await jest.unstable_mockModule(
     "../database/models/sessions.js",
     () => sessionMocks
+  );
+
+  await jest.unstable_mockModule(
+    "../database/models/sessionLogs.js",
+    () => sessionLogMocks
   );
 
   await jest.unstable_mockModule("../database/exampleScenarios.js", () => ({
@@ -103,6 +113,7 @@ async function loadMainWithScenarioMocks() {
     userMocks,
     scenarioMocks,
     sessionMocks,
+    sessionLogMocks,
     mockIpcHandle,
     simulationMocks,
   };
@@ -334,10 +345,12 @@ describe("simulation IPC handlers", () => {
   });
 
   test("end-sim stops the session and returns final state", async () => {
-    const { mockIpcHandle, simulationMocks } =
+    const { mockIpcHandle, simulationMocks, sessionLogMocks } =
       await loadMainWithScenarioMocks();
     const finalState = { status: "ended" };
+    const summary = { id: 1, sessionId: 5, summary: "Summary" };
     simulationMocks.endSession.mockReturnValueOnce(finalState);
+    sessionLogMocks.getSessionSummaryBySessionId.mockReturnValueOnce(summary);
 
     const handler = findHandler(mockIpcHandle, "end-sim");
     const result = await handler(null, { sessionId: 5 });
@@ -345,7 +358,35 @@ describe("simulation IPC handlers", () => {
     expect(simulationMocks.endSession).toHaveBeenCalledWith(5, {
       reason: "user_end",
     });
-    expect(result).toEqual({ success: true, state: finalState });
+    expect(result).toEqual({ success: true, state: finalState, summary });
+  });
+
+  test("get-session-summary returns stored summary", async () => {
+    const { mockIpcHandle, sessionLogMocks } =
+      await loadMainWithScenarioMocks();
+    const summary = { id: 2, sessionId: 9, summary: "Stored summary" };
+    sessionLogMocks.getSessionSummaryBySessionId.mockReturnValueOnce(summary);
+
+    const handler = findHandler(mockIpcHandle, "get-session-summary");
+    const result = await handler(null, { sessionId: 9 });
+
+    expect(sessionLogMocks.getSessionSummaryBySessionId).toHaveBeenCalledWith(9);
+    expect(result).toEqual({ success: true, summary });
+  });
+
+  test("get-session-summaries returns user summaries", async () => {
+    const { mockIpcHandle, sessionLogMocks } =
+      await loadMainWithScenarioMocks();
+    const summaries = [
+      { id: 1, sessionId: 7, userId: 3, summary: "Summary" },
+    ];
+    sessionLogMocks.getUserSessionSummaries.mockReturnValueOnce(summaries);
+
+    const handler = findHandler(mockIpcHandle, "get-session-summaries");
+    const result = await handler(null, { userId: 3 });
+
+    expect(sessionLogMocks.getUserSessionSummaries).toHaveBeenCalledWith(3);
+    expect(result).toEqual({ success: true, summaries });
   });
 });
 

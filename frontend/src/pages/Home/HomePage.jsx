@@ -29,6 +29,13 @@ function HomePage() {
   const [noteSubmitting, setNoteSubmitting] = useState(false);
   const [noteError, setNoteError] = useState(null);
   const [noteDeletingId, setNoteDeletingId] = useState(null);
+  const [sessionSummary, setSessionSummary] = useState(null);
+  const [sessionSummaryLoading, setSessionSummaryLoading] = useState(false);
+  const [sessionSummaryError, setSessionSummaryError] = useState(null);
+  const [sessionSummaries, setSessionSummaries] = useState([]);
+  const [sessionSummariesLoading, setSessionSummariesLoading] = useState(false);
+  const [sessionSummariesError, setSessionSummariesError] = useState(null);
+  const [expandedSummaryId, setExpandedSummaryId] = useState(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showCreateScenarioModal, setShowCreateScenarioModal] = useState(false);
@@ -182,6 +189,68 @@ function HomePage() {
     }
   }, []);
 
+  const loadSessionSummary = useCallback(
+    async (sessionId) => {
+      if (!window.api?.getSessionSummary || !sessionId) {
+        return;
+      }
+      setSessionSummaryLoading(true);
+      setSessionSummaryError(null);
+      try {
+        const response = await window.api.getSessionSummary(sessionId);
+        if (response.success) {
+          setSessionSummary(
+            response.summary
+              ? { ...response.summary, sessionId }
+              : { sessionId, summary: null }
+          );
+        } else {
+          setSessionSummaryError(
+            response.error || "Unable to load session summary"
+          );
+        }
+      } catch (err) {
+        setSessionSummaryError(
+          err.message || "Unable to load session summary"
+        );
+      } finally {
+        setSessionSummaryLoading(false);
+      }
+    },
+    []
+  );
+
+  const loadSessionSummaries = useCallback(async () => {
+    const parsedUserId = Number.parseInt(user?.id, 10);
+    if (!window.api?.getSessionSummaries || !Number.isFinite(parsedUserId)) {
+      return;
+    }
+    setSessionSummariesLoading(true);
+    setSessionSummariesError(null);
+    try {
+      const response = await window.api.getSessionSummaries(parsedUserId);
+      if (response.success) {
+        setSessionSummaries(response.summaries || []);
+      } else {
+        setSessionSummariesError(
+          response.error || "Unable to load session summaries"
+        );
+      }
+    } catch (err) {
+      setSessionSummariesError(
+        err.message || "Unable to load session summaries"
+      );
+    } finally {
+      setSessionSummariesLoading(false);
+    }
+  }, [user?.id]);
+
+  const toggleSummary = (summaryId) => {
+    setExpandedSummaryId((previous) =>
+      previous === summaryId ? null : summaryId
+    );
+  };
+
   const handleStartScenario = async (scenario) => {
     if (!scenario) {
       setStartError("Select a scenario to start.");
@@ -218,6 +287,10 @@ function HomePage() {
         setNoteContent("");
         setNoteError(null);
         setDoseInputs({});
+        setSessionSummary(null);
+        setSessionSummaryError(null);
+        setSessionSummaries([]);
+        setSessionSummariesError(null);
         setSelectedScenario(null);
         startPolling(response.sessionId);
         await loadNotes(response.sessionId);
@@ -397,8 +470,13 @@ function HomePage() {
               }
             : previous
         );
+        if (response.summary) {
+          setSessionSummary({ ...response.summary, sessionId: activeSession.sessionId });
+          setSessionSummaryError(null);
+        }
         setSessionError(null);
         stopPolling();
+        await loadSessionSummaries();
       } else {
         setSessionError(response.error || "Unable to end simulation");
       }
@@ -445,6 +523,31 @@ function HomePage() {
     }
   }, [activeSession?.sessionId, loadNotes]);
 
+  useEffect(() => {
+    if (user?.id) {
+      loadSessionSummaries();
+    } else {
+      setSessionSummaries([]);
+    }
+  }, [loadSessionSummaries, user?.id]);
+
+  useEffect(() => {
+    if (
+      activeSession?.state?.status === "ended" &&
+      activeSession?.sessionId &&
+      (!sessionSummary || sessionSummary.sessionId !== activeSession.sessionId) &&
+      !sessionSummaryLoading
+    ) {
+      loadSessionSummary(activeSession.sessionId);
+    }
+  }, [
+    activeSession?.state?.status,
+    activeSession?.sessionId,
+    loadSessionSummary,
+    sessionSummary,
+    sessionSummaryLoading,
+  ]);
+
   const activeVitals = useMemo(
     () =>
       activeSession?.state
@@ -456,6 +559,16 @@ function HomePage() {
   const activeMedications = activeSession?.state?.medications || [];
   const patientDetails = activeScenario?.definition?.patient || null;
   const targetStatus = activeSession?.state?.targetStatus;
+  const formatSummaryTimestamp = (timestamp) => {
+    if (!timestamp) {
+      return "";
+    }
+    try {
+      return new Date(timestamp).toLocaleString();
+    } catch {
+      return timestamp;
+    }
+  };
 
   if (loading) {
     return (
@@ -536,6 +649,9 @@ function HomePage() {
           onResume={handleResume}
           onEnd={handleEnd}
           sessionError={sessionError}
+          sessionSummary={sessionSummary}
+          sessionSummaryLoading={sessionSummaryLoading}
+          sessionSummaryError={sessionSummaryError}
         />
       )}
 
@@ -562,6 +678,63 @@ function HomePage() {
           onClose={closeCreateScenarioModal}
           onCreateSuccess={loadScenarios}
         />
+      )}
+
+      {user?.id && (
+        <section className="session-summaries-panel">
+          <div className="session-summaries-header">
+            <h2>My Session Summaries</h2>
+            {sessionSummariesLoading && (
+              <span className="session-summaries-status">Loading...</span>
+            )}
+          </div>
+          {sessionSummariesError && (
+            <div className="session-summaries-error">
+              {sessionSummariesError}
+            </div>
+          )}
+          {!sessionSummariesLoading &&
+            !sessionSummariesError &&
+            sessionSummaries.length === 0 && (
+              <p className="session-summaries-empty">
+                No session summaries yet.
+              </p>
+            )}
+          {!sessionSummariesLoading &&
+            !sessionSummariesError &&
+            sessionSummaries.length > 0 && (
+              <div className="session-summaries-list">
+                {sessionSummaries.map((summary) => (
+                  <article
+                    key={`${summary.id}-${summary.sessionId}`}
+                    className="session-summary-card"
+                  >
+                    <button
+                      type="button"
+                      className="session-summary-toggle"
+                      onClick={() => toggleSummary(summary.id)}
+                      aria-expanded={expandedSummaryId === summary.id}
+                    >
+                      <span className="session-summary-title">
+                        {summary.scenarioName || "Unknown scenario"}
+                      </span>
+                      <span className="session-summary-date">
+                        {formatSummaryTimestamp(summary.createdAt)}
+                      </span>
+                      <span className="session-summary-chevron">
+                        {expandedSummaryId === summary.id ? "▲" : "▼"}
+                      </span>
+                    </button>
+                    {expandedSummaryId === summary.id && (
+                      <pre className="session-summary-content">
+                        {summary.summary}
+                      </pre>
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
+        </section>
       )}
     </div>
   );
