@@ -3,6 +3,10 @@ import { jest } from "@jest/globals";
 const mockDb = { prepare: jest.fn() };
 const mockGetDb = jest.fn(() => mockDb);
 const mockGetScenarioById = jest.fn();
+const mockLogSessionAction = jest.fn();
+const mockGetSessionActions = jest.fn();
+const mockGetSessionSummaryBySessionId = jest.fn();
+const mockCreateSessionSummary = jest.fn();
 
 const baseScenario = {
   id: 22,
@@ -86,6 +90,12 @@ async function loadSimulationModule() {
   await jest.unstable_mockModule("../database/models/scenarios.js", () => ({
     getScenarioById: mockGetScenarioById,
   }));
+  await jest.unstable_mockModule("../database/models/sessionLogs.js", () => ({
+    logSessionAction: mockLogSessionAction,
+    getSessionActions: mockGetSessionActions,
+    getSessionSummaryBySessionId: mockGetSessionSummaryBySessionId,
+    createSessionSummary: mockCreateSessionSummary,
+  }));
   const module = await import("../database/simulation.js");
   startSession = module.startSession;
   getSessionState = module.getSessionState;
@@ -100,7 +110,7 @@ beforeEach(async () => {
   jest.useFakeTimers();
   jest.setSystemTime(new Date("2024-01-01T00:00:00Z"));
   mockDb.prepare = jest.fn();
-  selectUserStmt = { get: jest.fn(() => ({ id: 7 })) };
+  selectUserStmt = { get: jest.fn(() => ({ id: 7, username: "Test User" })) };
   insertSessionStmt = {
     run: jest.fn(() => ({ lastInsertRowid: sessionIdCounter++ })),
   };
@@ -123,6 +133,10 @@ beforeEach(async () => {
   });
 
   mockGetScenarioById.mockImplementation(() => cloneScenario());
+  mockLogSessionAction.mockReset();
+  mockGetSessionActions.mockReset();
+  mockGetSessionSummaryBySessionId.mockReset();
+  mockCreateSessionSummary.mockReset();
   await loadSimulationModule();
 });
 
@@ -168,6 +182,8 @@ describe("simulation session manager", () => {
   });
 
   test("endSession stops the tick loop and updates persistence", () => {
+    mockGetSessionSummaryBySessionId.mockReturnValueOnce(null);
+    mockGetSessionActions.mockReturnValueOnce([]);
     const { sessionId } = startSession(22, 7);
     const finalState = endSession(sessionId);
 
@@ -178,9 +194,12 @@ describe("simulation session manager", () => {
     const snapshot = getSessionState(sessionId);
     expect(snapshot.tickCount).toBe(finalState.tickCount);
     expect(snapshot.status).toBe("ended");
+    expect(mockCreateSessionSummary).toHaveBeenCalledTimes(1);
   });
 
   test("session auto-ends when target vitals are achieved", () => {
+    mockGetSessionSummaryBySessionId.mockReturnValue(null);
+    mockGetSessionActions.mockReturnValue([]);
     const { sessionId } = startSession(22, 7);
     // heart rate drops 1 bpm per tick; need 2 ticks <=85 with holdTicks=2
     jest.advanceTimersByTime(6000);
@@ -189,5 +208,26 @@ describe("simulation session manager", () => {
     expect(state.status).toBe("ended");
     expect(state.completionReasonCode).toBe("targets_met");
     expect(state.targetStatus.met).toBe(true);
+  });
+
+  test("endSession generates a summary with action history", () => {
+    mockGetSessionSummaryBySessionId.mockReturnValueOnce(null);
+    mockGetSessionActions.mockReturnValueOnce([
+      { createdAt: "2024-01-01T00:00:05Z", actionLabel: "Paused simulation" },
+    ]);
+    const { sessionId } = startSession(22, 7);
+    endSession(sessionId);
+
+    expect(mockCreateSessionSummary).toHaveBeenCalledTimes(1);
+    const args = mockCreateSessionSummary.mock.calls[0][0];
+    expect(args).toEqual(
+      expect.objectContaining({
+        sessionId,
+        userId: 7,
+        scenarioId: 22,
+      })
+    );
+    expect(args.summary).toContain("Actions (1):");
+    expect(args.summary).toContain("Paused simulation");
   });
 });
