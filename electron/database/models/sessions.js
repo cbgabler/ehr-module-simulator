@@ -1,4 +1,18 @@
 import { getDb } from "../database.js";
+import { logSessionAction } from "./sessionLogs.js";
+
+const NOTE_PREVIEW_LIMIT = 140;
+
+function buildNotePreview(content) {
+  const sanitized = (content ?? "").trim().replace(/\s+/g, " ");
+  if (!sanitized) {
+    return "";
+  }
+  if (sanitized.length <= NOTE_PREVIEW_LIMIT) {
+    return sanitized;
+  }
+  return `${sanitized.slice(0, NOTE_PREVIEW_LIMIT - 3)}...`;
+}
 
 export function addSessionNote({
   sessionId,
@@ -26,7 +40,7 @@ export function addSessionNote({
     createdAt
   );
 
-  return {
+  const note = {
     id: info.lastInsertRowid,
     sessionId,
     userId,
@@ -34,6 +48,20 @@ export function addSessionNote({
     createdAt,
     vitalsSnapshot,
   };
+
+  const preview = buildNotePreview(sanitizedContent);
+  logSessionAction({
+    sessionId,
+    userId,
+    actionType: "note_added",
+    actionLabel: preview ? `Added note: ${preview}` : "Added note",
+    details: {
+      noteId: note.id,
+      preview: preview || null,
+    },
+  });
+
+  return note;
 }
 
 export function getSessionNotes(sessionId) {
@@ -69,10 +97,24 @@ export function deleteSessionNote({ noteId, userId }) {
     throw new Error("You do not have permission to delete this note");
   }
   db.prepare("DELETE FROM notes WHERE id = ?").run(noteId);
-  return {
+  const deletedNote = {
     ...note,
     vitalsSnapshot: note.vitalsSnapshot
       ? JSON.parse(note.vitalsSnapshot)
       : null,
   };
+
+  const preview = buildNotePreview(note.content);
+  logSessionAction({
+    sessionId: note.sessionId,
+    userId: note.userId,
+    actionType: "note_deleted",
+    actionLabel: preview ? `Deleted note: ${preview}` : "Deleted note",
+    details: {
+      noteId,
+      preview: preview || null,
+    },
+  });
+
+  return deletedNote;
 }

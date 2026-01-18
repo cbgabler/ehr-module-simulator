@@ -4,23 +4,29 @@ import { fileURLToPath } from "url";
 import { initDatabase } from "./database/database.js";
 
 // Users
-import {
-  authenticateUser,
-  registerUser
-} from "./database/models/users.js"
+import { 
+  authenticateUser, 
+  registerUser 
+} from "./database/models/users.js";
 
 // Scenarios
 import {
   getAllScenarios,
   getScenarioById,
-} from "./database/models/scenarios.js"
+  createScenario,
+  deleteScenario
+} from "./database/models/scenarios.js";
 
 // Sessions
 import {
   addSessionNote,
   getSessionNotes,
   deleteSessionNote
-} from "./database/models/sessions.js"
+} from "./database/models/sessions.js";
+import {
+  getSessionSummaryBySessionId,
+  getUserSessionSummaries,
+} from "./database/models/sessionLogs.js";
 
 // Simulation deps
 import {
@@ -89,6 +95,36 @@ ipcMain.handle("get-scenario", async (event, scenarioId) => {
     return { success: true, scenario };
   } catch (error) {
     console.error("Error getting scenario:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("create-scenario", async (event, payload) => {
+  try {
+    const { name, definition } = payload ?? {};
+    if (!name || !definition) {
+      throw new Error("name and definition are required");
+    }
+    const scenarioId = createScenario(name, definition);
+    return { success: true, scenarioId };
+  } catch (error) {
+    console.error("Error creating scenario:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("delete-scenario", async (event, scenarioId) => {
+  try {
+    if (!scenarioId) {
+      throw new Error("scenarioId is required");
+    }
+    const deleted = deleteScenario(scenarioId);
+    if (!deleted) {
+      return { success: false, error: "Scenario not found" };
+    }
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting scenario:", error);
     return { success: false, error: error.message };
   }
 });
@@ -173,9 +209,38 @@ ipcMain.handle("end-sim", async (event, payload) => {
       throw new Error("sessionId is required");
     }
     const state = endSession(sessionId, { reason: "user_end" });
-    return { success: true, state };
+    const summary = getSessionSummaryBySessionId(sessionId);
+    return { success: true, state, summary };
   } catch (error) {
     console.error("Error ending simulation:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("get-session-summary", async (event, payload) => {
+  try {
+    const { sessionId } = payload ?? {};
+    if (!sessionId) {
+      throw new Error("sessionId is required");
+    }
+    const summary = getSessionSummaryBySessionId(sessionId);
+    return { success: true, summary: summary ?? null };
+  } catch (error) {
+    console.error("Error fetching session summary:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("get-session-summaries", async (event, payload) => {
+  try {
+    const { userId } = payload ?? {};
+    if (!userId) {
+      throw new Error("userId is required");
+    }
+    const summaries = getUserSessionSummaries(userId);
+    return { success: true, summaries };
+  } catch (error) {
+    console.error("Error fetching session summaries:", error);
     return { success: false, error: error.message };
   }
 });

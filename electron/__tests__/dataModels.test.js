@@ -4,6 +4,7 @@ import { scryptSync } from "crypto";
 const mockPrepare = jest.fn();
 const mockDb = { prepare: mockPrepare };
 const mockGetDb = jest.fn(() => mockDb);
+const mockLogSessionAction = jest.fn();
 
 const runResults = [];
 const getResults = [];
@@ -12,6 +13,10 @@ let preparedStatements = [];
 
 await jest.unstable_mockModule("../database/database.js", () => ({
   getDb: mockGetDb,
+}));
+
+await jest.unstable_mockModule("../database/models/sessionLogs.js", () => ({
+  logSessionAction: mockLogSessionAction,
 }));
 
 const { registerUser, authenticateUser } = await import(
@@ -36,6 +41,7 @@ beforeEach(() => {
   getResults.length = 0;
   allResults.length = 0;
   preparedStatements = [];
+  mockLogSessionAction.mockReset();
 
   mockPrepare.mockImplementation((sql) => {
     const statement = {

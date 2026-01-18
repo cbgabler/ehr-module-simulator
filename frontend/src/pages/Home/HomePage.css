@@ -788,9 +788,163 @@
   color: var(--ehr-text-primary);
 }
 
+.summary-panel {
+  border: 1px solid var(--ehr-border-light);
+  border-radius: var(--ehr-radius-lg);
+  padding: var(--ehr-spacing-lg);
+  background-color: var(--ehr-bg-primary);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ehr-spacing-sm);
+}
+
+.summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--ehr-spacing-sm);
+}
+
+.summary-header h3 {
+  margin: 0;
+  color: var(--ehr-text-primary);
+}
+
+.summary-status {
+  font-size: 0.875rem;
+  color: var(--ehr-text-secondary);
+}
+
+.summary-content {
+  margin: 0;
+  white-space: pre-wrap;
+  background-color: var(--ehr-bg-secondary);
+  border-radius: var(--ehr-radius-md);
+  padding: var(--ehr-spacing-md);
+  color: var(--ehr-text-primary);
+  font-family: "Courier New", monospace;
+  font-size: 0.875rem;
+}
+
+.summary-error {
+  color: var(--ehr-error);
+  font-size: 0.875rem;
+}
+
 .simulation-error {
   color: var(--ehr-error);
   font-weight: 500;
+}
+
+.session-summaries-panel {
+  margin-top: var(--ehr-spacing-2xl);
+  border: 1px solid var(--ehr-border);
+  border-radius: var(--ehr-radius-xl);
+  background-color: var(--ehr-bg-secondary);
+  padding: var(--ehr-spacing-2xl);
+  box-shadow: var(--ehr-shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ehr-spacing-lg);
+}
+
+.session-summaries-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--ehr-spacing-sm);
+  flex-wrap: wrap;
+}
+
+.session-summaries-header h2 {
+  margin: 0;
+  color: var(--ehr-text-primary);
+}
+
+.session-summaries-status {
+  font-size: 0.875rem;
+  color: var(--ehr-text-secondary);
+}
+
+.session-summaries-error {
+  color: var(--ehr-error);
+  font-weight: 500;
+}
+
+.session-summaries-empty {
+  margin: 0;
+  font-style: italic;
+  color: var(--ehr-text-secondary);
+}
+
+.session-summaries-list {
+  display: grid;
+  gap: var(--ehr-spacing-md);
+}
+
+.session-summary-card {
+  border: 1px solid var(--ehr-border-light);
+  border-radius: var(--ehr-radius-lg);
+  background-color: var(--ehr-bg-primary);
+  box-shadow: var(--ehr-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.session-summary-card:hover,
+.session-summary-card:has(.session-summary-toggle:hover),
+.session-summary-card:has(.session-summary-toggle:focus-visible) {
+  transform: translateY(-4px);
+  box-shadow: var(--ehr-shadow-md);
+  border-color: var(--ehr-primary-light);
+}
+
+.session-summary-toggle {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: var(--ehr-spacing-sm);
+  border: none;
+  background: transparent;
+  padding: var(--ehr-spacing-lg);
+  color: var(--ehr-text-primary);
+  cursor: pointer;
+  text-align: left;
+}
+
+.session-summary-toggle:hover,
+.session-summary-toggle:active,
+.session-summary-toggle:focus,
+.session-summary-toggle:focus-visible {
+  background-color: transparent !important;
+}
+
+.session-summary-title {
+  font-weight: 600;
+}
+
+.session-summary-date {
+  display: flex;
+  font-size: 0.875rem;
+  color: var(--ehr-text-secondary);
+}
+
+.session-summary-chevron {
+  font-size: 0.75rem;
+  color: var(--ehr-text-secondary);
+}
+
+.session-summary-content {
+  margin: 0;
+  white-space: pre-wrap;
+  background-color: var(--ehr-bg-secondary);
+  border-top: 1px solid var(--ehr-border-light);
+  padding: var(--ehr-spacing-lg);
+  color: var(--ehr-text-primary);
+  font-family: "Courier New", monospace;
+  font-size: 0.875rem;
 }
 
 .start-scenario-controls {
