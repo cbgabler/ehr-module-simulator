@@ -11,7 +11,7 @@ To add a new migration:
 3. The migration will run automatically on next app start
 */
 
-export const CURRENT_VERSION = 1;
+export const CURRENT_VERSION = 2;
 
 export const migrations = [
   {
@@ -70,6 +70,38 @@ export const migrations = [
           createdAt DATETIME,
           FOREIGN KEY (sessionId) REFERENCES sessions(id) ON DELETE CASCADE,
           FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+        );
+      `);
+    },
+  },
+
+  {
+    version: 2,
+    description: "Add session_actions and session_summaries tables",
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS session_actions (
+          id INTEGER PRIMARY KEY,
+          sessionId INTEGER,
+          userId INTEGER,
+          actionType TEXT NOT NULL,
+          actionLabel TEXT NOT NULL,
+          details TEXT,
+          createdAt DATETIME,
+          FOREIGN KEY (sessionId) REFERENCES sessions(id) ON DELETE CASCADE,
+          FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS session_summaries (
+          id INTEGER PRIMARY KEY,
+          sessionId INTEGER,
+          userId INTEGER,
+          scenarioId INTEGER,
+          summary TEXT,
+          createdAt DATETIME,
+          FOREIGN KEY (sessionId) REFERENCES sessions(id) ON DELETE CASCADE,
+          FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+          FOREIGN KEY (scenarioId) REFERENCES scenarios(id) ON DELETE CASCADE
         );
       `);
     },
