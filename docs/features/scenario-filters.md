@@ -157,6 +157,6 @@ This feature demonstrates:
 
 ---
 
-**Author:** Frontend Team  
-**Date:** January 2026  
-**Sprint:** Current Sprint
+**Author:** Trey Springer (Frontend Team)  
+**Date:** January 2026, 1/18/2026
+**Sprint:** Sprint 1 of Winter Term
