@@ -7,6 +7,7 @@ import ActiveSimulationPanel from "./components/ActiveSimulationPanel.jsx";
 import ImportModal from "./components/ImportModal.jsx";
 import ExportModal from "./components/ExportModal.jsx";
 import CreateScenarioModal from "./components/CreateScenarioModal.jsx";
+import ScenarioFilters from "./components/ScenarioFilters.jsx";
 import "./HomePage.css";
 
 const POLL_INTERVAL_MS = 2500;
@@ -41,6 +42,12 @@ function HomePage() {
   const [showCreateScenarioModal, setShowCreateScenarioModal] = useState(false);
   const [deletingScenarioId, setDeletingScenarioId] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
+  
+  // Filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDifficulty, setSelectedDifficulty] = useState("");
+  const [selectedSpecialty, setSelectedSpecialty] = useState("");
+  const [selectedTag, setSelectedTag] = useState("");
 
   const pollingRef = useRef(null);
   const sessionUserIdRef = useRef(null);
@@ -559,6 +566,68 @@ function HomePage() {
   const activeMedications = activeSession?.state?.medications || [];
   const patientDetails = activeScenario?.definition?.patient || null;
   const targetStatus = activeSession?.state?.targetStatus;
+
+  // Extract unique specialties and tags from all scenarios
+  const { availableSpecialties, availableTags } = useMemo(() => {
+    const specialties = new Set();
+    const tags = new Set();
+
+    scenarios.forEach((scenario) => {
+      const metadata = scenario.definition?.metadata;
+      if (metadata?.specialty) {
+        specialties.add(metadata.specialty);
+      }
+      if (metadata?.tags && Array.isArray(metadata.tags)) {
+        metadata.tags.forEach((tag) => tags.add(tag));
+      }
+    });
+
+    return {
+      availableSpecialties: Array.from(specialties).sort(),
+      availableTags: Array.from(tags).sort(),
+    };
+  }, [scenarios]);
+
+  // Filter scenarios based on search and filters
+  const filteredScenarios = useMemo(() => {
+    return scenarios.filter((scenario) => {
+      const definition = scenario.definition || {};
+      const metadata = definition.metadata || {};
+      const patient = definition.patient || {};
+
+      // Text search (scenario name, patient name, diagnosis)
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesName = scenario.name?.toLowerCase().includes(query);
+        const matchesPatient = patient.name?.toLowerCase().includes(query);
+        const matchesDiagnosis = patient.primaryDiagnosis?.toLowerCase().includes(query);
+        
+        if (!matchesName && !matchesPatient && !matchesDiagnosis) {
+          return false;
+        }
+      }
+
+      // Difficulty filter
+      if (selectedDifficulty && metadata.difficulty !== selectedDifficulty) {
+        return false;
+      }
+
+      // Specialty filter
+      if (selectedSpecialty && metadata.specialty !== selectedSpecialty) {
+        return false;
+      }
+
+      // Tag filter
+      if (selectedTag) {
+        const scenarioTags = metadata.tags || [];
+        if (!scenarioTags.includes(selectedTag)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [scenarios, searchQuery, selectedDifficulty, selectedSpecialty, selectedTag]);
   const formatSummaryTimestamp = (timestamp) => {
     if (!timestamp) {
       return "";
@@ -623,7 +692,30 @@ function HomePage() {
           <p>No scenarios available. Scenarios will appear here once created.</p>
         </div>
       ) : (
-        <ScenarioGrid scenarios={scenarios} onSelect={handleScenarioClick} />
+        <>
+          <ScenarioFilters
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            selectedDifficulty={selectedDifficulty}
+            setSelectedDifficulty={setSelectedDifficulty}
+            selectedSpecialty={selectedSpecialty}
+            setSelectedSpecialty={setSelectedSpecialty}
+            selectedTag={selectedTag}
+            setSelectedTag={setSelectedTag}
+            availableSpecialties={availableSpecialties}
+            availableTags={availableTags}
+            totalCount={scenarios.length}
+            filteredCount={filteredScenarios.length}
+          />
+          
+          {filteredScenarios.length === 0 ? (
+            <div className="scenarios-empty">
+              <p>No scenarios match your filters. Try adjusting your search criteria.</p>
+            </div>
+          ) : (
+            <ScenarioGrid scenarios={filteredScenarios} onSelect={handleScenarioClick} />
+          )}
+        </>
       )}
 
       {activeSession?.state && (
