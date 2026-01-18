@@ -1,5 +1,11 @@
 import { getDb } from './database.js';
 import { getScenarioById } from './models/scenarios.js';
+import {
+  createSessionSummary,
+  getSessionActions,
+  getSessionSummaryBySessionId,
+  logSessionAction,
+} from './models/sessionLogs.js';
 
 const DEFAULT_TICK_INTERVAL_MS = 5000;
 const DEFAULT_VITAL_RANGES = {
@@ -27,7 +33,9 @@ const DEFAULT_TARGET_STATUS = {
 export function startSession(scenarioId, userId) {
   const db = getDb();
 
-  const user = db.prepare('SELECT id FROM users WHERE id = ?').get(userId);
+  const user = db
+    .prepare('SELECT id, username FROM users WHERE id = ?')
+    .get(userId);
   if (!user) {
     throw new Error('User not found');
   }
@@ -60,10 +68,22 @@ export function startSession(scenarioId, userId) {
     simulationConfig,
     interval,
     scenario,
+    userName: user.username ?? null,
     targetHoldCount: 0,
     targetStatus: DEFAULT_TARGET_STATUS,
     completionReason: null,
     completionReasonCode: null,
+  });
+
+  logSessionAction({
+    sessionId,
+    userId,
+    actionType: 'session_started',
+    actionLabel: `Started scenario: ${scenario.name}`,
+    details: {
+      scenarioId: scenario.id,
+      scenarioName: scenario.name,
+    },
   });
 
   return { sessionId, state: formatState(sessions.get(sessionId)) };
@@ -95,8 +115,24 @@ export function adjustMedication(sessionId, medicationId, newDose) {
     throw new Error('Dose above allowed maximum');
   }
 
+  const previousDose = medState.dose;
+  const medicationName = medState.name || `Medication ${medicationId}`;
   medState.dose = Number(newDose);
   session.updatedAt = new Date().toISOString();
+
+  logSessionAction({
+    sessionId,
+    userId: session.userId,
+    actionType: 'medication_adjusted',
+    actionLabel: `Adjusted medication ${medicationName}: ${formatDose(previousDose, medState.unit)} -> ${formatDose(medState.dose, medState.unit)}`,
+    details: {
+      medicationId,
+      medicationName,
+      previousDose,
+      newDose: medState.dose,
+      unit: medState.unit,
+    },
+  });
 
   return formatState(session);
 }
@@ -113,6 +149,14 @@ export function pauseSession(sessionId) {
   }
   session.status = 'paused';
   session.updatedAt = new Date().toISOString();
+
+  logSessionAction({
+    sessionId,
+    userId: session.userId,
+    actionType: 'session_paused',
+    actionLabel: 'Paused simulation',
+  });
+
   return formatState(session);
 }
 
@@ -128,6 +172,14 @@ export function resumeSession(sessionId) {
   );
   session.status = 'running';
   session.updatedAt = new Date().toISOString();
+
+  logSessionAction({
+    sessionId,
+    userId: session.userId,
+    actionType: 'session_resumed',
+    actionLabel: 'Resumed simulation',
+  });
+
   return formatState(session);
 }
 
@@ -135,6 +187,10 @@ export function resumeSession(sessionId) {
 export function endSession(sessionId, options = {}) {
   const db = getDb();
   const session = getActiveSession(sessionId);
+
+  if (session.status === 'ended') {
+    return formatState(session);
+  }
 
   const endedAt = new Date().toISOString();
   db.prepare('UPDATE sessions SET ended = ? WHERE id = ?').run(
@@ -159,6 +215,34 @@ export function endSession(sessionId, options = {}) {
       session.completionReasonCode === 'targets_met'
         ? 'Scenario targets achieved'
         : 'Ended by user';
+  }
+
+  logSessionAction({
+    sessionId,
+    userId: session.userId,
+    actionType: 'session_ended',
+    actionLabel: `Ended scenario: ${session.completionReason}`,
+    details: {
+      reasonCode: session.completionReasonCode,
+      reason: session.completionReason,
+    },
+  });
+
+  try {
+    const existingSummary = getSessionSummaryBySessionId(sessionId);
+    if (!existingSummary) {
+      const actions = getSessionActions(sessionId);
+      const summary = buildSessionSummary(session, actions);
+      createSessionSummary({
+        sessionId,
+        userId: session.userId,
+        scenarioId: session.scenarioId,
+        summary,
+        createdAt: endedAt,
+      });
+    }
+  } catch (error) {
+    console.error('Failed to generate session summary:', error);
   }
 
   return formatState(session);
@@ -414,6 +498,13 @@ function parseDoseValue(doseString) {
   return { value: Number.isFinite(value) ? value : 0, unit: unit ?? null };
 }
 
+function formatDose(value, unit) {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return unit ? `0 ${unit}` : '0';
+  }
+  return unit ? `${value} ${unit}` : `${value}`;
+}
+
 // Pulls reusable simulation config (drift, ranges, targets, etc.).
 function buildSimulationConfig(definition = {}) {
   const simulation = definition?.simulation ?? {};
@@ -464,6 +555,44 @@ function normalizeTargets(targets) {
     description: targets.description ?? null,
     vitals: targets.vitals ?? null,
   };
+}
+
+function buildSessionSummary(session, actions) {
+  const summaryLines = [];
+  summaryLines.push('Scenario Summary');
+  summaryLines.push(`Scenario: ${session.scenarioName}`);
+  summaryLines.push(`User: ${session.userName || 'Unknown user'}`);
+  summaryLines.push(`Started: ${formatTimestamp(session.startedAt)}`);
+  summaryLines.push(`Ended: ${formatTimestamp(session.endedAt)}`);
+  if (session.completionReason) {
+    summaryLines.push(`Completion: ${session.completionReason}`);
+  }
+  summaryLines.push(`Actions (${actions.length}):`);
+  if (actions.length === 0) {
+    summaryLines.push('- No actions recorded.');
+  } else {
+    actions.forEach((action) => {
+      summaryLines.push(`- ${action.createdAt}: ${action.actionLabel}`);
+    });
+  }
+  return summaryLines.join('\n');
+}
+
+function formatTimestamp(value) {
+  if (!value) {
+    return 'unknown';
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 // Determines whether the session currently satisfies its goals.

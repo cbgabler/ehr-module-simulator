@@ -109,6 +109,22 @@ contextBridge.exposeInMainWorld("api", {
       return { success: false, error: error.message };
     }
   },
+  getSessionSummary: async (sessionId) => {
+    try {
+      return await ipcRenderer.invoke("get-session-summary", { sessionId });
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
+  getSessionSummaries: async (userId) => {
+    try {
+      return await ipcRenderer.invoke("get-session-summaries", { userId });
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
   addNote: async ({ sessionId, userId, content, vitalsSnapshot }) => {
     try {
       return await ipcRenderer.invoke("add-note", {
