@@ -34,6 +34,7 @@ function HomePage() {
   const [sessionSummaryLoading, setSessionSummaryLoading] = useState(false);
   const [sessionSummaryError, setSessionSummaryError] = useState(null);
   const [sessionSummaries, setSessionSummaries] = useState([]);
+  const [vitalsHistory, setVitalsHistory] = useState([]);
   const [sessionSummariesLoading, setSessionSummariesLoading] = useState(false);
   const [sessionSummariesError, setSessionSummariesError] = useState(null);
   const [expandedSummaryId, setExpandedSummaryId] = useState(null);
@@ -42,7 +43,7 @@ function HomePage() {
   const [showCreateScenarioModal, setShowCreateScenarioModal] = useState(false);
   const [deletingScenarioId, setDeletingScenarioId] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
-  
+
   // Filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
@@ -294,6 +295,7 @@ function HomePage() {
         setNoteContent("");
         setNoteError(null);
         setDoseInputs({});
+        setVitalsHistory([]);
         setSessionSummary(null);
         setSessionSummaryError(null);
         setSessionSummaries([]);
@@ -398,9 +400,9 @@ function HomePage() {
         setActiveSession((previous) =>
           previous
             ? {
-                ...previous,
-                state: response.state,
-              }
+              ...previous,
+              state: response.state,
+            }
             : previous
         );
         setSessionError(null);
@@ -422,9 +424,9 @@ function HomePage() {
         setActiveSession((previous) =>
           previous
             ? {
-                ...previous,
-                state: response.state,
-              }
+              ...previous,
+              state: response.state,
+            }
             : previous
         );
         setSessionError(null);
@@ -448,9 +450,9 @@ function HomePage() {
         setActiveSession((previous) =>
           previous
             ? {
-                ...previous,
-                state: response.state,
-              }
+              ...previous,
+              state: response.state,
+            }
             : previous
         );
         setSessionError(null);
@@ -472,9 +474,9 @@ function HomePage() {
         setActiveSession((previous) =>
           previous
             ? {
-                ...previous,
-                state: response.state,
-              }
+              ...previous,
+              state: response.state,
+            }
             : previous
         );
         if (response.summary) {
@@ -521,6 +523,30 @@ function HomePage() {
       stopPolling();
     }
   }, [activeSession?.state?.status]);
+
+  // Accumulate vitals history each time tickCount changes
+  useEffect(() => {
+    if (
+      activeSession?.state?.currentVitals &&
+      activeSession?.state?.status === "running" &&
+      typeof activeSession?.state?.tickCount === "number"
+    ) {
+      setVitalsHistory((prev) => {
+        // Avoid duplicate entries for same tick
+        if (prev.length > 0 && prev[prev.length - 1].tick === activeSession.state.tickCount) {
+          return prev;
+        }
+        return [
+          ...prev,
+          {
+            tick: activeSession.state.tickCount,
+            timestamp: activeSession.state.updatedAt,
+            vitals: { ...activeSession.state.currentVitals },
+          },
+        ].slice(-100); // Cap at 100 entries
+      });
+    }
+  }, [activeSession?.state?.tickCount, activeSession?.state?.status]);
 
   useEffect(() => {
     if (activeSession?.sessionId) {
@@ -601,7 +627,7 @@ function HomePage() {
         const matchesName = scenario.name?.toLowerCase().includes(query);
         const matchesPatient = patient.name?.toLowerCase().includes(query);
         const matchesDiagnosis = patient.primaryDiagnosis?.toLowerCase().includes(query);
-        
+
         if (!matchesName && !matchesPatient && !matchesDiagnosis) {
           return false;
         }
@@ -707,7 +733,7 @@ function HomePage() {
             totalCount={scenarios.length}
             filteredCount={filteredScenarios.length}
           />
-          
+
           {filteredScenarios.length === 0 ? (
             <div className="scenarios-empty">
               <p>No scenarios match your filters. Try adjusting your search criteria.</p>
@@ -744,6 +770,7 @@ function HomePage() {
           sessionSummary={sessionSummary}
           sessionSummaryLoading={sessionSummaryLoading}
           sessionSummaryError={sessionSummaryError}
+          vitalsHistory={vitalsHistory}
         />
       )}
 
