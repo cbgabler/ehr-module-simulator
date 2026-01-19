@@ -8,6 +8,9 @@ const defaultDbPath = path.join(app.getPath("userData"), "ehr_scenarios.db");
 
 let db;
 
+// Initializes the current database if it doesn't already exist
+// @param {string} [dbPath] - Optional path to database file. Defaults to the main database path.
+// @param {boolean} [skipMigrations=false] - Whether to skip running migrations
 export function initDatabase(dbPath = defaultDbPath, skipMigrations = false) {
   db = new Database(dbPath);
 
