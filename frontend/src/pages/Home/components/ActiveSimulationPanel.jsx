@@ -31,6 +31,9 @@ function ActiveSimulationPanel({
   onResume,
   onEnd,
   sessionError,
+  sessionSummary,
+  sessionSummaryLoading,
+  sessionSummaryError,
 }) {
   if (!activeSession?.state) {
     return null;
@@ -200,6 +203,26 @@ function ActiveSimulationPanel({
       {activeSession.state.completionReason && (
         <div className="completion-banner">
           {activeSession.state.completionReason}
+        </div>
+      )}
+
+      {activeSession.state.status === "ended" && (
+        <div className="summary-panel">
+          <div className="summary-header">
+            <h3>Session Summary</h3>
+            {sessionSummaryLoading && (
+              <span className="summary-status">Loading...</span>
+            )}
+          </div>
+          {sessionSummaryError && (
+            <div className="summary-error">{sessionSummaryError}</div>
+          )}
+          {!sessionSummaryLoading && !sessionSummaryError && (
+            <pre className="summary-content">
+              {sessionSummary?.summary ||
+                "No summary available for this session yet."}
+            </pre>
+          )}
         </div>
       )}
 

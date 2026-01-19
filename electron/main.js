@@ -23,6 +23,10 @@ import {
   getSessionNotes,
   deleteSessionNote
 } from "./database/models/sessions.js";
+import {
+  getSessionSummaryBySessionId,
+  getUserSessionSummaries,
+} from "./database/models/sessionLogs.js";
 
 // Simulation deps
 import {
@@ -212,9 +216,38 @@ ipcMain.handle("end-sim", async (event, payload = {}) => {
       throw new Error("sessionId is required");
     }
     const state = endSession(sessionId, { reason: "user_end" });
-    return { success: true, state };
+    const summary = getSessionSummaryBySessionId(sessionId);
+    return { success: true, state, summary };
   } catch (error) {
     console.error("Error ending simulation:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("get-session-summary", async (event, payload) => {
+  try {
+    const { sessionId } = payload ?? {};
+    if (!sessionId) {
+      throw new Error("sessionId is required");
+    }
+    const summary = getSessionSummaryBySessionId(sessionId);
+    return { success: true, summary: summary ?? null };
+  } catch (error) {
+    console.error("Error fetching session summary:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("get-session-summaries", async (event, payload) => {
+  try {
+    const { userId } = payload ?? {};
+    if (!userId) {
+      throw new Error("userId is required");
+    }
+    const summaries = getUserSessionSummaries(userId);
+    return { success: true, summaries };
+  } catch (error) {
+    console.error("Error fetching session summaries:", error);
     return { success: false, error: error.message };
   }
 });
