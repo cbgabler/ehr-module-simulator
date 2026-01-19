@@ -1,3 +1,5 @@
+import VitalsTrendGraph from "./VitalsTrendGraph.jsx";
+
 function formatNoteTimestamp(timestamp) {
   if (!timestamp) {
     return "";
@@ -34,6 +36,7 @@ function ActiveSimulationPanel({
   sessionSummary,
   sessionSummaryLoading,
   sessionSummaryError,
+  vitalsHistory,
 }) {
   if (!activeSession?.state) {
     return null;
@@ -93,6 +96,16 @@ function ActiveSimulationPanel({
               <strong>{vital.value}</strong>
             </div>
           ))}
+        </div>
+      )}
+
+      {vitalsHistory?.length >= 2 && (
+        <div className="vitals-trend-section">
+          <h3>Vitals Trend</h3>
+          <VitalsTrendGraph
+            history={vitalsHistory}
+            selectedVitals={["heartRate", "oxygenSaturation", "systolic", "diastolic"]}
+          />
         </div>
       )}
 
