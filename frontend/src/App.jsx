@@ -8,6 +8,7 @@ import {
 import Navigation from "./pages/Combined/Navigation.jsx";
 import SignInPage from "./pages/Auth/SignInPage.jsx";
 import HomePage from "./pages/Home/HomePage.jsx";
+import SimulationPage from "./pages/Simulation/SimulationPage.jsx";
 import { useAuth } from "./pages/Auth/AuthContext.jsx";
 import "./App.css";
 
@@ -40,6 +41,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <HomePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/simulation/:sessionId"
+            element={
+              <ProtectedRoute>
+                <SimulationPage />
               </ProtectedRoute>
             }
           />

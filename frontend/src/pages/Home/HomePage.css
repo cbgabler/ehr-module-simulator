@@ -752,6 +752,22 @@
   background-color: rgba(59, 130, 246, 0.1);
 }
 
+.open-full-view-btn {
+  padding: var(--ehr-spacing-xs) var(--ehr-spacing-md);
+  background-color: var(--ehr-primary);
+  color: var(--ehr-text-inverse);
+  border: none;
+  border-radius: var(--ehr-radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.open-full-view-btn:hover {
+  background-color: var(--ehr-primary-dark);
+}
+
 .target-banner {
   border-radius: var(--ehr-radius-lg);
   padding: var(--ehr-spacing-md) var(--ehr-spacing-xl);
