@@ -49,3 +49,21 @@ export function deleteScenario(scenarioId) {
   const info = db.prepare("DELETE FROM scenarios WHERE id = ?").run(scenarioId);
   return info.changes > 0;
 }
+
+export function duplicateScenario(scenarioId) {
+  const db = getDb();
+  
+  // Get the original scenario
+  const original = getScenarioById(scenarioId);
+  if (!original) {
+    throw new Error("Scenario not found");
+  }
+  
+  // Create new name with " (Copy)" suffix
+  const newName = `${original.name} (Copy)`;
+  
+  // Create the duplicate using the same definition
+  const newScenarioId = createScenario(newName, original.definition);
+  
+  return newScenarioId;
+}
