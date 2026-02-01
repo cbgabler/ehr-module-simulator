@@ -1,38 +1,24 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Auth/AuthContext.jsx";
-import { buildVitalSummary } from "../../utils/simulationFormatting.js";
 import ScenarioGrid from "./components/ScenarioGrid.jsx";
 import ScenarioDetailsModal from "./components/ScenarioDetailsModal.jsx";
-import ActiveSimulationPanel from "./components/ActiveSimulationPanel.jsx";
 import ImportModal from "./components/ImportModal.jsx";
 import ExportModal from "./components/ExportModal.jsx";
 import CreateScenarioModal from "./components/CreateScenarioModal.jsx";
 import ScenarioFilters from "./components/ScenarioFilters.jsx";
 import "./HomePage.css";
 
-const POLL_INTERVAL_MS = 2500;
-
 function HomePage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [scenarios, setScenarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedScenario, setSelectedScenario] = useState(null);
-  const [activeScenario, setActiveScenario] = useState(null);
-  const [activeSession, setActiveSession] = useState(null);
-  const [sessionError, setSessionError] = useState(null);
   const [startError, setStartError] = useState(null);
   const [isStarting, setIsStarting] = useState(false);
-  const [doseInputs, setDoseInputs] = useState({});
-  const [notes, setNotes] = useState([]);
-  const [noteContent, setNoteContent] = useState("");
-  const [noteSubmitting, setNoteSubmitting] = useState(false);
-  const [noteError, setNoteError] = useState(null);
-  const [noteDeletingId, setNoteDeletingId] = useState(null);
-  const [sessionSummary, setSessionSummary] = useState(null);
-  const [sessionSummaryLoading, setSessionSummaryLoading] = useState(false);
-  const [sessionSummaryError, setSessionSummaryError] = useState(null);
   const [sessionSummaries, setSessionSummaries] = useState([]);
   const [vitalsHistory, setVitalsHistory] = useState([]);
   const [sessionSummariesLoading, setSessionSummariesLoading] = useState(false);
@@ -50,52 +36,7 @@ function HomePage() {
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [selectedTag, setSelectedTag] = useState("");
 
-  const pollingRef = useRef(null);
-  const sessionUserIdRef = useRef(null);
   const electronApiAvailable = typeof window !== "undefined" && window.api;
-
-  const stopPolling = () => {
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current);
-      pollingRef.current = null;
-    }
-  };
-
-  const refreshSessionState = async (sessionId) => {
-    if (!window.api?.getSimulationState) {
-      return;
-    }
-    try {
-      const response = await window.api.getSimulationState(sessionId);
-      if (response.success) {
-        setActiveSession((previous) => ({
-          sessionId,
-          state: response.state,
-          userId: previous?.userId ?? sessionUserIdRef.current ?? null,
-        }));
-        if (response.state?.status === "ended") {
-          stopPolling();
-        }
-      } else {
-        setSessionError(response.error || "Failed to read simulation state");
-        stopPolling();
-      }
-    } catch (err) {
-      setSessionError(err.message || "Failed to read simulation state");
-      stopPolling();
-    }
-  };
-
-  const startPolling = (sessionId) => {
-    stopPolling();
-    if (!window.api?.getSimulationState) {
-      return;
-    }
-    pollingRef.current = setInterval(
-      () => refreshSessionState(sessionId),
-      POLL_INTERVAL_MS
-    );
-  };
 
   const loadScenarios = useCallback(async () => {
     setLoading(true);
@@ -152,11 +93,9 @@ function HomePage() {
       }
       const result = await window.api.deleteScenario(scenarioId);
       if (result.success) {
-        // Close modal if the deleted scenario is currently selected
         if (selectedScenario?.id === scenarioId) {
           setSelectedScenario(null);
         }
-        // Refresh scenarios list
         await loadScenarios();
       } else {
         setDeleteError(result.error || "Failed to delete scenario");
@@ -179,54 +118,6 @@ function HomePage() {
   const closeExportModal = () => setShowExportModal(false);
   const openCreateScenarioModal = () => setShowCreateScenarioModal(true);
   const closeCreateScenarioModal = () => setShowCreateScenarioModal(false);
-
-  const loadNotes = useCallback(async (sessionId) => {
-    if (!window.api?.getNotes || !sessionId) {
-      return;
-    }
-    try {
-      const response = await window.api.getNotes(sessionId);
-      if (response.success) {
-        setNotes(response.notes || []);
-        setNoteError(null);
-      } else {
-        setNoteError(response.error || "Unable to fetch notes");
-      }
-    } catch (err) {
-      setNoteError(err.message || "Unable to fetch notes");
-    }
-  }, []);
-
-  const loadSessionSummary = useCallback(
-    async (sessionId) => {
-      if (!window.api?.getSessionSummary || !sessionId) {
-        return;
-      }
-      setSessionSummaryLoading(true);
-      setSessionSummaryError(null);
-      try {
-        const response = await window.api.getSessionSummary(sessionId);
-        if (response.success) {
-          setSessionSummary(
-            response.summary
-              ? { ...response.summary, sessionId }
-              : { sessionId, summary: null }
-          );
-        } else {
-          setSessionSummaryError(
-            response.error || "Unable to load session summary"
-          );
-        }
-      } catch (err) {
-        setSessionSummaryError(
-          err.message || "Unable to load session summary"
-        );
-      } finally {
-        setSessionSummaryLoading(false);
-      }
-    },
-    []
-  );
 
   const loadSessionSummaries = useCallback(async () => {
     const parsedUserId = Number.parseInt(user?.id, 10);
@@ -265,7 +156,6 @@ function HomePage() {
       return false;
     }
     setStartError(null);
-    setSessionError(null);
 
     const parsedUserId = Number.parseInt(user?.id, 10);
     if (!Number.isFinite(parsedUserId) || parsedUserId <= 0) {
@@ -284,25 +174,8 @@ function HomePage() {
         userId: parsedUserId,
       });
       if (response.success) {
-        sessionUserIdRef.current = parsedUserId;
-        setActiveScenario(scenario);
-        setActiveSession({
-          sessionId: response.sessionId,
-          state: response.state,
-          userId: parsedUserId,
-        });
-        setNotes([]);
-        setNoteContent("");
-        setNoteError(null);
-        setDoseInputs({});
-        setVitalsHistory([]);
-        setSessionSummary(null);
-        setSessionSummaryError(null);
-        setSessionSummaries([]);
-        setSessionSummariesError(null);
         setSelectedScenario(null);
-        startPolling(response.sessionId);
-        await loadNotes(response.sessionId);
+        navigate(`/simulation/${response.sessionId}`);
         return true;
       }
       setStartError(response.error || "Unable to start simulation");
@@ -315,246 +188,9 @@ function HomePage() {
     }
   };
 
-  const handleDoseInputChange = (medicationId, value) => {
-    setDoseInputs((previous) => ({
-      ...previous,
-      [medicationId]: value,
-    }));
-  };
-
-  const handleAddNote = async (event) => {
-    event?.preventDefault?.();
-    if (!activeSession?.sessionId) {
-      setNoteError("Start a scenario before adding notes.");
-      return;
-    }
-    if (!noteContent.trim()) {
-      setNoteError("Enter a note before saving.");
-      return;
-    }
-    if (!window.api?.addNote) {
-      setNoteError("Notes API unavailable.");
-      return;
-    }
-    setNoteSubmitting(true);
-    setNoteError(null);
-    try {
-      const response = await window.api.addNote({
-        sessionId: activeSession.sessionId,
-        userId: activeSession.userId,
-        content: noteContent,
-        vitalsSnapshot: activeSession.state?.currentVitals,
-      });
-      if (response.success) {
-        setNotes((previous) => [...previous, response.note]);
-        setNoteContent("");
-      } else {
-        setNoteError(response.error || "Unable to save note");
-      }
-    } catch (err) {
-      setNoteError(err.message || "Unable to save note");
-    } finally {
-      setNoteSubmitting(false);
-    }
-  };
-
-  const handleDeleteNote = async (noteId) => {
-    if (!window.api?.deleteNote || !noteId) {
-      return;
-    }
-    setNoteDeletingId(noteId);
-    setNoteError(null);
-    try {
-      const response = await window.api.deleteNote({
-        noteId,
-        userId: activeSession?.userId,
-      });
-      if (response.success) {
-        setNotes((previous) => previous.filter((note) => note.id !== noteId));
-      } else {
-        setNoteError(response.error || "Unable to delete note");
-      }
-    } catch (err) {
-      setNoteError(err.message || "Unable to delete note");
-    } finally {
-      setNoteDeletingId(null);
-    }
-  };
-
-  const handleAdjustMedication = async (medicationId) => {
-    if (!activeSession?.sessionId || !window.api?.adjustMedication) {
-      return;
-    }
-    const desiredDose = Number.parseFloat(doseInputs[medicationId]);
-    if (!Number.isFinite(desiredDose)) {
-      setSessionError("Enter a valid numeric dose.");
-      return;
-    }
-    try {
-      const response = await window.api.adjustMedication({
-        sessionId: activeSession.sessionId,
-        medicationId,
-        newDose: desiredDose,
-      });
-      if (response.success) {
-        setActiveSession((previous) =>
-          previous
-            ? {
-              ...previous,
-              state: response.state,
-            }
-            : previous
-        );
-        setSessionError(null);
-      } else {
-        setSessionError(response.error || "Unable to adjust medication");
-      }
-    } catch (err) {
-      setSessionError(err.message || "Unable to adjust medication");
-    }
-  };
-
-  const handlePause = async () => {
-    if (!activeSession?.sessionId || !window.api?.pauseSimulation) {
-      return;
-    }
-    try {
-      const response = await window.api.pauseSimulation(activeSession.sessionId);
-      if (response.success) {
-        setActiveSession((previous) =>
-          previous
-            ? {
-              ...previous,
-              state: response.state,
-            }
-            : previous
-        );
-        setSessionError(null);
-      } else {
-        setSessionError(response.error || "Unable to pause simulation");
-      }
-    } catch (err) {
-      setSessionError(err.message || "Unable to pause simulation");
-    }
-  };
-
-  const handleResume = async () => {
-    if (!activeSession?.sessionId || !window.api?.resumeSimulation) {
-      return;
-    }
-    try {
-      const response = await window.api.resumeSimulation(
-        activeSession.sessionId
-      );
-      if (response.success) {
-        setActiveSession((previous) =>
-          previous
-            ? {
-              ...previous,
-              state: response.state,
-            }
-            : previous
-        );
-        setSessionError(null);
-      } else {
-        setSessionError(response.error || "Unable to resume simulation");
-      }
-    } catch (err) {
-      setSessionError(err.message || "Unable to resume simulation");
-    }
-  };
-
-  const handleEnd = async () => {
-    if (!activeSession?.sessionId || !window.api?.endSimulation) {
-      return;
-    }
-    try {
-      const response = await window.api.endSimulation(activeSession.sessionId);
-      if (response.success) {
-        setActiveSession((previous) =>
-          previous
-            ? {
-              ...previous,
-              state: response.state,
-            }
-            : previous
-        );
-        if (response.summary) {
-          setSessionSummary({ ...response.summary, sessionId: activeSession.sessionId });
-          setSessionSummaryError(null);
-        }
-        setSessionError(null);
-        stopPolling();
-        await loadSessionSummaries();
-      } else {
-        setSessionError(response.error || "Unable to end simulation");
-      }
-    } catch (err) {
-      setSessionError(err.message || "Unable to end simulation");
-    }
-  };
-
   useEffect(() => {
     loadScenarios();
   }, [loadScenarios]);
-
-  useEffect(() => () => stopPolling(), []);
-
-  useEffect(() => {
-    if (!activeSession?.state?.medicationState) {
-      setDoseInputs({});
-      return;
-    }
-    setDoseInputs((previous) => {
-      const next = {};
-      Object.entries(activeSession.state.medicationState).forEach(
-        ([id, medState]) => {
-          next[id] =
-            previous[id] ??
-            (typeof medState.dose === "number" ? medState.dose : "");
-        }
-      );
-      return next;
-    });
-  }, [activeSession?.state?.medicationState]);
-
-  useEffect(() => {
-    if (activeSession?.state?.status === "ended") {
-      stopPolling();
-    }
-  }, [activeSession?.state?.status]);
-
-  // Accumulate vitals history each time tickCount changes
-  useEffect(() => {
-    if (
-      activeSession?.state?.currentVitals &&
-      activeSession?.state?.status === "running" &&
-      typeof activeSession?.state?.tickCount === "number"
-    ) {
-      setVitalsHistory((prev) => {
-        // Avoid duplicate entries for same tick
-        if (prev.length > 0 && prev[prev.length - 1].tick === activeSession.state.tickCount) {
-          return prev;
-        }
-        return [
-          ...prev,
-          {
-            tick: activeSession.state.tickCount,
-            timestamp: activeSession.state.updatedAt,
-            vitals: { ...activeSession.state.currentVitals },
-          },
-        ].slice(-100); // Cap at 100 entries
-      });
-    }
-  }, [activeSession?.state?.tickCount, activeSession?.state?.status]);
-
-  useEffect(() => {
-    if (activeSession?.sessionId) {
-      loadNotes(activeSession.sessionId);
-    } else {
-      setNotes([]);
-    }
-  }, [activeSession?.sessionId, loadNotes]);
 
   useEffect(() => {
     if (user?.id) {
@@ -563,35 +199,6 @@ function HomePage() {
       setSessionSummaries([]);
     }
   }, [loadSessionSummaries, user?.id]);
-
-  useEffect(() => {
-    if (
-      activeSession?.state?.status === "ended" &&
-      activeSession?.sessionId &&
-      (!sessionSummary || sessionSummary.sessionId !== activeSession.sessionId) &&
-      !sessionSummaryLoading
-    ) {
-      loadSessionSummary(activeSession.sessionId);
-    }
-  }, [
-    activeSession?.state?.status,
-    activeSession?.sessionId,
-    loadSessionSummary,
-    sessionSummary,
-    sessionSummaryLoading,
-  ]);
-
-  const activeVitals = useMemo(
-    () =>
-      activeSession?.state
-        ? buildVitalSummary(activeSession.state.currentVitals)
-        : [],
-    [activeSession?.state]
-  );
-
-  const activeMedications = activeSession?.state?.medications || [];
-  const patientDetails = activeScenario?.definition?.patient || null;
-  const targetStatus = activeSession?.state?.targetStatus;
 
   // Extract unique specialties and tags from all scenarios
   const { availableSpecialties, availableTags } = useMemo(() => {
@@ -621,7 +228,6 @@ function HomePage() {
       const metadata = definition.metadata || {};
       const patient = definition.patient || {};
 
-      // Text search (scenario name, patient name, diagnosis)
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesName = scenario.name?.toLowerCase().includes(query);
@@ -633,17 +239,14 @@ function HomePage() {
         }
       }
 
-      // Difficulty filter
       if (selectedDifficulty && metadata.difficulty !== selectedDifficulty) {
         return false;
       }
 
-      // Specialty filter
       if (selectedSpecialty && metadata.specialty !== selectedSpecialty) {
         return false;
       }
 
-      // Tag filter
       if (selectedTag) {
         const scenarioTags = metadata.tags || [];
         if (!scenarioTags.includes(selectedTag)) {
@@ -654,6 +257,7 @@ function HomePage() {
       return true;
     });
   }, [scenarios, searchQuery, selectedDifficulty, selectedSpecialty, selectedTag]);
+
   const formatSummaryTimestamp = (timestamp) => {
     if (!timestamp) {
       return "";
@@ -742,36 +346,6 @@ function HomePage() {
             <ScenarioGrid scenarios={filteredScenarios} onSelect={handleScenarioClick} />
           )}
         </>
-      )}
-
-      {activeSession?.state && (
-        <ActiveSimulationPanel
-          activeScenario={activeScenario}
-          activeSession={activeSession}
-          activeVitals={activeVitals}
-          activeMedications={activeMedications}
-          patientDetails={patientDetails}
-          targetStatus={targetStatus}
-          doseInputs={doseInputs}
-          onDoseChange={handleDoseInputChange}
-          onAdjustMedication={handleAdjustMedication}
-          notes={notes}
-          noteContent={noteContent}
-          onNoteContentChange={setNoteContent}
-          onAddNote={handleAddNote}
-          onDeleteNote={handleDeleteNote}
-          noteSubmitting={noteSubmitting}
-          noteError={noteError}
-          noteDeletingId={noteDeletingId}
-          onPause={handlePause}
-          onResume={handleResume}
-          onEnd={handleEnd}
-          sessionError={sessionError}
-          sessionSummary={sessionSummary}
-          sessionSummaryLoading={sessionSummaryLoading}
-          sessionSummaryError={sessionSummaryError}
-          vitalsHistory={vitalsHistory}
-        />
       )}
 
       {selectedScenario && (

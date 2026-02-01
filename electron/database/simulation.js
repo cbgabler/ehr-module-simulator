@@ -52,7 +52,7 @@ export function startSession(scenarioId, userId) {
     )
     .run(scenarioId, userId, startedAt);
 
-  const sessionId = result.lastInsertRowid;
+  const sessionId = Number(result.lastInsertRowid);
   const simulationConfig = buildSimulationConfig(scenario.definition);
   const state = createInitialState({
     sessionId,
