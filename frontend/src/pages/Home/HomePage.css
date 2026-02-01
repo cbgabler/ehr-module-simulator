@@ -752,6 +752,22 @@
   background-color: rgba(59, 130, 246, 0.1);
 }
 
+.open-full-view-btn {
+  padding: var(--ehr-spacing-xs) var(--ehr-spacing-md);
+  background-color: var(--ehr-primary);
+  color: var(--ehr-text-inverse);
+  border: none;
+  border-radius: var(--ehr-radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.open-full-view-btn:hover {
+  background-color: var(--ehr-primary-dark);
+}
+
 .target-banner {
   border-radius: var(--ehr-radius-lg);
   padding: var(--ehr-spacing-md) var(--ehr-spacing-xl);
@@ -1160,3 +1176,105 @@
   cursor: not-allowed;
 }
 
+/* Vitals Trend Graph */
+.vitals-trend-section {
+  margin-top: var(--ehr-spacing-lg);
+  padding: var(--ehr-spacing-lg);
+  background-color: var(--ehr-bg-primary);
+  border: 1px solid var(--ehr-border);
+  border-radius: var(--ehr-radius-lg);
+}
+
+.vitals-trend-section h3 {
+  margin: 0 0 var(--ehr-spacing-md) 0;
+  color: var(--ehr-text-primary);
+  font-size: 1.125rem;
+}
+
+.vitals-trend-container {
+  position: relative;
+}
+
+.vitals-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ehr-spacing-sm);
+  margin-bottom: var(--ehr-spacing-md);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--ehr-spacing-xs);
+  padding: var(--ehr-spacing-xs) var(--ehr-spacing-sm);
+  background: transparent;
+  border: 2px solid;
+  border-radius: var(--ehr-radius-md);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--ehr-text-primary);
+}
+
+.legend-item:hover {
+  background-color: var(--ehr-bg-tertiary);
+}
+
+.legend-item.hidden {
+  opacity: 0.5;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  flex-shrink: 0;
+}
+
+.vitals-graph-svg {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  background-color: var(--ehr-bg-secondary);
+  border-radius: var(--ehr-radius-md);
+}
+
+.vitals-tooltip {
+  position: absolute;
+  top: 60px;
+  right: var(--ehr-spacing-md);
+  background-color: var(--ehr-bg-primary);
+  border: 1px solid var(--ehr-border);
+  border-radius: var(--ehr-radius-md);
+  padding: var(--ehr-spacing-sm) var(--ehr-spacing-md);
+  box-shadow: var(--ehr-shadow-md);
+  font-size: 0.8125rem;
+  z-index: 10;
+  min-width: 140px;
+}
+
+.vitals-tooltip strong {
+  display: block;
+  margin-bottom: var(--ehr-spacing-xs);
+  color: var(--ehr-text-primary);
+}
+
+.vitals-tooltip div {
+  padding: 2px 0;
+}
+
+@media (max-width: 768px) {
+  .vitals-graph-svg {
+    max-width: 100%;
+  }
+  
+  .vitals-legend {
+    gap: var(--ehr-spacing-xs);
+  }
+  
+  .legend-item {
+    font-size: 0.75rem;
+    padding: var(--ehr-spacing-xs);
+  }
+}

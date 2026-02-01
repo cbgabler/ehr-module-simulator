@@ -157,7 +157,8 @@ ipcMain.handle("get-sim-state", async (event, payload = {}) => {
     if (!sessionId) {
       throw new Error("sessionId is required");
     }
-    const state = getSessionState(sessionId);
+    const numericSessionId = typeof sessionId === "string" ? Number(sessionId) : sessionId;
+    const state = getSessionState(numericSessionId);
     return { success: true, state };
   } catch (error) {
     console.error("Error getting simulation state:", error);
@@ -173,7 +174,8 @@ ipcMain.handle("adjust-sim-medication", async (event, payload = {}) => {
         "sessionId, medicationId, and numeric newDose are required"
       );
     }
-    const state = adjustMedication(sessionId, medicationId, newDose);
+    const numericSessionId = typeof sessionId === "string" ? Number(sessionId) : sessionId;
+    const state = adjustMedication(numericSessionId, medicationId, newDose);
     return { success: true, state };
   } catch (error) {
     console.error("Error adjusting medication:", error);
@@ -187,7 +189,8 @@ ipcMain.handle("pause-sim", async (event, payload = {}) => {
     if (!sessionId) {
       throw new Error("sessionId is required");
     }
-    const state = pauseSession(sessionId);
+    const numericSessionId = typeof sessionId === "string" ? Number(sessionId) : sessionId;
+    const state = pauseSession(numericSessionId);
     return { success: true, state };
   } catch (error) {
     console.error("Error pausing simulation:", error);
@@ -201,7 +204,8 @@ ipcMain.handle("resume-sim", async (event, payload = {}) => {
     if (!sessionId) {
       throw new Error("sessionId is required");
     }
-    const state = resumeSession(sessionId);
+    const numericSessionId = typeof sessionId === "string" ? Number(sessionId) : sessionId;
+    const state = resumeSession(numericSessionId);
     return { success: true, state };
   } catch (error) {
     console.error("Error resuming simulation:", error);
@@ -215,8 +219,9 @@ ipcMain.handle("end-sim", async (event, payload = {}) => {
     if (!sessionId) {
       throw new Error("sessionId is required");
     }
-    const state = endSession(sessionId, { reason: "user_end" });
-    const summary = getSessionSummaryBySessionId(sessionId);
+    const numericSessionId = typeof sessionId === "string" ? Number(sessionId) : sessionId;
+    const state = endSession(numericSessionId, { reason: "user_end" });
+    const summary = getSessionSummaryBySessionId(numericSessionId);
     return { success: true, state, summary };
   } catch (error) {
     console.error("Error ending simulation:", error);
@@ -230,7 +235,8 @@ ipcMain.handle("get-session-summary", async (event, payload) => {
     if (!sessionId) {
       throw new Error("sessionId is required");
     }
-    const summary = getSessionSummaryBySessionId(sessionId);
+    const numericSessionId = typeof sessionId === "string" ? Number(sessionId) : sessionId;
+    const summary = getSessionSummaryBySessionId(numericSessionId);
     return { success: true, summary: summary ?? null };
   } catch (error) {
     console.error("Error fetching session summary:", error);
@@ -259,12 +265,13 @@ ipcMain.handle("add-note", async (event, payload = {}) => {
     if (!sessionId || !userId || !content?.trim()) {
       throw new Error("sessionId, userId, and content are required");
     }
-    const session = getSession(sessionId);
+    const numericSessionId = typeof sessionId === "string" ? Number(sessionId) : sessionId;
+    const session = getSession(numericSessionId);
     if (!session) {
       throw new Error("Session not found");
     }
     const note = addSessionNote({
-      sessionId,
+      sessionId: numericSessionId,
       userId,
       content,
       vitalsSnapshot: vitalsSnapshot ?? null,
@@ -282,7 +289,8 @@ ipcMain.handle("get-notes", async (event, payload = {}) => {
     if (!sessionId) {
       throw new Error("sessionId is required");
     }
-    const notes = getSessionNotes(sessionId);
+    const numericSessionId = typeof sessionId === "string" ? Number(sessionId) : sessionId;
+    const notes = getSessionNotes(numericSessionId);
     return { success: true, notes };
   } catch (error) {
     console.error("Error fetching notes:", error);
