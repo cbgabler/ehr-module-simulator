@@ -14,7 +14,8 @@ import {
   getAllScenarios,
   getScenarioById,
   createScenario,
-  deleteScenario
+  deleteScenario,
+  duplicateScenario
 } from "./database/models/scenarios.js";
 
 // Sessions
@@ -132,6 +133,19 @@ ipcMain.handle("delete-scenario", async (event, scenarioId) => {
     return { success: true };
   } catch (error) {
     console.error("Error deleting scenario:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("duplicate-scenario", async (event, scenarioId) => {
+  try {
+    if (!scenarioId) {
+      throw new Error("scenarioId is required");
+    }
+    const newScenarioId = duplicateScenario(scenarioId);
+    return { success: true, scenarioId: newScenarioId };
+  } catch (error) {
+    console.error("Error duplicating scenario:", error);
     return { success: false, error: error.message };
   }
 });

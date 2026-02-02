@@ -29,6 +29,8 @@ function HomePage() {
   const [showCreateScenarioModal, setShowCreateScenarioModal] = useState(false);
   const [deletingScenarioId, setDeletingScenarioId] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
+  const [duplicatingScenarioId, setDuplicatingScenarioId] = useState(null);
+  const [duplicateError, setDuplicateError] = useState(null);
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -104,6 +106,30 @@ function HomePage() {
       setDeleteError(err.message || "An unexpected error occurred");
     } finally {
       setDeletingScenarioId(null);
+    }
+  };
+
+  const handleDuplicateScenario = async (scenarioId) => {
+    setDuplicatingScenarioId(scenarioId);
+    setDuplicateError(null);
+    try {
+      if (!window.api?.duplicateScenario) {
+        setDuplicateError("Electron API not available.");
+        setDuplicatingScenarioId(null);
+        return;
+      }
+      const result = await window.api.duplicateScenario(scenarioId);
+      if (result.success) {
+        // Close modal and refresh scenarios list
+        setSelectedScenario(null);
+        await loadScenarios();
+      } else {
+        setDuplicateError(result.error || "Failed to duplicate scenario");
+      }
+    } catch (err) {
+      setDuplicateError(err.message || "An unexpected error occurred");
+    } finally {
+      setDuplicatingScenarioId(null);
     }
   };
 
@@ -354,11 +380,14 @@ function HomePage() {
           onClose={closeScenarioDetails}
           onStartScenario={handleStartScenario}
           onDeleteScenario={handleDeleteScenario}
+          onDuplicateScenario={handleDuplicateScenario}
           isStarting={isStarting}
           startError={startError}
           currentUser={user}
           isDeleting={deletingScenarioId === selectedScenario.id}
           deleteError={deleteError}
+          isDuplicating={duplicatingScenarioId === selectedScenario.id}
+          duplicateError={duplicateError}
         />
       )}
 
