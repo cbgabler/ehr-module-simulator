@@ -7,6 +7,7 @@ import ActiveMedicationsTab from "./components/ActiveMedicationsTab.jsx";
 import ProviderOrdersTab from "./components/ProviderOrdersTab.jsx";
 import MedicationAdminTab from "./components/MedicationAdminTab.jsx";
 import NotesSection from "./components/NotesSection.jsx";
+import { buildSummaryFileName } from "../../utils/summaryExport.js";
 import "./SimulationPage.css";
 
 const POLL_INTERVAL_MS = 2500;
@@ -39,6 +40,8 @@ function SimulationPage() {
 
   // session summary state
   const [sessionSummary, setSessionSummary] = useState(null);
+  const [summaryExporting, setSummaryExporting] = useState(false);
+  const [summaryExportStatus, setSummaryExportStatus] = useState(null);
 
   const pollingRef = useRef(null);
 
@@ -309,6 +312,57 @@ function SimulationPage() {
     navigate("/home");
   };
 
+  const handleExportSummaryPdf = async () => {
+    if (!sessionSummary) {
+      return;
+    }
+    if (!window.api?.exportSessionSummaryPdf) {
+      setSummaryExportStatus({
+        isError: true,
+        message: "Export API not available.",
+      });
+      return;
+    }
+
+    setSummaryExporting(true);
+    setSummaryExportStatus(null);
+    try {
+      const fileName = buildSummaryFileName({
+        scenarioName: scenario?.name,
+        sessionId,
+      });
+      const response = await window.api.exportSessionSummaryPdf({
+        summaryText: sessionSummary.summary,
+        scenarioName: scenario?.name,
+        createdAt: sessionSummary?.createdAt,
+        sessionId,
+        userName: user?.username,
+        fileName,
+      });
+
+      if (response?.canceled) {
+        setSummaryExportStatus({ isError: false, message: "Export canceled." });
+      } else if (response?.success) {
+        setSummaryExportStatus({
+          isError: false,
+          message: `Saved PDF to ${response.filePath}`,
+        });
+      } else {
+        setSummaryExportStatus({
+          isError: true,
+          message: response?.error || "Unable to export summary.",
+        });
+      }
+    } catch (err) {
+      setSummaryExportStatus({
+        isError: true,
+        message: err.message || "Unable to export summary.",
+      });
+    } finally {
+      setSummaryExporting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="simulation-page">
@@ -424,8 +478,27 @@ function SimulationPage() {
           {/* session summary (when ended) */}
           {isEnded && sessionSummary && (
             <div className="session-summary-display">
-              <h3>Session Summary</h3>
+              <div className="session-summary-header">
+                <h3>Session Summary</h3>
+                <button
+                  type="button"
+                  className="summary-export-btn"
+                  onClick={handleExportSummaryPdf}
+                  disabled={summaryExporting}
+                >
+                  {summaryExporting ? "Exporting..." : "Download PDF"}
+                </button>
+              </div>
               <pre className="summary-content">{sessionSummary.summary}</pre>
+              {summaryExportStatus && (
+                <div
+                  className={`summary-export-status ${
+                    summaryExportStatus.isError ? "error" : "success"
+                  }`}
+                >
+                  {summaryExportStatus.message}
+                </div>
+              )}
             </div>
           )}
 
