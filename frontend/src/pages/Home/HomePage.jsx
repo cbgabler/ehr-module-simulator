@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Auth/AuthContext.jsx";
+import useKeyboardShortcuts from "../../utils/useKeyboardShortcuts.js";
 import ScenarioGrid from "./components/ScenarioGrid.jsx";
 import ScenarioDetailsModal from "./components/ScenarioDetailsModal.jsx";
 import ImportModal from "./components/ImportModal.jsx";
@@ -32,6 +33,8 @@ function HomePage() {
   const [deleteError, setDeleteError] = useState(null);
   const [summaryExportingId, setSummaryExportingId] = useState(null);
   const [summaryExportStatus, setSummaryExportStatus] = useState(null);
+  const [duplicatingScenarioId, setDuplicatingScenarioId] = useState(null);
+  const [duplicateError, setDuplicateError] = useState(null);
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -110,6 +113,30 @@ function HomePage() {
     }
   };
 
+  const handleDuplicateScenario = async (scenarioId) => {
+    setDuplicatingScenarioId(scenarioId);
+    setDuplicateError(null);
+    try {
+      if (!window.api?.duplicateScenario) {
+        setDuplicateError("Electron API not available.");
+        setDuplicatingScenarioId(null);
+        return;
+      }
+      const result = await window.api.duplicateScenario(scenarioId);
+      if (result.success) {
+        // Close modal and refresh scenarios list
+        setSelectedScenario(null);
+        await loadScenarios();
+      } else {
+        setDuplicateError(result.error || "Failed to duplicate scenario");
+      }
+    } catch (err) {
+      setDuplicateError(err.message || "An unexpected error occurred");
+    } finally {
+      setDuplicatingScenarioId(null);
+    }
+  };
+
   const closeScenarioDetails = () => {
     setSelectedScenario(null);
     setStartError(null);
@@ -121,6 +148,26 @@ function HomePage() {
   const closeExportModal = () => setShowExportModal(false);
   const openCreateScenarioModal = () => setShowCreateScenarioModal(true);
   const closeCreateScenarioModal = () => setShowCreateScenarioModal(false);
+
+  // Keyboard shortcut to close modals with Escape
+  const closeAllModals = useCallback(() => {
+    if (selectedScenario) {
+      closeScenarioDetails();
+    } else if (showImportModal) {
+      closeImportModal();
+    } else if (showExportModal) {
+      closeExportModal();
+    } else if (showCreateScenarioModal) {
+      closeCreateScenarioModal();
+    }
+  }, [selectedScenario, showImportModal, showExportModal, showCreateScenarioModal]);
+
+  const hasOpenModal = selectedScenario || showImportModal || showExportModal || showCreateScenarioModal;
+
+  useKeyboardShortcuts(
+    useMemo(() => ({ Escape: closeAllModals }), [closeAllModals]),
+    { enabled: hasOpenModal }
+  );
 
   const loadSessionSummaries = useCallback(async () => {
     const parsedUserId = Number.parseInt(user?.id, 10);
@@ -415,11 +462,14 @@ function HomePage() {
           onClose={closeScenarioDetails}
           onStartScenario={handleStartScenario}
           onDeleteScenario={handleDeleteScenario}
+          onDuplicateScenario={handleDuplicateScenario}
           isStarting={isStarting}
           startError={startError}
           currentUser={user}
           isDeleting={deletingScenarioId === selectedScenario.id}
           deleteError={deleteError}
+          isDuplicating={duplicatingScenarioId === selectedScenario.id}
+          duplicateError={duplicateError}
         />
       )}
 
