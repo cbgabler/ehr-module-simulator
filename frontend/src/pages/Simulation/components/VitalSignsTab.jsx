@@ -57,7 +57,7 @@ function VitalSignsTab({ vitals }) {
       <div key="hr" className={`vital-card ${status}`}>
         <div className="vital-label">Heart Rate</div>
         <div className="vital-value">
-          {Number.parseFloat(vitals.heartRate).toFixed(2)}
+          {Math.round(vitals.heartRate)}
           <span className="vital-unit"> bpm</span>
         </div>
       </div>

@@ -6,7 +6,11 @@ async function loadMainWithScenarioMocks() {
   const mockWindowInstance = {
     loadURL: jest.fn(),
     loadFile: jest.fn(),
-    webContents: { openDevTools: jest.fn() },
+    webContents: {
+      openDevTools: jest.fn(),
+      on: jest.fn(),
+      setWindowOpenHandler: jest.fn(),
+    },
   };
   const mockBrowserWindow = jest.fn(() => mockWindowInstance);
   const mockIpcHandle = jest.fn();
@@ -56,6 +60,17 @@ async function loadMainWithScenarioMocks() {
     dialog: {
       showOpenDialog: jest.fn(),
       showSaveDialog: jest.fn(),
+    },
+    Menu: {
+      setApplicationMenu: jest.fn(),
+    },
+    session: {
+      defaultSession: {
+        webRequest: {
+          onHeadersReceived: jest.fn(),
+        },
+        setPermissionRequestHandler: jest.fn(),
+      },
     },
   }));
 
@@ -135,6 +150,14 @@ const findHandler = (ipcMock, channel) => {
   return handlerCall[1];
 };
 
+// Mock event with senderFrame for IPC sender validation
+// In dev mode (isPackaged: false), validates against localhost:5173
+const mockEvent = {
+  senderFrame: {
+    url: "http://localhost:5173/",
+  },
+};
+
 describe("scenario IPC handlers", () => {
   test("get-all-scenarios returns payload on success", async () => {
     const { mockIpcHandle, scenarioMocks } = await loadMainWithScenarioMocks();
@@ -142,7 +165,7 @@ describe("scenario IPC handlers", () => {
     scenarioMocks.getAllScenarios.mockReturnValueOnce(scenarios);
 
     const handler = findHandler(mockIpcHandle, "get-all-scenarios");
-    const response = await handler();
+    const response = await handler(mockEvent);
 
     expect(scenarioMocks.getAllScenarios).toHaveBeenCalledTimes(1);
     expect(response).toEqual({ success: true, scenarios });
@@ -156,7 +179,7 @@ describe("scenario IPC handlers", () => {
     });
 
     const handler = findHandler(mockIpcHandle, "get-all-scenarios");
-    const response = await handler();
+    const response = await handler(mockEvent);
 
     expect(response).toEqual({ success: false, error: err.message });
   });
@@ -167,7 +190,7 @@ describe("scenario IPC handlers", () => {
     scenarioMocks.getScenarioById.mockReturnValueOnce(scenario);
 
     const handler = findHandler(mockIpcHandle, "get-scenario");
-    const response = await handler(null, 3);
+    const response = await handler(mockEvent, 3);
 
     expect(scenarioMocks.getScenarioById).toHaveBeenCalledWith(3);
     expect(response).toEqual({ success: true, scenario });
@@ -178,7 +201,7 @@ describe("scenario IPC handlers", () => {
     scenarioMocks.getScenarioById.mockReturnValueOnce(undefined);
 
     const handler = findHandler(mockIpcHandle, "get-scenario");
-    const response = await handler(null, 7);
+    const response = await handler(mockEvent, 7);
 
     expect(response).toEqual({
       success: false,
@@ -193,7 +216,7 @@ describe("scenario IPC handlers", () => {
     });
 
     const handler = findHandler(mockIpcHandle, "get-scenario");
-    const response = await handler(null, 9);
+    const response = await handler(mockEvent, 9);
 
     expect(response).toEqual({ success: false, error: "boom" });
   });
@@ -211,7 +234,7 @@ describe("auth IPC handlers", () => {
       password: "Secret1!",
       role: "student",
     };
-    const response = await handler(null, payload);
+    const response = await handler(mockEvent, payload);
 
     expect(userMocks.registerUser).toHaveBeenCalledWith(payload);
     expect(response).toEqual({ success: true, user: mockUser });
@@ -224,7 +247,7 @@ describe("auth IPC handlers", () => {
     });
 
     const handler = findHandler(mockIpcHandle, "register-user");
-    const response = await handler(null, { username: "dupe" });
+    const response = await handler(mockEvent, { username: "dupe" });
 
     expect(response).toEqual({ success: false, error: "taken" });
   });
@@ -235,7 +258,7 @@ describe("auth IPC handlers", () => {
     userMocks.authenticateUser.mockReturnValueOnce(mockUser);
 
     const handler = findHandler(mockIpcHandle, "login-user");
-    const response = await handler(null, {
+    const response = await handler(mockEvent, {
       username: "educator",
       password: "StrongPass1!",
     });
@@ -254,7 +277,7 @@ describe("auth IPC handlers", () => {
     });
 
     const handler = findHandler(mockIpcHandle, "login-user");
-    const response = await handler(null, {
+    const response = await handler(mockEvent, {
       username: "educator",
       password: "bad",
     });
@@ -277,7 +300,7 @@ describe("simulation IPC handlers", () => {
     });
 
     const handler = findHandler(mockIpcHandle, "start-sim");
-    const result = await handler(null, { scenarioId: 3, userId: 9 });
+    const result = await handler(mockEvent, { scenarioId: 3, userId: 9 });
 
     expect(simulationMocks.startSession).toHaveBeenCalledWith(3, 9);
     expect(result).toEqual({
@@ -295,7 +318,7 @@ describe("simulation IPC handlers", () => {
     });
 
     const handler = findHandler(mockIpcHandle, "start-sim");
-    const result = await handler(null, { scenarioId: 3, userId: 9 });
+    const result = await handler(mockEvent, { scenarioId: 3, userId: 9 });
 
     expect(result).toEqual({ success: false, error: "nope" });
   });
@@ -307,7 +330,7 @@ describe("simulation IPC handlers", () => {
     simulationMocks.getSessionState.mockReturnValueOnce(state);
 
     const handler = findHandler(mockIpcHandle, "get-sim-state");
-    const result = await handler(null, { sessionId: 55 });
+    const result = await handler(mockEvent, { sessionId: 55 });
 
     expect(simulationMocks.getSessionState).toHaveBeenCalledWith(55);
     expect(result).toEqual({ success: true, state });
@@ -321,7 +344,7 @@ describe("simulation IPC handlers", () => {
 
     const handler = findHandler(mockIpcHandle, "adjust-sim-medication");
     const payload = { sessionId: 1, medicationId: "med", newDose: 12 };
-    const result = await handler(null, payload);
+    const result = await handler(mockEvent, payload);
 
     expect(simulationMocks.adjustMedication).toHaveBeenCalledWith(
       payload.sessionId,
@@ -342,11 +365,11 @@ describe("simulation IPC handlers", () => {
     const pauseHandler = findHandler(mockIpcHandle, "pause-sim");
     const resumeHandler = findHandler(mockIpcHandle, "resume-sim");
 
-    expect(await pauseHandler(null, { sessionId: 9 })).toEqual({
+    expect(await pauseHandler(mockEvent, { sessionId: 9 })).toEqual({
       success: true,
       state: paused,
     });
-    expect(await resumeHandler(null, { sessionId: 9 })).toEqual({
+    expect(await resumeHandler(mockEvent, { sessionId: 9 })).toEqual({
       success: true,
       state: resumed,
     });
@@ -361,7 +384,7 @@ describe("simulation IPC handlers", () => {
     sessionLogMocks.getSessionSummaryBySessionId.mockReturnValueOnce(summary);
 
     const handler = findHandler(mockIpcHandle, "end-sim");
-    const result = await handler(null, { sessionId: 5 });
+    const result = await handler(mockEvent, { sessionId: 5 });
 
     expect(simulationMocks.endSession).toHaveBeenCalledWith(5, {
       reason: "user_end",
@@ -376,7 +399,7 @@ describe("simulation IPC handlers", () => {
     sessionLogMocks.getSessionSummaryBySessionId.mockReturnValueOnce(summary);
 
     const handler = findHandler(mockIpcHandle, "get-session-summary");
-    const result = await handler(null, { sessionId: 9 });
+    const result = await handler(mockEvent, { sessionId: 9 });
 
     expect(sessionLogMocks.getSessionSummaryBySessionId).toHaveBeenCalledWith(9);
     expect(result).toEqual({ success: true, summary });
@@ -391,7 +414,7 @@ describe("simulation IPC handlers", () => {
     sessionLogMocks.getUserSessionSummaries.mockReturnValueOnce(summaries);
 
     const handler = findHandler(mockIpcHandle, "get-session-summaries");
-    const result = await handler(null, { userId: 3 });
+    const result = await handler(mockEvent, { userId: 3 });
 
     expect(sessionLogMocks.getUserSessionSummaries).toHaveBeenCalledWith(3);
     expect(result).toEqual({ success: true, summaries });
@@ -413,7 +436,7 @@ describe("documentation IPC handlers", () => {
       content: "note",
       vitalsSnapshot: { heartRate: 90 },
     };
-    const result = await handler(null, payload);
+    const result = await handler(mockEvent, payload);
 
     expect(simulationMocks.getSession).toHaveBeenCalledWith(5);
     expect(sessionMocks.addSessionNote).toHaveBeenCalledWith(payload);
@@ -426,7 +449,7 @@ describe("documentation IPC handlers", () => {
     sessionMocks.getSessionNotes.mockReturnValueOnce(notes);
 
     const handler = findHandler(mockIpcHandle, "get-notes");
-    const result = await handler(null, { sessionId: 3 });
+    const result = await handler(mockEvent, { sessionId: 3 });
 
     expect(sessionMocks.getSessionNotes).toHaveBeenCalledWith(3);
     expect(result).toEqual({ success: true, notes });
@@ -438,7 +461,7 @@ describe("documentation IPC handlers", () => {
     sessionMocks.deleteSessionNote.mockReturnValueOnce(note);
 
     const handler = findHandler(mockIpcHandle, "delete-note");
-    const result = await handler(null, { noteId: 2, userId: 3 });
+    const result = await handler(mockEvent, { noteId: 2, userId: 3 });
 
     expect(sessionMocks.deleteSessionNote).toHaveBeenCalledWith({
       noteId: 2,

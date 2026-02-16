@@ -1,8 +1,12 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, session, Menu } from "electron";
 import path from "path";
 import { fileURLToPath } from "url";
 import { initDatabase } from "./database/database.js";
 import { exportSessionSummaryPdf } from "./utils/summaryExport.js";
+
+// Performance: Set application menu to null before app is ready
+// This prevents Electron from creating a default menu, improving startup time
+Menu.setApplicationMenu(null);
 
 // Users
 import { 
@@ -51,9 +55,22 @@ const __dirname = path.dirname(__filename);
 
 const isDev = !app.isPackaged; // for dev vs prod, should be changed later
 
+// Security: Validate IPC message senders to prevent untrusted frames from accessing APIs
+// Reference: https://www.electronjs.org/docs/latest/tutorial/security#17-validate-the-sender-of-all-ipc-messages
+function validateSender(frame) {
+  // In development, allow localhost
+  if (isDev) {
+    const url = new URL(frame.url);
+    return url.hostname === "localhost" && url.port === "5173";
+  }
+  // In production, only allow file:// protocol from our app
+  return frame.url.startsWith("file://");
+}
 
-// IPC handlers
+// IPC handlers with sender validation
+// Security: All handlers validate the sender to prevent untrusted content from accessing APIs
 ipcMain.handle("register-user", async (event, payload = {}) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const username = payload ?? {};
     if (!username) {
@@ -72,6 +89,7 @@ ipcMain.handle("register-user", async (event, payload = {}) => {
 });
 
 ipcMain.handle("login-user", async (event, payload = {}) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const { username, password } = payload ?? {};
     if (!username || !password) {
@@ -86,7 +104,8 @@ ipcMain.handle("login-user", async (event, payload = {}) => {
 });
 
 // Scenario handlers
-ipcMain.handle("get-all-scenarios", async () => {
+ipcMain.handle("get-all-scenarios", async (event) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const scenarios = getAllScenarios();
     return { success: true, scenarios };
@@ -97,6 +116,7 @@ ipcMain.handle("get-all-scenarios", async () => {
 });
 
 ipcMain.handle("get-scenario", async (event, scenarioId) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const scenario = getScenarioById(scenarioId);
     if (!scenario) {
@@ -110,6 +130,7 @@ ipcMain.handle("get-scenario", async (event, scenarioId) => {
 });
 
 ipcMain.handle("create-scenario", async (event, payload = {}) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const { name, definition } = payload ?? {};
     if (!name || !definition) {
@@ -124,6 +145,7 @@ ipcMain.handle("create-scenario", async (event, payload = {}) => {
 });
 
 ipcMain.handle("delete-scenario", async (event, scenarioId) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     if (!scenarioId) {
       throw new Error("scenarioId is required");
@@ -140,6 +162,7 @@ ipcMain.handle("delete-scenario", async (event, scenarioId) => {
 });
 
 ipcMain.handle("duplicate-scenario", async (event, scenarioId) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     if (!scenarioId) {
       throw new Error("scenarioId is required");
@@ -154,6 +177,7 @@ ipcMain.handle("duplicate-scenario", async (event, scenarioId) => {
 
 // Simulation handlers
 ipcMain.handle("start-sim", async (event, payload = {}) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const { scenarioId, userId } = payload ?? {};
     if (!scenarioId || !userId) {
@@ -168,6 +192,7 @@ ipcMain.handle("start-sim", async (event, payload = {}) => {
 });
 
 ipcMain.handle("get-sim-state", async (event, payload = {}) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const { sessionId } = payload ?? {};
     if (!sessionId) {
@@ -183,6 +208,7 @@ ipcMain.handle("get-sim-state", async (event, payload = {}) => {
 });
 
 ipcMain.handle("adjust-sim-medication", async (event, payload = {}) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const { sessionId, medicationId, newDose } = payload ?? {};
     if (!sessionId || !medicationId || typeof newDose !== "number") {
@@ -200,6 +226,7 @@ ipcMain.handle("adjust-sim-medication", async (event, payload = {}) => {
 });
 
 ipcMain.handle("pause-sim", async (event, payload = {}) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const { sessionId } = payload ?? {};
     if (!sessionId) {
@@ -215,6 +242,7 @@ ipcMain.handle("pause-sim", async (event, payload = {}) => {
 });
 
 ipcMain.handle("resume-sim", async (event, payload = {}) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const { sessionId } = payload ?? {};
     if (!sessionId) {
@@ -230,6 +258,7 @@ ipcMain.handle("resume-sim", async (event, payload = {}) => {
 });
 
 ipcMain.handle("end-sim", async (event, payload = {}) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const { sessionId } = payload ?? {};
     if (!sessionId) {
@@ -246,6 +275,7 @@ ipcMain.handle("end-sim", async (event, payload = {}) => {
 });
 
 ipcMain.handle("get-session-summary", async (event, payload) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const { sessionId } = payload ?? {};
     if (!sessionId) {
@@ -261,6 +291,7 @@ ipcMain.handle("get-session-summary", async (event, payload) => {
 });
 
 ipcMain.handle("get-session-summaries", async (event, payload) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const { userId } = payload ?? {};
     if (!userId) {
@@ -285,6 +316,7 @@ ipcMain.handle("export-session-summary-pdf", async (event, payload = {}) => {
 
 // Documentation handlers
 ipcMain.handle("add-note", async (event, payload = {}) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const { sessionId, userId, content, vitalsSnapshot } = payload ?? {};
     if (!sessionId || !userId || !content?.trim()) {
@@ -309,6 +341,7 @@ ipcMain.handle("add-note", async (event, payload = {}) => {
 });
 
 ipcMain.handle("get-notes", async (event, payload = {}) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const { sessionId } = payload ?? {};
     if (!sessionId) {
@@ -324,6 +357,7 @@ ipcMain.handle("get-notes", async (event, payload = {}) => {
 });
 
 ipcMain.handle("delete-note", async (event, payload = {}) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const { noteId, userId } = payload ?? {};
     if (!noteId) {
@@ -339,6 +373,7 @@ ipcMain.handle("delete-note", async (event, payload = {}) => {
 
 // Import & Export handlers
 ipcMain.handle("show-open-dialog", async (event, options) => {
+  if (!validateSender(event.senderFrame)) return { canceled: true, error: "Unauthorized" };
   try {
     const result = await dialog.showOpenDialog(options);
     return result;
@@ -349,6 +384,7 @@ ipcMain.handle("show-open-dialog", async (event, options) => {
 });
 
 ipcMain.handle("show-save-dialog", async (event, options) => {
+  if (!validateSender(event.senderFrame)) return { canceled: true, error: "Unauthorized" };
   try {
     const result = await dialog.showSaveDialog(options);
     return result;
@@ -359,6 +395,7 @@ ipcMain.handle("show-save-dialog", async (event, options) => {
 });
 
 ipcMain.handle("import-file", async (event, filePath) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const importFilePath = importData(filePath);
     if (!importFilePath) {
@@ -372,6 +409,7 @@ ipcMain.handle("import-file", async (event, filePath) => {
 });
 
 ipcMain.handle("export-data", async (event, payload = {}) => {
+  if (!validateSender(event.senderFrame)) return { success: false, error: "Unauthorized" };
   try {
     const { filePath, scenarioIds } = payload ?? {};
     if (!filePath || !scenarioIds) {
@@ -391,9 +429,40 @@ export function createWindow() {
     height: 800,
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
-      contextIsolation: true,
-      nodeIntegration: false,
+      contextIsolation: true,      // Security: Isolate preload script context
+      nodeIntegration: false,      // Security: Disable Node.js in renderer
+      sandbox: true,               // Security: Enable Chromium sandbox for renderer
+      webSecurity: true,           // Security: Enforce same-origin policy (default)
+      allowRunningInsecureContent: false,  // Security: Block insecure content
+      experimentalFeatures: false, // Security: Disable experimental Chromium features
     },
+  });
+
+  // Security: Restrict navigation to prevent XSS attacks from redirecting to malicious sites
+  // Reference: https://www.electronjs.org/docs/latest/tutorial/security#13-disable-or-limit-navigation
+  win.webContents.on("will-navigate", (event, navigationUrl) => {
+    const parsedUrl = new URL(navigationUrl);
+    
+    // In dev, allow localhost navigation
+    if (isDev && parsedUrl.hostname === "localhost" && parsedUrl.port === "5173") {
+      return;
+    }
+    
+    // In production, only allow file:// protocol
+    if (!isDev && parsedUrl.protocol === "file:") {
+      return;
+    }
+    
+    // Block all other navigation
+    event.preventDefault();
+    console.warn("Blocked navigation to:", navigationUrl);
+  });
+
+  // Security: Prevent new window creation from renderer
+  // Reference: https://www.electronjs.org/docs/latest/tutorial/security#14-disable-or-limit-creation-of-new-windows
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    console.warn("Blocked new window creation for:", url);
+    return { action: "deny" };
   });
 
   if (isDev) {
@@ -402,10 +471,63 @@ export function createWindow() {
   } else {
     win.loadFile(path.join(__dirname, "build/index.html"));
   }
+
+  return win;
 }
 
 // Initialize database and create window when app is ready
 app.whenReady().then(async () => {
+  // Security: Set Content Security Policy (CSP) headers
+  // Reference: https://www.electronjs.org/docs/latest/tutorial/security#7-define-a-content-security-policy
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        "Content-Security-Policy": [
+          isDev
+            ? // Development: Allow localhost for Vite HMR
+              "default-src 'self'; " +
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+              "style-src 'self' 'unsafe-inline'; " +
+              "img-src 'self' data: blob:; " +
+              "font-src 'self' data:; " +
+              "connect-src 'self' ws://localhost:* http://localhost:*"
+            : // Production: Strict CSP
+              "default-src 'self'; " +
+              "script-src 'self'; " +
+              "style-src 'self' 'unsafe-inline'; " +
+              "img-src 'self' data: blob:; " +
+              "font-src 'self' data:; " +
+              "connect-src 'self'"
+        ],
+      },
+    });
+  });
+
+  // Security: Handle permission requests - deny all by default
+  // Reference: https://www.electronjs.org/docs/latest/tutorial/security#5-handle-session-permission-requests-from-remote-content
+  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    // This app doesn't need any special permissions (camera, mic, geolocation, etc.)
+    // Deny all permission requests for security
+    console.warn("Permission request denied:", permission);
+    callback(false);
+  });
+
+  // Security: Verify webview options before creation (if webviews are used)
+  // Reference: https://www.electronjs.org/docs/latest/tutorial/security#12-verify-webview-options-before-creation
+  app.on("web-contents-created", (event, contents) => {
+    contents.on("will-attach-webview", (event, webPreferences, params) => {
+      // Strip away preload scripts if unused
+      delete webPreferences.preload;
+      // Disable Node.js integration
+      webPreferences.nodeIntegration = false;
+      webPreferences.contextIsolation = true;
+      // Block all webviews by default - this app doesn't use them
+      event.preventDefault();
+      console.warn("Blocked webview creation");
+    });
+  });
+
   initDatabase();
 
   // Seed example scenarios in development mode

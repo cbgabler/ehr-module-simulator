@@ -8,6 +8,8 @@ async function loadMainModule({ isPackaged = false } = {}) {
     loadFile: jest.fn(),
     webContents: {
       openDevTools: jest.fn(),
+      on: jest.fn(),
+      setWindowOpenHandler: jest.fn(),
     },
   };
   const mockBrowserWindow = jest.fn(() => mockWindowInstance);
@@ -32,6 +34,17 @@ async function loadMainModule({ isPackaged = false } = {}) {
     dialog: {
       showOpenDialog: jest.fn(),
       showSaveDialog: jest.fn(),
+    },
+    Menu: {
+      setApplicationMenu: jest.fn(),
+    },
+    session: {
+      defaultSession: {
+        webRequest: {
+          onHeadersReceived: jest.fn(),
+        },
+        setPermissionRequestHandler: jest.fn(),
+      },
     },
   }));
 
