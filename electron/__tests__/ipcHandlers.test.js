@@ -532,6 +532,9 @@ describe("quiz IPC handlers", () => {
 
     expect(quizMocks.getUserQuizSubmissions).toHaveBeenCalledWith(3);
     expect(response).toEqual({ success: true, submissions });
+  });
+});
+    
 describe("summary export IPC handler", () => {
   test("export-session-summary-pdf returns util payload", async () => {
     const { mockIpcHandle, summaryExportMocks } =
