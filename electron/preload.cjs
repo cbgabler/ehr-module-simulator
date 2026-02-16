@@ -65,6 +65,46 @@ contextBridge.exposeInMainWorld("api", {
       return { success: false, error: error.message };
     }
   },
+  getAllQuizzes: async () => {
+    try {
+      return await ipcRenderer.invoke("get-all-quizzes");
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
+  getQuiz: async (quizId) => {
+    try {
+      return await ipcRenderer.invoke("get-quiz", quizId);
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
+  createQuiz: async (payload) => {
+    try {
+      return await ipcRenderer.invoke("create-quiz", payload);
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
+  submitQuiz: async (payload) => {
+    try {
+      return await ipcRenderer.invoke("submit-quiz", payload);
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
+  getUserQuizSubmissions: async (userId) => {
+    try {
+      return await ipcRenderer.invoke("get-user-quiz-submissions", { userId });
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
   startSimulation: async ({ scenarioId, userId }) => {
     try {
       return await ipcRenderer.invoke("start-sim", { scenarioId, userId });

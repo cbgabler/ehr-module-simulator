@@ -18,6 +18,15 @@ import {
   duplicateScenario
 } from "./database/models/scenarios.js";
 
+// Quizzes
+import {
+  createQuiz,
+  getAllQuizzes,
+  getQuizById,
+  submitQuiz,
+  getUserQuizSubmissions,
+} from "./database/models/quizzes.js";
+
 // Sessions
 import {
   addSessionNote,
@@ -146,6 +155,67 @@ ipcMain.handle("duplicate-scenario", async (event, scenarioId) => {
     return { success: true, scenarioId: newScenarioId };
   } catch (error) {
     console.error("Error duplicating scenario:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Quiz handlers
+ipcMain.handle("get-all-quizzes", async () => {
+  try {
+    const quizzes = getAllQuizzes();
+    return { success: true, quizzes };
+  } catch (error) {
+    console.error("Error getting quizzes:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("get-quiz", async (event, quizId) => {
+  try {
+    if (!quizId) {
+      throw new Error("quizId is required");
+    }
+    const quiz = getQuizById(quizId);
+    if (!quiz) {
+      return { success: false, error: "Quiz not found" };
+    }
+    return { success: true, quiz };
+  } catch (error) {
+    console.error("Error getting quiz:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("create-quiz", async (event, payload = {}) => {
+  try {
+    const quizId = createQuiz(payload);
+    return { success: true, quizId };
+  } catch (error) {
+    console.error("Error creating quiz:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("submit-quiz", async (event, payload = {}) => {
+  try {
+    const result = submitQuiz(payload);
+    return { success: true, result };
+  } catch (error) {
+    console.error("Error submitting quiz:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("get-user-quiz-submissions", async (event, payload = {}) => {
+  try {
+    const { userId } = payload ?? {};
+    if (!userId) {
+      throw new Error("userId is required");
+    }
+    const submissions = getUserQuizSubmissions(userId);
+    return { success: true, submissions };
+  } catch (error) {
+    console.error("Error getting quiz submissions:", error);
     return { success: false, error: error.message };
   }
 });
