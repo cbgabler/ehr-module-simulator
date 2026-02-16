@@ -21,7 +21,7 @@ function NotesSection({
   return (
     <div className="notes-section">
       <div className="notes-header">
-        <h3>Simulation Notes</h3>
+        <h3>Data Assessment</h3>
       </div>
 
       {noteError && <div className="notes-error">{noteError}</div>}
