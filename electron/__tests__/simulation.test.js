@@ -230,4 +230,26 @@ describe("simulation session manager", () => {
     expect(args.summary).toContain("Actions (1):");
     expect(args.summary).toContain("Paused simulation");
   });
+
+  test("customTabs from scenario are available in session state", () => {
+    const scenario = cloneScenario();
+    scenario.definition.customTabs = [
+      {
+        id: "urineOutput",
+        label: "Urine Output",
+        fields: [
+          { key: "totalOutput", label: "Total Output", value: "450 mL" },
+        ],
+      },
+    ];
+    mockGetScenarioById.mockReturnValueOnce(scenario);
+
+    const { sessionId, state } = startSession(22, 7);
+    expect(state.customTabs).toHaveLength(1);
+    expect(state.customTabs[0].id).toBe("urineOutput");
+    expect(state.customTabs[0].fields[0].value).toBe("450 mL");
+
+    const snapshot = getSessionState(sessionId);
+    expect(snapshot.customTabs).toEqual(state.customTabs);
+  });
 });
