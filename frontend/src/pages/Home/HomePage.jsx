@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Auth/AuthContext.jsx";
+import useKeyboardShortcuts from "../../utils/useKeyboardShortcuts.js";
 import ScenarioGrid from "./components/ScenarioGrid.jsx";
 import ScenarioDetailsModal from "./components/ScenarioDetailsModal.jsx";
 import ImportModal from "./components/ImportModal.jsx";
@@ -144,6 +145,26 @@ function HomePage() {
   const closeExportModal = () => setShowExportModal(false);
   const openCreateScenarioModal = () => setShowCreateScenarioModal(true);
   const closeCreateScenarioModal = () => setShowCreateScenarioModal(false);
+
+  // Keyboard shortcut to close modals with Escape
+  const closeAllModals = useCallback(() => {
+    if (selectedScenario) {
+      closeScenarioDetails();
+    } else if (showImportModal) {
+      closeImportModal();
+    } else if (showExportModal) {
+      closeExportModal();
+    } else if (showCreateScenarioModal) {
+      closeCreateScenarioModal();
+    }
+  }, [selectedScenario, showImportModal, showExportModal, showCreateScenarioModal]);
+
+  const hasOpenModal = selectedScenario || showImportModal || showExportModal || showCreateScenarioModal;
+
+  useKeyboardShortcuts(
+    useMemo(() => ({ Escape: closeAllModals }), [closeAllModals]),
+    { enabled: hasOpenModal }
+  );
 
   const loadSessionSummaries = useCallback(async () => {
     const parsedUserId = Number.parseInt(user?.id, 10);
