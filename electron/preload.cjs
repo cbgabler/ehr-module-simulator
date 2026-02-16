@@ -194,6 +194,14 @@ contextBridge.exposeInMainWorld("api", {
       return { success: false, error: error.message };
     }
   },
+  exportSessionSummaryPdf: async (payload) => {
+    try {
+      return await ipcRenderer.invoke("export-session-summary-pdf", payload);
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
 });
 
 console.log("API exposed to window.api");

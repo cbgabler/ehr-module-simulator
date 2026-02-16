@@ -1124,6 +1124,54 @@
   font-size: 0.875rem;
 }
 
+.session-summary-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.session-summary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ehr-spacing-sm);
+  padding: var(--ehr-spacing-md) var(--ehr-spacing-lg);
+  border-top: 1px solid var(--ehr-border-light);
+  background-color: var(--ehr-bg-primary);
+}
+
+.session-summary-export {
+  border: none;
+  border-radius: var(--ehr-radius-md);
+  background-color: var(--ehr-primary);
+  color: var(--ehr-text-inverse);
+  padding: var(--ehr-spacing-xs) var(--ehr-spacing-lg);
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.session-summary-export:hover:not(:disabled) {
+  background-color: var(--ehr-primary-dark);
+}
+
+.session-summary-export:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.summary-export-status {
+  font-size: 0.8125rem;
+  color: var(--ehr-text-secondary);
+}
+
+.summary-export-status.success {
+  color: var(--ehr-success);
+}
+
+.summary-export-status.error {
+  color: var(--ehr-error);
+}
+
 .start-scenario-controls {
   flex: 1;
   display: flex;

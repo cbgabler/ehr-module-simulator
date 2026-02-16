@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import path from "path";
 import { fileURLToPath } from "url";
 import { initDatabase } from "./database/database.js";
+import { exportSessionSummaryPdf } from "./utils/summaryExport.js";
 
 // Users
 import { 
@@ -49,6 +50,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const isDev = !app.isPackaged; // for dev vs prod, should be changed later
+
 
 // IPC handlers
 ipcMain.handle("register-user", async (event, payload = {}) => {
@@ -268,6 +270,15 @@ ipcMain.handle("get-session-summaries", async (event, payload) => {
     return { success: true, summaries };
   } catch (error) {
     console.error("Error fetching session summaries:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("export-session-summary-pdf", async (event, payload = {}) => {
+  try {
+    return await exportSessionSummaryPdf(payload ?? {});
+  } catch (error) {
+    console.error("Error exporting summary PDF:", error);
     return { success: false, error: error.message };
   }
 });

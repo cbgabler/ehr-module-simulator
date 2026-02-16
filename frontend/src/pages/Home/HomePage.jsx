@@ -8,6 +8,7 @@ import ImportModal from "./components/ImportModal.jsx";
 import ExportModal from "./components/ExportModal.jsx";
 import CreateScenarioModal from "./components/CreateScenarioModal.jsx";
 import ScenarioFilters from "./components/ScenarioFilters.jsx";
+import { buildSummaryFileName } from "../../utils/summaryExport.js";
 import "./HomePage.css";
 
 function HomePage() {
@@ -30,6 +31,8 @@ function HomePage() {
   const [showCreateScenarioModal, setShowCreateScenarioModal] = useState(false);
   const [deletingScenarioId, setDeletingScenarioId] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
+  const [summaryExportingId, setSummaryExportingId] = useState(null);
+  const [summaryExportStatus, setSummaryExportStatus] = useState(null);
   const [duplicatingScenarioId, setDuplicatingScenarioId] = useState(null);
   const [duplicateError, setDuplicateError] = useState(null);
 
@@ -232,6 +235,64 @@ function HomePage() {
       return false;
     } finally {
       setIsStarting(false);
+    }
+  };
+
+  const handleExportSummary = async (summary) => {
+    if (!summary) {
+      return;
+    }
+    if (!window.api?.exportSessionSummaryPdf) {
+      setSummaryExportStatus({
+        summaryId: summary.id,
+        isError: true,
+        message: "Export API not available.",
+      });
+      return;
+    }
+
+    setSummaryExportingId(summary.id);
+    setSummaryExportStatus(null);
+    try {
+      const fileName = buildSummaryFileName({
+        scenarioName: summary.scenarioName,
+        sessionId: summary.sessionId,
+      });
+      const response = await window.api.exportSessionSummaryPdf({
+        summaryText: summary.summary,
+        scenarioName: summary.scenarioName,
+        createdAt: summary.createdAt,
+        sessionId: summary.sessionId,
+        userName: user?.username,
+        fileName,
+      });
+      if (response?.canceled) {
+        setSummaryExportStatus({
+          summaryId: summary.id,
+          isError: false,
+          message: "Export canceled.",
+        });
+      } else if (response?.success) {
+        setSummaryExportStatus({
+          summaryId: summary.id,
+          isError: false,
+          message: `Saved PDF to ${response.filePath}`,
+        });
+      } else {
+        setSummaryExportStatus({
+          summaryId: summary.id,
+          isError: true,
+          message: response?.error || "Unable to export summary.",
+        });
+      }
+    } catch (err) {
+      setSummaryExportStatus({
+        summaryId: summary.id,
+        isError: true,
+        message: err.message || "Unable to export summary.",
+      });
+    } finally {
+      setSummaryExportingId(null);
     }
   };
 
@@ -469,9 +530,32 @@ function HomePage() {
                       </span>
                     </button>
                     {expandedSummaryId === summary.id && (
-                      <pre className="session-summary-content">
-                        {summary.summary}
-                      </pre>
+                      <div className="session-summary-body">
+                        <pre className="session-summary-content">
+                          {summary.summary}
+                        </pre>
+                        <div className="session-summary-actions">
+                          <button
+                            type="button"
+                            className="session-summary-export"
+                            onClick={() => handleExportSummary(summary)}
+                            disabled={summaryExportingId === summary.id}
+                          >
+                            {summaryExportingId === summary.id
+                              ? "Exporting..."
+                              : "Download PDF"}
+                          </button>
+                          {summaryExportStatus?.summaryId === summary.id && (
+                            <span
+                              className={`summary-export-status ${
+                                summaryExportStatus.isError ? "error" : "success"
+                              }`}
+                            >
+                              {summaryExportStatus.message}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </article>
                 ))}
