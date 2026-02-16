@@ -49,6 +49,10 @@ async function loadMainWithScenarioMocks() {
     getUserSessionSummaries: jest.fn(),
   };
 
+  const summaryExportMocks = {
+    exportSessionSummaryPdf: jest.fn(),
+  };
+
   await jest.unstable_mockModule("electron", () => ({
     app: mockApp,
     BrowserWindow: mockBrowserWindow,
@@ -121,6 +125,8 @@ async function loadMainWithScenarioMocks() {
     exportData: jest.fn(),
   }));
 
+  await jest.unstable_mockModule("../utils/summaryExport.js", () => summaryExportMocks);
+
   const electron = await import("electron");
   await import("../main.js");
 
@@ -132,6 +138,7 @@ async function loadMainWithScenarioMocks() {
     sessionLogMocks,
     mockIpcHandle,
     simulationMocks,
+    summaryExportMocks,
   };
 }
 
@@ -461,5 +468,38 @@ describe("documentation IPC handlers", () => {
       userId: 3,
     });
     expect(result).toEqual({ success: true, note });
+  });
+});
+
+describe("summary export IPC handler", () => {
+  test("export-session-summary-pdf returns util payload", async () => {
+    const { mockIpcHandle, summaryExportMocks } =
+      await loadMainWithScenarioMocks();
+    summaryExportMocks.exportSessionSummaryPdf.mockResolvedValueOnce({
+      success: true,
+      filePath: "/tmp/summary.pdf",
+    });
+
+    const handler = findHandler(mockIpcHandle, "export-session-summary-pdf");
+    const payload = { summaryText: "Summary" };
+    const result = await handler(null, payload);
+
+    expect(summaryExportMocks.exportSessionSummaryPdf).toHaveBeenCalledWith(
+      payload
+    );
+    expect(result).toEqual({ success: true, filePath: "/tmp/summary.pdf" });
+  });
+
+  test("export-session-summary-pdf reports errors", async () => {
+    const { mockIpcHandle, summaryExportMocks } =
+      await loadMainWithScenarioMocks();
+    summaryExportMocks.exportSessionSummaryPdf.mockImplementation(() => {
+      throw new Error("export failed");
+    });
+
+    const handler = findHandler(mockIpcHandle, "export-session-summary-pdf");
+    const result = await handler(null, { summaryText: "Summary" });
+
+    expect(result).toEqual({ success: false, error: "export failed" });
   });
 });
