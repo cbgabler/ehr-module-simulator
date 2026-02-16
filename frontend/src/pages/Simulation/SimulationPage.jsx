@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../Auth/AuthContext.jsx";
+import useKeyboardShortcuts from "../../utils/useKeyboardShortcuts.js";
 import PatientInfoSidebar from "./components/PatientInfoSidebar.jsx";
 import VitalSignsTab from "./components/VitalSignsTab.jsx";
 import ActiveMedicationsTab from "./components/ActiveMedicationsTab.jsx";
@@ -41,6 +42,7 @@ function SimulationPage() {
   const [sessionSummary, setSessionSummary] = useState(null);
 
   const pollingRef = useRef(null);
+  const notesTextareaRef = useRef(null);
 
   const stopPolling = useCallback(() => {
     if (pollingRef.current) {
@@ -309,6 +311,35 @@ function SimulationPage() {
     navigate("/home");
   };
 
+  // Keyboard shortcuts
+  const shortcuts = useMemo(
+    () => ({
+      Space: () => {
+        const ended = sessionState?.status === "ended";
+        if (ended) return;
+        if (sessionState?.status === "running") {
+          handlePause();
+        } else if (sessionState?.status === "paused") {
+          handleResume();
+        }
+      },
+      Escape: () => {
+        const ended = sessionState?.status === "ended";
+        if (!ended && window.confirm("End the simulation?")) {
+          handleEnd();
+        }
+      },
+      "1": () => setActiveTab("vitals"),
+      "2": () => setActiveTab("medications"),
+      "3": () => setActiveTab("orders"),
+      "4": () => setActiveTab("medAdmin"),
+      n: () => notesTextareaRef.current?.focus(),
+    }),
+    [sessionState?.status]
+  );
+
+  useKeyboardShortcuts(shortcuts, { ignoreInputs: true, enabled: !loading && !error });
+
   if (loading) {
     return (
       <div className="simulation-page">
@@ -347,14 +378,14 @@ function SimulationPage() {
         <main className="simulation-main">
           {/* tab navigation */}
           <nav className="simulation-tabs">
-            {TABS.map((tab) => (
+            {TABS.map((tab, index) => (
               <button
                 key={tab.id}
                 type="button"
                 className={`simulation-tab ${activeTab === tab.id ? "active" : ""}`}
                 onClick={() => setActiveTab(tab.id)}
               >
-                {tab.label}
+                {tab.label} <span className="keyboard-hint">[{index + 1}]</span>
               </button>
             ))}
           </nav>
@@ -419,6 +450,7 @@ function SimulationPage() {
             noteError={noteError}
             noteDeletingId={noteDeletingId}
             disabled={isEnded}
+            textareaRef={notesTextareaRef}
           />
 
           {/* session summary (when ended) */}
@@ -450,17 +482,17 @@ function SimulationPage() {
         <div className="control-actions">
           {!isEnded && sessionState?.status === "running" && (
             <button type="button" className="control-btn warning" onClick={handlePause}>
-              Pause
+              Pause <span className="keyboard-hint">[Space]</span>
             </button>
           )}
           {!isEnded && sessionState?.status === "paused" && (
             <button type="button" className="control-btn success" onClick={handleResume}>
-              Resume
+              Resume <span className="keyboard-hint">[Space]</span>
             </button>
           )}
           {!isEnded && (
             <button type="button" className="control-btn danger" onClick={handleEnd}>
-              End Simulation
+              End Simulation <span className="keyboard-hint">[Esc]</span>
             </button>
           )}
         </div>
