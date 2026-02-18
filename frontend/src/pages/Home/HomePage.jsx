@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../Auth/AuthContext.jsx";
+import useKeyboardShortcuts from "../../utils/useKeyboardShortcuts.js";
 import ScenarioGrid from "./components/ScenarioGrid.jsx";
 import ScenarioDetailsModal from "./components/ScenarioDetailsModal.jsx";
 import ImportModal from "./components/ImportModal.jsx";
 import ExportModal from "./components/ExportModal.jsx";
 import CreateScenarioModal from "./components/CreateScenarioModal.jsx";
 import ScenarioFilters from "./components/ScenarioFilters.jsx";
+import { buildSummaryFileName } from "../../utils/summaryExport.js";
 import "./HomePage.css";
 
 function HomePage() {
@@ -29,6 +31,10 @@ function HomePage() {
   const [showCreateScenarioModal, setShowCreateScenarioModal] = useState(false);
   const [deletingScenarioId, setDeletingScenarioId] = useState(null);
   const [deleteError, setDeleteError] = useState(null);
+  const [summaryExportingId, setSummaryExportingId] = useState(null);
+  const [summaryExportStatus, setSummaryExportStatus] = useState(null);
+  const [duplicatingScenarioId, setDuplicatingScenarioId] = useState(null);
+  const [duplicateError, setDuplicateError] = useState(null);
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -107,6 +113,30 @@ function HomePage() {
     }
   };
 
+  const handleDuplicateScenario = async (scenarioId) => {
+    setDuplicatingScenarioId(scenarioId);
+    setDuplicateError(null);
+    try {
+      if (!window.api?.duplicateScenario) {
+        setDuplicateError("Electron API not available.");
+        setDuplicatingScenarioId(null);
+        return;
+      }
+      const result = await window.api.duplicateScenario(scenarioId);
+      if (result.success) {
+        // Close modal and refresh scenarios list
+        setSelectedScenario(null);
+        await loadScenarios();
+      } else {
+        setDuplicateError(result.error || "Failed to duplicate scenario");
+      }
+    } catch (err) {
+      setDuplicateError(err.message || "An unexpected error occurred");
+    } finally {
+      setDuplicatingScenarioId(null);
+    }
+  };
+
   const closeScenarioDetails = () => {
     setSelectedScenario(null);
     setStartError(null);
@@ -118,6 +148,26 @@ function HomePage() {
   const closeExportModal = () => setShowExportModal(false);
   const openCreateScenarioModal = () => setShowCreateScenarioModal(true);
   const closeCreateScenarioModal = () => setShowCreateScenarioModal(false);
+
+  // Keyboard shortcut to close modals with Escape
+  const closeAllModals = useCallback(() => {
+    if (selectedScenario) {
+      closeScenarioDetails();
+    } else if (showImportModal) {
+      closeImportModal();
+    } else if (showExportModal) {
+      closeExportModal();
+    } else if (showCreateScenarioModal) {
+      closeCreateScenarioModal();
+    }
+  }, [selectedScenario, showImportModal, showExportModal, showCreateScenarioModal]);
+
+  const hasOpenModal = selectedScenario || showImportModal || showExportModal || showCreateScenarioModal;
+
+  useKeyboardShortcuts(
+    useMemo(() => ({ Escape: closeAllModals }), [closeAllModals]),
+    { enabled: hasOpenModal }
+  );
 
   const loadSessionSummaries = useCallback(async () => {
     const parsedUserId = Number.parseInt(user?.id, 10);
@@ -185,6 +235,64 @@ function HomePage() {
       return false;
     } finally {
       setIsStarting(false);
+    }
+  };
+
+  const handleExportSummary = async (summary) => {
+    if (!summary) {
+      return;
+    }
+    if (!window.api?.exportSessionSummaryPdf) {
+      setSummaryExportStatus({
+        summaryId: summary.id,
+        isError: true,
+        message: "Export API not available.",
+      });
+      return;
+    }
+
+    setSummaryExportingId(summary.id);
+    setSummaryExportStatus(null);
+    try {
+      const fileName = buildSummaryFileName({
+        scenarioName: summary.scenarioName,
+        sessionId: summary.sessionId,
+      });
+      const response = await window.api.exportSessionSummaryPdf({
+        summaryText: summary.summary,
+        scenarioName: summary.scenarioName,
+        createdAt: summary.createdAt,
+        sessionId: summary.sessionId,
+        userName: user?.username,
+        fileName,
+      });
+      if (response?.canceled) {
+        setSummaryExportStatus({
+          summaryId: summary.id,
+          isError: false,
+          message: "Export canceled.",
+        });
+      } else if (response?.success) {
+        setSummaryExportStatus({
+          summaryId: summary.id,
+          isError: false,
+          message: `Saved PDF to ${response.filePath}`,
+        });
+      } else {
+        setSummaryExportStatus({
+          summaryId: summary.id,
+          isError: true,
+          message: response?.error || "Unable to export summary.",
+        });
+      }
+    } catch (err) {
+      setSummaryExportStatus({
+        summaryId: summary.id,
+        isError: true,
+        message: err.message || "Unable to export summary.",
+      });
+    } finally {
+      setSummaryExportingId(null);
     }
   };
 
@@ -354,11 +462,14 @@ function HomePage() {
           onClose={closeScenarioDetails}
           onStartScenario={handleStartScenario}
           onDeleteScenario={handleDeleteScenario}
+          onDuplicateScenario={handleDuplicateScenario}
           isStarting={isStarting}
           startError={startError}
           currentUser={user}
           isDeleting={deletingScenarioId === selectedScenario.id}
           deleteError={deleteError}
+          isDuplicating={duplicatingScenarioId === selectedScenario.id}
+          duplicateError={duplicateError}
         />
       )}
 
@@ -419,9 +530,32 @@ function HomePage() {
                       </span>
                     </button>
                     {expandedSummaryId === summary.id && (
-                      <pre className="session-summary-content">
-                        {summary.summary}
-                      </pre>
+                      <div className="session-summary-body">
+                        <pre className="session-summary-content">
+                          {summary.summary}
+                        </pre>
+                        <div className="session-summary-actions">
+                          <button
+                            type="button"
+                            className="session-summary-export"
+                            onClick={() => handleExportSummary(summary)}
+                            disabled={summaryExportingId === summary.id}
+                          >
+                            {summaryExportingId === summary.id
+                              ? "Exporting..."
+                              : "Download PDF"}
+                          </button>
+                          {summaryExportStatus?.summaryId === summary.id && (
+                            <span
+                              className={`summary-export-status ${
+                                summaryExportStatus.isError ? "error" : "success"
+                              }`}
+                            >
+                              {summaryExportStatus.message}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     )}
                   </article>
                 ))}

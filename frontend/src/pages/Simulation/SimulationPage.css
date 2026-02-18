@@ -195,12 +195,54 @@
   font-size: 1rem;
 }
 
+.session-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--ehr-spacing-sm);
+}
+
+.summary-export-btn {
+  border: none;
+  border-radius: var(--ehr-radius-md);
+  background-color: var(--ehr-primary);
+  color: var(--ehr-text-inverse);
+  padding: var(--ehr-spacing-xs) var(--ehr-spacing-lg);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.summary-export-btn:hover:not(:disabled) {
+  background-color: var(--ehr-primary-dark);
+}
+
+.summary-export-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .summary-content {
   white-space: pre-wrap;
   font-family: var(--ehr-font-mono);
   font-size: 0.875rem;
   color: var(--ehr-text-secondary);
   line-height: 1.6;
+}
+
+.summary-export-status {
+  margin-top: var(--ehr-spacing-sm);
+  font-size: 0.8125rem;
+  color: var(--ehr-text-secondary);
+}
+
+.summary-export-status.success {
+  color: var(--ehr-success);
+}
+
+.summary-export-status.error {
+  color: var(--ehr-error);
 }
 
 /* error banner */
@@ -941,4 +983,32 @@
     flex-direction: column;
     gap: var(--ehr-spacing-xs);
   }
+}
+
+/* Keyboard shortcut hints */
+.keyboard-hint {
+  display: inline-block;
+  margin-left: var(--ehr-spacing-xs);
+  padding: 0 0.35em;
+  font-size: 0.7em;
+  font-weight: 500;
+  font-family: var(--ehr-font-mono);
+  color: inherit;
+  opacity: 0.6;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+.control-btn .keyboard-hint {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.simulation-tab .keyboard-hint {
+  opacity: 0.5;
+}
+
+.simulation-tab.active .keyboard-hint {
+  background-color: rgba(255, 255, 255, 0.2);
+  opacity: 0.7;
 }

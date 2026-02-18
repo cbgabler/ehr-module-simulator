@@ -8,6 +8,7 @@ function NotesSection({
   noteError,
   noteDeletingId,
   disabled,
+  textareaRef,
 }) {
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return "";
@@ -28,6 +29,7 @@ function NotesSection({
 
       <form className="notes-form" onSubmit={onAddNote}>
         <textarea
+          ref={textareaRef}
           className="notes-input"
           placeholder="Add a note about your observations..."
           value={noteContent}

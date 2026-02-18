@@ -3,11 +3,14 @@ function ScenarioDetailsModal({
   onClose,
   onStartScenario,
   onDeleteScenario,
+  onDuplicateScenario,
   isStarting,
   startError,
   currentUser,
   isDeleting,
   deleteError,
+  isDuplicating,
+  duplicateError,
 }) {
   const isInstructor = currentUser?.role === "instructor" || currentUser?.role === "admin";
   const definition = scenario.definition || {};
@@ -218,19 +221,33 @@ function ScenarioDetailsModal({
           </div>
           <div className="modal-actions">
             {isInstructor && (
-              <button
-                className="modal-button"
-                type="button"
-                onClick={() => onDeleteScenario?.(scenario.id)}
-                disabled={isDeleting}
-                style={{
-                  backgroundColor: "var(--ehr-error)",
-                  color: "var(--ehr-text-inverse)",
-                  marginRight: "auto",
-                }}
-              >
-                {isDeleting ? "Deleting..." : "Delete Scenario"}
-              </button>
+              <>
+                <button
+                  className="modal-button"
+                  type="button"
+                  onClick={() => onDuplicateScenario?.(scenario.id)}
+                  disabled={isDuplicating || isDeleting}
+                  style={{
+                    backgroundColor: "var(--ehr-info)",
+                    color: "var(--ehr-text-inverse)",
+                    marginRight: "auto",
+                  }}
+                >
+                  {isDuplicating ? "Duplicating..." : "Duplicate Scenario"}
+                </button>
+                <button
+                  className="modal-button"
+                  type="button"
+                  onClick={() => onDeleteScenario?.(scenario.id)}
+                  disabled={isDeleting || isDuplicating}
+                  style={{
+                    backgroundColor: "var(--ehr-error)",
+                    color: "var(--ehr-text-inverse)",
+                  }}
+                >
+                  {isDeleting ? "Deleting..." : "Delete Scenario"}
+                </button>
+              </>
             )}
             <button className="modal-button secondary" onClick={onClose} type="button">
               Close
@@ -239,7 +256,7 @@ function ScenarioDetailsModal({
               className="modal-button primary"
               type="button"
               onClick={() => onStartScenario?.(scenario)}
-              disabled={isStarting || isDeleting}
+              disabled={isStarting || isDeleting || isDuplicating}
             >
               {isStarting ? "Starting..." : "Start Scenario"}
             </button>
@@ -255,6 +272,19 @@ function ScenarioDetailsModal({
               }}
             >
               {deleteError}
+            </div>
+          )}
+          {duplicateError && (
+            <div
+              style={{
+                padding: "var(--ehr-spacing-md)",
+                borderRadius: "var(--ehr-radius-md)",
+                backgroundColor: "rgba(239, 68, 68, 0.1)",
+                color: "var(--ehr-error)",
+                marginTop: "var(--ehr-spacing-md)",
+              }}
+            >
+              {duplicateError}
             </div>
           )}
         </div>

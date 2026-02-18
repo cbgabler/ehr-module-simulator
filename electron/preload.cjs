@@ -57,6 +57,14 @@ contextBridge.exposeInMainWorld("api", {
       return { success: false, error: error.message };
     }
   },
+  duplicateScenario: async (scenarioId) => {
+    try {
+      return await ipcRenderer.invoke("duplicate-scenario", scenarioId);
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
   startSimulation: async ({ scenarioId, userId }) => {
     try {
       return await ipcRenderer.invoke("start-sim", { scenarioId, userId });
@@ -181,6 +189,14 @@ contextBridge.exposeInMainWorld("api", {
   exportData: async ({ filePath, scenarioIds }) => {
     try {
       return await ipcRenderer.invoke("export-data", { filePath, scenarioIds });
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
+  exportSessionSummaryPdf: async (payload) => {
+    try {
+      return await ipcRenderer.invoke("export-session-summary-pdf", payload);
     } catch (error) {
       console.error("IPC error:", error);
       return { success: false, error: error.message };
