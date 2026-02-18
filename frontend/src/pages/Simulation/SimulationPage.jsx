@@ -536,21 +536,21 @@ function SimulationPage() {
                   />
                 )
             )}
+            {activeTab === "dataAssessment" && (
+              <NotesSection
+                notes={notes}
+                noteContent={noteContent}
+                onNoteContentChange={setNoteContent}
+                onAddNote={handleAddNote}
+                onDeleteNote={handleDeleteNote}
+                noteSubmitting={noteSubmitting}
+                noteError={noteError}
+                noteDeletingId={noteDeletingId}
+                disabled={isEnded}
+                textareaRef={notesTextareaRef}
+              />
+            )}
           </div>
-
-          {/* notes section */}
-          <NotesSection
-            notes={notes}
-            noteContent={noteContent}
-            onNoteContentChange={setNoteContent}
-            onAddNote={handleAddNote}
-            onDeleteNote={handleDeleteNote}
-            noteSubmitting={noteSubmitting}
-            noteError={noteError}
-            noteDeletingId={noteDeletingId}
-            disabled={isEnded}
-            textareaRef={notesTextareaRef}
-          />
 
           {/* session summary (when ended) */}
           {isEnded && sessionSummary && (
