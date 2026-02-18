@@ -1,4 +1,5 @@
 import { getDb } from "../database.js";
+import { getRoleById } from "./users.js";
 
 const VALID_TYPES = new Set(["true_false", "multiple_choice"]);
 
@@ -107,13 +108,16 @@ export function getAllQuizzes() {
     .all();
 }
 
-export function getQuizById(quizId) {
+export function getQuizById(quizId, userId) {
   const db = getDb();
   const quiz = db.prepare("SELECT * FROM quizzes WHERE id = ?").get(quizId);
   if (!quiz) {
     return null;
   }
 
+  const userPerms = getRoleById(userId);
+
+  // Exposed questions for instructors/admins
   const questions = db
     .prepare(
       "SELECT * FROM quiz_questions WHERE quizId = ? ORDER BY orderIndex"
@@ -123,6 +127,28 @@ export function getQuizById(quizId) {
       ...question,
       options: question.options ? JSON.parse(question.options) : [],
     }));
+
+  // Secure question dict for students
+  const secureQuestions = db
+  .prepare(
+    "SELECT * FROM quiz_questions WHERE quizId = ? ORDER BY orderIndex"
+  )
+  .all(quizId)
+  .map((question) => ({
+    ...question,
+    options: question.options ? JSON.parse(question.options) : [],
+  }));
+  
+  // Check roles to see if we should be allowed to look at correctIndex
+  if (userPerms.role == 'admin' || userPerms.role == 'instructor') {
+    return { ...quiz, questions };
+  }
+
+  /* 
+  This should only be used for instructors or admins
+  If we use select * the correct index will be exposed to the frontend
+  Check roles first
+  */
 
   return { ...quiz, questions };
 }
