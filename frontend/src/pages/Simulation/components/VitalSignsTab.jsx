@@ -4,8 +4,12 @@ function VitalSignsTab({ vitals }) {
   }
 
   const formatBloodPressure = (bp) => {
-    if (!bp) return null;
-    return `${bp.systolic || "—"}/${bp.diastolic || "—"}`;
+    if (!bp) {
+      return null;
+    }
+    const systolic = bp.systolic != null ? Math.round(bp.systolic) : "—";
+    const diastolic = bp.diastolic != null ? Math.round(bp.diastolic) : "—";
+    return `${systolic}/${diastolic}`;
   };
 
   const getVitalStatus = (label, value) => {
@@ -57,7 +61,7 @@ function VitalSignsTab({ vitals }) {
       <div key="hr" className={`vital-card ${status}`}>
         <div className="vital-label">Heart Rate</div>
         <div className="vital-value">
-          {Number.parseFloat(vitals.heartRate).toFixed(2)}
+          {Math.round(vitals.heartRate)}
           <span className="vital-unit"> bpm</span>
         </div>
       </div>

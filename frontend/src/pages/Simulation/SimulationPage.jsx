@@ -7,17 +7,19 @@ import VitalSignsTab from "./components/VitalSignsTab.jsx";
 import ActiveMedicationsTab from "./components/ActiveMedicationsTab.jsx";
 import ProviderOrdersTab from "./components/ProviderOrdersTab.jsx";
 import MedicationAdminTab from "./components/MedicationAdminTab.jsx";
+import CustomTab from "./components/CustomTab.jsx";
 import NotesSection from "./components/NotesSection.jsx";
 import { buildSummaryFileName } from "../../utils/summaryExport.js";
 import "./SimulationPage.css";
 
 const POLL_INTERVAL_MS = 2500;
 
-const TABS = [
+const STATIC_TABS = [
   { id: "vitals", label: "Vital Signs" },
   { id: "medications", label: "Active Medications" },
   { id: "orders", label: "Provider Orders" },
   { id: "medAdmin", label: "Medication Administration" },
+  { id: "dataAssessment", label: "Data Assessment" },
 ];
 
 function SimulationPage() {
@@ -43,6 +45,9 @@ function SimulationPage() {
   const [sessionSummary, setSessionSummary] = useState(null);
   const [summaryExporting, setSummaryExporting] = useState(false);
   const [summaryExportStatus, setSummaryExportStatus] = useState(null);
+
+  // custom tab input values  { [tabId]: { [fieldKey]: value } }
+  const [customTabValues, setCustomTabValues] = useState({});
 
   const pollingRef = useRef(null);
   const notesTextareaRef = useRef(null);
@@ -364,7 +369,33 @@ function SimulationPage() {
       setSummaryExporting(false);
     }
   };
-  
+
+  const handleCustomTabChange = useCallback((tabId, fieldKey, value) => {
+    setCustomTabValues((prev) => ({
+      ...prev,
+      [tabId]: {
+        ...(prev[tabId] || {}),
+        [fieldKey]: value,
+      },
+    }));
+  }, []);
+
+  const customTabs = useMemo(
+    () =>
+      (sessionState?.customTabs || []).map((ct) => ({
+        id: ct.id,
+        label: ct.label,
+        isCustom: true,
+        data: ct,
+      })),
+    [sessionState?.customTabs]
+  );
+
+  const allTabs = useMemo(
+    () => [...STATIC_TABS, ...customTabs],
+    [customTabs]
+  );
+
   // Keyboard shortcuts
   const shortcuts = useMemo(
     () => ({
@@ -383,13 +414,15 @@ function SimulationPage() {
           handleEnd();
         }
       },
-      "1": () => setActiveTab("vitals"),
-      "2": () => setActiveTab("medications"),
-      "3": () => setActiveTab("orders"),
-      "4": () => setActiveTab("medAdmin"),
+      ...Object.fromEntries(
+        allTabs.map((tab, i) => [
+          String(i + 1),
+          () => setActiveTab(tab.id),
+        ])
+      ),
       n: () => notesTextareaRef.current?.focus(),
     }),
-    [sessionState?.status]
+    [sessionState?.status, allTabs]
   );
 
   useKeyboardShortcuts(shortcuts, { ignoreInputs: true, enabled: !loading && !error });
@@ -432,7 +465,7 @@ function SimulationPage() {
         <main className="simulation-main">
           {/* tab navigation */}
           <nav className="simulation-tabs">
-            {TABS.map((tab, index) => (
+            {allTabs.map((tab, index) => (
               <button
                 key={tab.id}
                 type="button"
@@ -491,21 +524,33 @@ function SimulationPage() {
                 disabled={isEnded}
               />
             )}
+            {customTabs.map(
+              (ct) =>
+                activeTab === ct.id && (
+                  <CustomTab
+                    key={ct.id}
+                    tab={ct.data}
+                    values={customTabValues[ct.id]}
+                    onChange={handleCustomTabChange}
+                    disabled={isEnded}
+                  />
+                )
+            )}
+            {activeTab === "dataAssessment" && (
+              <NotesSection
+                notes={notes}
+                noteContent={noteContent}
+                onNoteContentChange={setNoteContent}
+                onAddNote={handleAddNote}
+                onDeleteNote={handleDeleteNote}
+                noteSubmitting={noteSubmitting}
+                noteError={noteError}
+                noteDeletingId={noteDeletingId}
+                disabled={isEnded}
+                textareaRef={notesTextareaRef}
+              />
+            )}
           </div>
-
-          {/* notes section */}
-          <NotesSection
-            notes={notes}
-            noteContent={noteContent}
-            onNoteContentChange={setNoteContent}
-            onAddNote={handleAddNote}
-            onDeleteNote={handleDeleteNote}
-            noteSubmitting={noteSubmitting}
-            noteError={noteError}
-            noteDeletingId={noteDeletingId}
-            disabled={isEnded}
-            textareaRef={notesTextareaRef}
-          />
 
           {/* session summary (when ended) */}
           {isEnded && sessionSummary && (
@@ -524,9 +569,8 @@ function SimulationPage() {
               <pre className="summary-content">{sessionSummary.summary}</pre>
               {summaryExportStatus && (
                 <div
-                  className={`summary-export-status ${
-                    summaryExportStatus.isError ? "error" : "success"
-                  }`}
+                  className={`summary-export-status ${summaryExportStatus.isError ? "error" : "success"
+                    }`}
                 >
                   {summaryExportStatus.message}
                 </div>
