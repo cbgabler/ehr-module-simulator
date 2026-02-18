@@ -766,7 +766,88 @@
   padding: var(--ehr-spacing-xl);
 }
 
-/* notes section (Data Assessment tab) */
+/* custom tab (blank box / specialty sections) */
+.custom-tab {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--ehr-spacing-md);
+}
+
+.custom-tab-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ehr-spacing-xs);
+}
+
+.custom-tab-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ehr-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.custom-tab-unit {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: var(--ehr-spacing-xs);
+  color: var(--ehr-text-tertiary);
+}
+
+.custom-tab-input {
+  padding: var(--ehr-spacing-sm) var(--ehr-spacing-md);
+  border: 2px solid var(--ehr-border);
+  border-radius: var(--ehr-radius-md);
+  font-size: 1rem;
+  font-family: var(--ehr-font-mono);
+  color: var(--ehr-text-primary);
+  background-color: var(--ehr-bg-primary);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.custom-tab-input:focus {
+  outline: none;
+  border-color: var(--ehr-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.custom-tab-input:disabled {
+  background-color: var(--ehr-bg-tertiary);
+  cursor: not-allowed;
+}
+
+.custom-tab-textarea {
+  padding: var(--ehr-spacing-sm) var(--ehr-spacing-md);
+  border: 2px solid var(--ehr-border);
+  border-radius: var(--ehr-radius-md);
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--ehr-text-primary);
+  background-color: var(--ehr-bg-primary);
+  resize: vertical;
+  min-height: 60px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.custom-tab-textarea:focus {
+  outline: none;
+  border-color: var(--ehr-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.custom-tab-textarea:disabled {
+  background-color: var(--ehr-bg-tertiary);
+  cursor: not-allowed;
+}
+
+.custom-tab-empty {
+  text-align: center;
+  color: var(--ehr-text-tertiary);
+  padding: var(--ehr-spacing-xl);
+}
+
+/* notes section */
 .notes-section {
   padding: 0;
 }
