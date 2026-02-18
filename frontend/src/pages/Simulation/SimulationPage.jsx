@@ -19,6 +19,7 @@ const STATIC_TABS = [
   { id: "medications", label: "Active Medications" },
   { id: "orders", label: "Provider Orders" },
   { id: "medAdmin", label: "Medication Administration" },
+  { id: "dataAssessment", label: "Data Assessment" },
 ];
 
 function SimulationPage() {
@@ -535,21 +536,21 @@ function SimulationPage() {
                   />
                 )
             )}
+            {activeTab === "dataAssessment" && (
+              <NotesSection
+                notes={notes}
+                noteContent={noteContent}
+                onNoteContentChange={setNoteContent}
+                onAddNote={handleAddNote}
+                onDeleteNote={handleDeleteNote}
+                noteSubmitting={noteSubmitting}
+                noteError={noteError}
+                noteDeletingId={noteDeletingId}
+                disabled={isEnded}
+                textareaRef={notesTextareaRef}
+              />
+            )}
           </div>
-
-          {/* notes section */}
-          <NotesSection
-            notes={notes}
-            noteContent={noteContent}
-            onNoteContentChange={setNoteContent}
-            onAddNote={handleAddNote}
-            onDeleteNote={handleDeleteNote}
-            noteSubmitting={noteSubmitting}
-            noteError={noteError}
-            noteDeletingId={noteDeletingId}
-            disabled={isEnded}
-            textareaRef={notesTextareaRef}
-          />
 
           {/* session summary (when ended) */}
           {isEnded && sessionSummary && (
