@@ -10,12 +10,14 @@ import RemoveButton from "../shared/RemoveButton.jsx";
  */
 function CustomTabsForm({ customTabs, setCustomTabs }) {
     const addTab = () => {
+        const stableId = `custom-${Date.now()}`;
         setCustomTabs([
             ...customTabs,
             {
-                id: `custom-${Date.now()}`,
+                _internalId: stableId,
+                id: stableId,
                 label: "",
-                fields: [{ key: `field-1`, label: "", type: "text", placeholder: "", unit: "" }],
+                fields: [{ _internalKey: "field-1", key: "field-1", label: "", type: "text", placeholder: "", unit: "" }],
             },
         ]);
     };
@@ -27,12 +29,12 @@ function CustomTabsForm({ customTabs, setCustomTabs }) {
     const updateTab = (tabIndex, field, value) => {
         const updated = [...customTabs];
         updated[tabIndex] = { ...updated[tabIndex], [field]: value };
-        // Auto-generate id from label
+        // Derive slug-based id from label for data purposes, but keep _internalId stable for React keys
         if (field === "label") {
             updated[tabIndex].id = value
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, "-")
-                .replace(/^-|-$/g, "") || `custom-${Date.now()}`;
+                .replace(/^-|-$/g, "") || updated[tabIndex]._internalId;
         }
         setCustomTabs(updated);
     };
@@ -40,8 +42,10 @@ function CustomTabsForm({ customTabs, setCustomTabs }) {
     const addField = (tabIndex) => {
         const updated = [...customTabs];
         const fields = [...updated[tabIndex].fields];
+        const stableKey = `field-${Date.now()}`;
         fields.push({
-            key: `field-${fields.length + 1}`,
+            _internalKey: stableKey,
+            key: stableKey,
             label: "",
             type: "text",
             placeholder: "",
@@ -62,12 +66,12 @@ function CustomTabsForm({ customTabs, setCustomTabs }) {
         const updated = [...customTabs];
         const fields = [...updated[tabIndex].fields];
         fields[fieldIndex] = { ...fields[fieldIndex], [prop]: value };
-        // Auto-generate key from label
+        // Derive slug-based key from label for data purposes, but keep _internalKey stable for React keys
         if (prop === "label") {
             fields[fieldIndex].key = value
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, "_")
-                .replace(/^_|_$/g, "") || `field-${fieldIndex + 1}`;
+                .replace(/^_|_$/g, "") || fields[fieldIndex]._internalKey;
         }
         updated[tabIndex] = { ...updated[tabIndex], fields };
         setCustomTabs(updated);
@@ -94,7 +98,7 @@ function CustomTabsForm({ customTabs, setCustomTabs }) {
 
             {customTabs.map((tab, tabIndex) => (
                 <div
-                    key={tab.id}
+                    key={tab._internalId || tab.id}
                     style={{
                         marginBottom: "var(--ehr-spacing-md)",
                         padding: "var(--ehr-spacing-md)",
@@ -126,7 +130,7 @@ function CustomTabsForm({ customTabs, setCustomTabs }) {
 
                         {tab.fields.map((field, fieldIndex) => (
                             <div
-                                key={fieldIndex}
+                                key={field._internalKey || fieldIndex}
                                 style={{
                                     display: "grid",
                                     gridTemplateColumns: "2fr 1fr 2fr 1fr auto",
