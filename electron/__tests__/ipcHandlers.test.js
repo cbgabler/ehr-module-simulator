@@ -24,6 +24,7 @@ async function loadMainWithScenarioMocks() {
   const userMocks = {
     registerUser: jest.fn(),
     authenticateUser: jest.fn(),
+    getRoleById: jest.fn(),
   };
 
   const scenarioMocks = {
@@ -522,16 +523,31 @@ describe("quiz IPC handlers", () => {
     expect(response).toEqual({ success: true, result });
   });
 
-  test("get-user-quiz-submissions returns list", async () => {
-    const { mockIpcHandle, quizMocks } = await loadMainWithScenarioMocks();
+  test("get-user-quiz-submissions returns list for logged-in user", async () => {
+    const { mockIpcHandle, quizMocks, userMocks } = await loadMainWithScenarioMocks();
     const submissions = [{ id: 1, quizId: 2 }];
     quizMocks.getUserQuizSubmissions.mockReturnValueOnce(submissions);
+    
+    // Log in first to establish session
+    const mockUser = { id: 3, username: "testuser", role: "student" };
+    userMocks.authenticateUser.mockReturnValueOnce(mockUser);
+    const loginHandler = findHandler(mockIpcHandle, "login-user");
+    await loginHandler(null, { username: "testuser", password: "pass" });
 
     const handler = findHandler(mockIpcHandle, "get-user-quiz-submissions");
-    const response = await handler(null, { userId: 3 });
+    const response = await handler();
 
     expect(quizMocks.getUserQuizSubmissions).toHaveBeenCalledWith(3);
     expect(response).toEqual({ success: true, submissions });
+  });
+
+  test("get-user-quiz-submissions fails when not logged in", async () => {
+    const { mockIpcHandle } = await loadMainWithScenarioMocks();
+
+    const handler = findHandler(mockIpcHandle, "get-user-quiz-submissions");
+    const response = await handler();
+
+    expect(response).toEqual({ success: false, error: "No user logged in" });
   });
 });
     

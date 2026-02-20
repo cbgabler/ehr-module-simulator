@@ -14,6 +14,10 @@ await jest.unstable_mockModule("../database/database.js", () => ({
   getDb: mockGetDb,
 }));
 
+await jest.unstable_mockModule("../database/models/users.js", () => ({
+  getRoleById: jest.fn(() => ({ role: "student" })),
+}));
+
 const {
   createQuiz,
   getAllQuizzes,
