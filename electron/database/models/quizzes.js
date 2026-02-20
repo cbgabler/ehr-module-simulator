@@ -108,16 +108,14 @@ export function getAllQuizzes() {
     .all();
 }
 
-export function getQuizById(quizId, userId) {
+// Internal helper for server-side use - always includes correctAnswerIndex
+function getQuizWithAnswers(quizId) {
   const db = getDb();
   const quiz = db.prepare("SELECT * FROM quizzes WHERE id = ?").get(quizId);
   if (!quiz) {
     return null;
   }
 
-  const userPerms = getRoleById(userId);
-
-  // Exposed questions for instructors/admins
   const questions = db
     .prepare(
       "SELECT * FROM quiz_questions WHERE quizId = ? ORDER BY orderIndex"
@@ -128,27 +126,43 @@ export function getQuizById(quizId, userId) {
       options: question.options ? JSON.parse(question.options) : [],
     }));
 
-  // Secure question dict for students
-  const secureQuestions = db
-  .prepare(
-    "SELECT * FROM quiz_questions WHERE quizId = ? ORDER BY orderIndex"
-  )
-  .all(quizId)
-  .map((question) => ({
-    ...question,
-    options: question.options ? JSON.parse(question.options) : [],
-  }));
-  
-  // Check roles to see if we should be allowed to look at correctIndex
-  if (userPerms.role == 'admin' || userPerms.role == 'instructor') {
+  return { ...quiz, questions };
+}
+
+export function getQuizById(quizId, userId) {
+  const db = getDb();
+  const quiz = db.prepare("SELECT * FROM quizzes WHERE id = ?").get(quizId);
+  if (!quiz) {
+    return null;
+  }
+
+  const role = getRoleById(userId);
+
+  // Check roles to see if we should be allowed to look at correctAnswerIndex
+  if (role === "admin" || role === "instructor") {
+    const questions = db
+      .prepare(
+        "SELECT * FROM quiz_questions WHERE quizId = ? ORDER BY orderIndex"
+      )
+      .all(quizId)
+      .map((question) => ({
+        ...question,
+        options: question.options ? JSON.parse(question.options) : [],
+      }));
+
     return { ...quiz, questions };
   }
 
-  /* 
-  This should only be used for instructors or admins
-  If we use select * the correct index will be exposed to the frontend
-  Check roles first
-  */
+  // Secure questions for students - excludes correctAnswerIndex
+  const questions = db
+    .prepare(
+      "SELECT id, quizId, prompt, type, options, orderIndex FROM quiz_questions WHERE quizId = ? ORDER BY orderIndex"
+    )
+    .all(quizId)
+    .map((question) => ({
+      ...question,
+      options: question.options ? JSON.parse(question.options) : [],
+    }));
 
   return { ...quiz, questions };
 }
@@ -161,7 +175,7 @@ export function submitQuiz({ quizId, userId, answers } = {}) {
     throw new Error("userId is required.");
   }
 
-  const quiz = getQuizById(quizId);
+  const quiz = getQuizWithAnswers(quizId);
   if (!quiz) {
     throw new Error("Quiz not found.");
   }

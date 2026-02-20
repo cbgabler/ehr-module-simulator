@@ -137,9 +137,6 @@ export function getAllUsers() {
 }
 
 export function getRoleById(userId) {
-  const userPerms = db.prepare(
-    `SELECT (id, role) FROM users WHERE id=?`
-  )
-
-  return userPerms.get(userId);
+  const db = getDb();
+  return db.prepare("SELECT role FROM users WHERE id=?").get(userId);
 }
