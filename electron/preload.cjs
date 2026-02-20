@@ -97,9 +97,10 @@ contextBridge.exposeInMainWorld("api", {
       return { success: false, error: error.message };
     }
   },
-  getUserQuizSubmissions: async (userId) => {
+  // get user id from context rather than passing
+  getUserQuizSubmissions: async () => {
     try {
-      return await ipcRenderer.invoke("get-user-quiz-submissions", { userId });
+      return await ipcRenderer.invoke("get-user-quiz-submissions");
     } catch (error) {
       console.error("IPC error:", error);
       return { success: false, error: error.message };

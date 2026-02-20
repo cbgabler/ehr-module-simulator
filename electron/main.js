@@ -60,6 +60,7 @@ const __dirname = path.dirname(__filename);
 
 const isDev = !app.isPackaged; // for dev vs prod, should be changed later
 
+let currentSession = null;
 
 // IPC handlers
 ipcMain.handle("register-user", async (event, payload = {}) => {
@@ -87,12 +88,21 @@ ipcMain.handle("login-user", async (event, payload = {}) => {
       throw new Error("Username or Password missing");
     }
     const user = authenticateUser(username, password);
+    currentSession = { userId: user.id, user } // Store current session on login so we cannot fake userIds
     return { success: true, user };
   } catch (error) {
     console.error("Error logging in:", error);
     return { success: false, error: error.message };
   }
 });
+
+// Helper function to get userId linked to the login session
+function getCurrentUserId() {
+  if (!currentSession?.userId) {
+    throw new Error("No user logged in");
+  }
+  return currentSession.userId;
+}
 
 // Scenario handlers
 ipcMain.handle("get-all-scenarios", async () => {
@@ -208,12 +218,9 @@ ipcMain.handle("submit-quiz", async (event, payload = {}) => {
   }
 });
 
-ipcMain.handle("get-user-quiz-submissions", async (event, payload = {}) => {
+ipcMain.handle("get-user-quiz-submissions", async () => {
   try {
-    const { userId } = payload ?? {};
-    if (!userId) {
-      throw new Error("userId is required");
-    }
+    const userId = getCurrentUserId();
     const submissions = getUserQuizSubmissions(userId);
     return { success: true, submissions };
   } catch (error) {
