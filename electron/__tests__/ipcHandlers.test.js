@@ -24,6 +24,7 @@ async function loadMainWithScenarioMocks() {
   const userMocks = {
     registerUser: jest.fn(),
     authenticateUser: jest.fn(),
+    getRoleById: jest.fn(),
   };
 
   const scenarioMocks = {
@@ -32,6 +33,14 @@ async function loadMainWithScenarioMocks() {
     deleteScenario: jest.fn(),
     createScenario: jest.fn(),
     duplicateScenario: jest.fn(),
+  };
+
+  const quizMocks = {
+    createQuiz: jest.fn(),
+    getAllQuizzes: jest.fn(),
+    getQuizById: jest.fn(),
+    submitQuiz: jest.fn(),
+    getUserQuizSubmissions: jest.fn(),
   };
 
   const sessionMocks = {
@@ -72,6 +81,11 @@ async function loadMainWithScenarioMocks() {
   await jest.unstable_mockModule(
     "../database/models/scenarios.js",
     () => scenarioMocks
+  );
+
+  await jest.unstable_mockModule(
+    "../database/models/quizzes.js",
+    () => quizMocks
   );
 
   await jest.unstable_mockModule(
@@ -119,6 +133,7 @@ async function loadMainWithScenarioMocks() {
     electron,
     userMocks,
     scenarioMocks,
+    quizMocks,
     sessionMocks,
     sessionLogMocks,
     mockIpcHandle,
@@ -448,6 +463,94 @@ describe("documentation IPC handlers", () => {
   });
 });
 
+describe("quiz IPC handlers", () => {
+  test("get-all-quizzes returns list", async () => {
+    const { mockIpcHandle, quizMocks } = await loadMainWithScenarioMocks();
+    const quizzes = [{ id: 1, title: "Quiz" }];
+    quizMocks.getAllQuizzes.mockReturnValueOnce(quizzes);
+
+    const handler = findHandler(mockIpcHandle, "get-all-quizzes");
+    const response = await handler();
+
+    expect(quizMocks.getAllQuizzes).toHaveBeenCalledTimes(1);
+    expect(response).toEqual({ success: true, quizzes });
+  });
+
+  test("get-quiz returns quiz when found", async () => {
+    const { mockIpcHandle, quizMocks } = await loadMainWithScenarioMocks();
+    const quiz = { id: 2, title: "Quiz" };
+    quizMocks.getQuizById.mockReturnValueOnce(quiz);
+
+    const handler = findHandler(mockIpcHandle, "get-quiz");
+    const response = await handler(null, 2);
+
+    expect(quizMocks.getQuizById).toHaveBeenCalledWith(2);
+    expect(response).toEqual({ success: true, quiz });
+  });
+
+  test("get-quiz returns error when missing", async () => {
+    const { mockIpcHandle, quizMocks } = await loadMainWithScenarioMocks();
+    quizMocks.getQuizById.mockReturnValueOnce(undefined);
+
+    const handler = findHandler(mockIpcHandle, "get-quiz");
+    const response = await handler(null, 9);
+
+    expect(response).toEqual({ success: false, error: "Quiz not found" });
+  });
+
+  test("create-quiz returns new ID", async () => {
+    const { mockIpcHandle, quizMocks } = await loadMainWithScenarioMocks();
+    quizMocks.createQuiz.mockReturnValueOnce(44);
+
+    const handler = findHandler(mockIpcHandle, "create-quiz");
+    const payload = { title: "Quiz", questions: [{ prompt: "Q1" }] };
+    const response = await handler(null, payload);
+
+    expect(quizMocks.createQuiz).toHaveBeenCalledWith(payload);
+    expect(response).toEqual({ success: true, quizId: 44 });
+  });
+
+  test("submit-quiz returns scoring payload", async () => {
+    const { mockIpcHandle, quizMocks } = await loadMainWithScenarioMocks();
+    const result = { submissionId: 1, score: 2, total: 3 };
+    quizMocks.submitQuiz.mockReturnValueOnce(result);
+
+    const handler = findHandler(mockIpcHandle, "submit-quiz");
+    const payload = { quizId: 1, userId: 2, answers: [] };
+    const response = await handler(null, payload);
+
+    expect(quizMocks.submitQuiz).toHaveBeenCalledWith(payload);
+    expect(response).toEqual({ success: true, result });
+  });
+
+  test("get-user-quiz-submissions returns list for logged-in user", async () => {
+    const { mockIpcHandle, quizMocks, userMocks } = await loadMainWithScenarioMocks();
+    const submissions = [{ id: 1, quizId: 2 }];
+    quizMocks.getUserQuizSubmissions.mockReturnValueOnce(submissions);
+    
+    // Log in first to establish session
+    const mockUser = { id: 3, username: "testuser", role: "student" };
+    userMocks.authenticateUser.mockReturnValueOnce(mockUser);
+    const loginHandler = findHandler(mockIpcHandle, "login-user");
+    await loginHandler(null, { username: "testuser", password: "pass" });
+
+    const handler = findHandler(mockIpcHandle, "get-user-quiz-submissions");
+    const response = await handler();
+
+    expect(quizMocks.getUserQuizSubmissions).toHaveBeenCalledWith(3);
+    expect(response).toEqual({ success: true, submissions });
+  });
+
+  test("get-user-quiz-submissions fails when not logged in", async () => {
+    const { mockIpcHandle } = await loadMainWithScenarioMocks();
+
+    const handler = findHandler(mockIpcHandle, "get-user-quiz-submissions");
+    const response = await handler();
+
+    expect(response).toEqual({ success: false, error: "No user logged in" });
+  });
+});
+    
 describe("summary export IPC handler", () => {
   test("export-session-summary-pdf returns util payload", async () => {
     const { mockIpcHandle, summaryExportMocks } =

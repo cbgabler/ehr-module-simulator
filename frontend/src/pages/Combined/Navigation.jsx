@@ -27,6 +27,18 @@ function Navigation() {
               </NavLink>
             </li>
           )}
+          {isAuthenticated && (
+            <li className="nav-item">
+              <NavLink
+                to="/quizzes"
+                className={({ isActive }) =>
+                  `nav-link ${isActive ? "active" : ""}`
+                }
+              >
+                Quizzes
+              </NavLink>
+            </li>
+          )}
           <li className="nav-item nav-auth">
             {isAuthenticated ? (
               <button

@@ -11,7 +11,7 @@ To add a new migration:
 3. The migration will run automatically on next app start
 */
 
-export const CURRENT_VERSION = 2;
+export const CURRENT_VERSION = 3;
 
 export const migrations = [
   {
@@ -102,6 +102,54 @@ export const migrations = [
           FOREIGN KEY (sessionId) REFERENCES sessions(id) ON DELETE CASCADE,
           FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
           FOREIGN KEY (scenarioId) REFERENCES scenarios(id) ON DELETE CASCADE
+        );
+      `);
+    },
+  },
+  {
+    version: 3,
+    description: "Add quizzes tables",
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS quizzes (
+          id INTEGER PRIMARY KEY,
+          title TEXT NOT NULL,
+          description TEXT,
+          createdBy INTEGER,
+          createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (createdBy) REFERENCES users(id) ON DELETE SET NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS quiz_questions (
+          id INTEGER PRIMARY KEY,
+          quizId INTEGER NOT NULL,
+          prompt TEXT NOT NULL,
+          type TEXT NOT NULL CHECK(type IN ('true_false', 'multiple_choice')),
+          options TEXT NOT NULL,
+          correctAnswerIndex INTEGER NOT NULL,
+          orderIndex INTEGER NOT NULL,
+          FOREIGN KEY (quizId) REFERENCES quizzes(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS quiz_submissions (
+          id INTEGER PRIMARY KEY,
+          quizId INTEGER NOT NULL,
+          userId INTEGER NOT NULL,
+          score INTEGER NOT NULL,
+          total INTEGER NOT NULL,
+          submittedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (quizId) REFERENCES quizzes(id) ON DELETE CASCADE,
+          FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS quiz_submission_answers (
+          id INTEGER PRIMARY KEY,
+          submissionId INTEGER NOT NULL,
+          questionId INTEGER NOT NULL,
+          selectedAnswerIndex INTEGER,
+          isCorrect BOOLEAN NOT NULL DEFAULT 0,
+          FOREIGN KEY (submissionId) REFERENCES quiz_submissions(id) ON DELETE CASCADE,
+          FOREIGN KEY (questionId) REFERENCES quiz_questions(id) ON DELETE CASCADE
         );
       `);
     },
