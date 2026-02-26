@@ -1,13 +1,17 @@
 import { app, BrowserWindow, ipcMain, dialog } from "electron";
 import path from "path";
 import { fileURLToPath } from "url";
+import { promises as fs } from "fs";
 import { initDatabase } from "./database/database.js";
 import { exportSessionSummaryPdf } from "./utils/summaryExport.js";
 
 // Users
 import { 
   authenticateUser, 
-  registerUser 
+  registerUser,
+  getAllUsers,
+  getRoleById,
+  getUserById,
 } from "./database/models/users.js";
 
 // Scenarios
@@ -26,6 +30,9 @@ import {
   getQuizById,
   submitQuiz,
   getUserQuizSubmissions,
+  updateQuiz,
+  deleteQuiz,
+  copyQuiz,
 } from "./database/models/quizzes.js";
 
 // Sessions
@@ -65,7 +72,7 @@ let currentSession = null;
 // IPC handlers
 ipcMain.handle("register-user", async (event, payload = {}) => {
   try {
-    const username = payload ?? {};
+    const { username } = payload ?? {};
     if (!username) {
       throw new Error("Username missing");
     }
@@ -73,6 +80,7 @@ ipcMain.handle("register-user", async (event, payload = {}) => {
       username
     });
     const user = registerUser(payload);
+    currentSession = { userId: user.id, user };
     console.log("User registered successfully with ID:", user?.id);
     return { success: true, user };
   } catch (error) {
@@ -102,6 +110,18 @@ function getCurrentUserId() {
     throw new Error("No user logged in");
   }
   return currentSession.userId;
+}
+
+function getCurrentUserRole() {
+  const userId = getCurrentUserId();
+  return getRoleById(userId)?.role;
+}
+
+function requireInstructor() {
+  const role = getCurrentUserRole();
+  if (role !== "admin" && role !== "instructor") {
+    throw new Error("Instructor access required");
+  }
 }
 
 // Scenario handlers
@@ -174,10 +194,33 @@ ipcMain.handle("duplicate-scenario", async (event, scenarioId) => {
 // Quiz handlers
 ipcMain.handle("get-all-quizzes", async () => {
   try {
-    const quizzes = getAllQuizzes();
+    const userId = getCurrentUserId();
+    const quizzes = getAllQuizzes(userId);
     return { success: true, quizzes };
   } catch (error) {
     console.error("Error getting quizzes:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("restore-session", async (event, payload = {}) => {
+  try {
+    const { userId } = payload ?? {};
+    if (!userId) {
+      throw new Error("userId is required");
+    }
+    const user = getUserById(userId);
+    if (!user) {
+      currentSession = null;
+      return { success: false, error: "User not found" };
+    }
+    currentSession = {
+      userId: user.id,
+      user: { id: user.id, username: user.username, role: user.role },
+    };
+    return { success: true, user: currentSession.user };
+  } catch (error) {
+    console.error("Error restoring session:", error);
     return { success: false, error: error.message };
   }
 });
@@ -187,7 +230,8 @@ ipcMain.handle("get-quiz", async (event, quizId) => {
     if (!quizId) {
       throw new Error("quizId is required");
     }
-    const quiz = getQuizById(quizId);
+    const userId = getCurrentUserId();
+    const quiz = getQuizById(quizId, userId);
     if (!quiz) {
       return { success: false, error: "Quiz not found" };
     }
@@ -200,7 +244,9 @@ ipcMain.handle("get-quiz", async (event, quizId) => {
 
 ipcMain.handle("create-quiz", async (event, payload = {}) => {
   try {
-    const quizId = createQuiz(payload);
+    requireInstructor();
+    const userId = getCurrentUserId();
+    const quizId = createQuiz({ ...payload, createdBy: userId });
     return { success: true, quizId };
   } catch (error) {
     console.error("Error creating quiz:", error);
@@ -208,9 +254,63 @@ ipcMain.handle("create-quiz", async (event, payload = {}) => {
   }
 });
 
+ipcMain.handle("update-quiz", async (event, payload = {}) => {
+  try {
+    requireInstructor();
+    const { quizId, updates } = payload ?? {};
+    if (!quizId) {
+      throw new Error("quizId is required");
+    }
+    const updated = updateQuiz(quizId, updates);
+    if (!updated) {
+      return { success: false, error: "Quiz not found" };
+    }
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating quiz:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("delete-quiz", async (event, quizId) => {
+  try {
+    requireInstructor();
+    if (!quizId) {
+      throw new Error("quizId is required");
+    }
+    const deleted = deleteQuiz(quizId);
+    if (!deleted) {
+      return { success: false, error: "Quiz not found" };
+    }
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting quiz:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("copy-quiz", async (event, quizId) => {
+  try {
+    requireInstructor();
+    if (!quizId) {
+      throw new Error("quizId is required");
+    }
+    const userId = getCurrentUserId();
+    const newQuizId = copyQuiz(quizId, userId);
+    if (!newQuizId) {
+      return { success: false, error: "Quiz not found" };
+    }
+    return { success: true, quizId: newQuizId };
+  } catch (error) {
+    console.error("Error copying quiz:", error);
+    return { success: false, error: error.message };
+  }
+});
+
 ipcMain.handle("submit-quiz", async (event, payload = {}) => {
   try {
-    const result = submitQuiz(payload);
+    const userId = getCurrentUserId();
+    const result = submitQuiz({ ...payload, userId });
     return { success: true, result };
   } catch (error) {
     console.error("Error submitting quiz:", error);
@@ -225,6 +325,97 @@ ipcMain.handle("get-user-quiz-submissions", async () => {
     return { success: true, submissions };
   } catch (error) {
     console.error("Error getting quiz submissions:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("get-all-users", async () => {
+  try {
+    requireInstructor();
+    const users = getAllUsers().map((user) => ({
+      id: user.id,
+      username: user.username,
+      role: user.role ?? "student",
+    }));
+    return { success: true, users };
+  } catch (error) {
+    console.error("Error getting users:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("export-quiz", async (event, payload = {}) => {
+  try {
+    requireInstructor();
+    const { quizId, filePath } = payload ?? {};
+    if (!quizId || !filePath) {
+      throw new Error("quizId and filePath are required");
+    }
+    const userId = getCurrentUserId();
+    const quiz = getQuizById(quizId, userId);
+    if (!quiz) {
+      return { success: false, error: "Quiz not found" };
+    }
+    const exportPayload = {
+      version: 1,
+      quiz: {
+        title: quiz.title,
+        description: quiz.description,
+        isPublic: quiz.isPublic ?? 1,
+        showCorrectAnswers: quiz.showCorrectAnswers ?? 0,
+        assignedStudentIds: quiz.assignedStudentIds ?? [],
+        questions: quiz.questions.map((question) => ({
+          prompt: question.prompt,
+          type: question.type,
+          options: question.options,
+          correctAnswerIndex: question.correctAnswerIndex,
+          explanation: question.explanation ?? null,
+        })),
+      },
+    };
+    await fs.writeFile(filePath, JSON.stringify(exportPayload, null, 2), "utf-8");
+    return { success: true };
+  } catch (error) {
+    console.error("Error exporting quiz:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("import-quiz", async (event, payload = {}) => {
+  try {
+    requireInstructor();
+    const { filePath } = payload ?? {};
+    if (!filePath) {
+      throw new Error("filePath is required");
+    }
+    const userId = getCurrentUserId();
+    const raw = await fs.readFile(filePath, "utf-8");
+    const parsed = JSON.parse(raw);
+    const quizPayload = parsed?.quiz ?? parsed;
+    if (!quizPayload?.title || !Array.isArray(quizPayload?.questions)) {
+      throw new Error("Invalid quiz file");
+    }
+    const userRecords = getAllUsers();
+    const studentIds = new Set(
+      userRecords
+        .filter((user) => (user.role ?? "student") === "student")
+        .map((user) => Number(user.id))
+    );
+    const assignedStudentIds = Array.isArray(quizPayload.assignedStudentIds)
+      ? quizPayload.assignedStudentIds.filter((id) => studentIds.has(Number(id)))
+      : [];
+    const quizId = createQuiz({
+      title: quizPayload.title,
+      description: quizPayload.description ?? "",
+      createdBy: userId,
+      questions: quizPayload.questions,
+      isPublic: quizPayload.isPublic ?? true,
+      showCorrectAnswers: quizPayload.showCorrectAnswers ?? false,
+      assignedStudentIds,
+    });
+    return { success: true, quizId };
+  } catch (error) {
+    console.error("Error importing quiz:", error);
     return { success: false, error: error.message };
   }
 });
