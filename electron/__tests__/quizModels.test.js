@@ -24,6 +24,8 @@ const {
   getQuizById,
   submitQuiz,
   getUserQuizSubmissions,
+  updateQuiz,
+  deleteQuiz,
 } = await import("../database/models/quizzes.js");
 
 beforeEach(() => {
@@ -226,5 +228,66 @@ describe("quiz data model helpers", () => {
 
     expect(preparedStatements[0].sql).toContain("FROM quiz_submissions");
     expect(submissions).toEqual([{ id: 1, quizId: 2, title: "Quiz" }]);
+  });
+
+  test("updateQuiz rewrites quiz and questions", () => {
+    runResults.push({ changes: 1 });
+
+    const updated = updateQuiz(5, {
+      title: "Updated Quiz",
+      description: "New description",
+      isPublic: false,
+      showCorrectAnswers: true,
+      assignedStudentIds: [2, 3],
+      questions: [
+        {
+          prompt: "New Question",
+          type: "multiple_choice",
+          options: ["A", "B"],
+          correctAnswerIndex: 1,
+          explanation: "Because B is correct",
+        },
+      ],
+    });
+
+    expect(updated).toBe(true);
+    expect(preparedStatements[0].sql).toContain("UPDATE quizzes");
+    expect(preparedStatements[1].sql).toContain("DELETE FROM quiz_questions");
+    expect(preparedStatements[2].sql).toContain("INSERT INTO quiz_questions");
+    expect(preparedStatements[3].sql).toContain("DELETE FROM quiz_assignments");
+  });
+
+  test("updateQuiz returns false when quiz missing", () => {
+    runResults.push({ changes: 0 });
+
+    const updated = updateQuiz(12, {
+      title: "Missing Quiz",
+      questions: [
+        {
+          prompt: "Q",
+          type: "true_false",
+          correctAnswerIndex: 0,
+        },
+      ],
+    });
+
+    expect(updated).toBe(false);
+  });
+
+  test("deleteQuiz removes quiz when found", () => {
+    runResults.push({ changes: 1 });
+
+    const deleted = deleteQuiz(3);
+
+    expect(preparedStatements[0].sql).toContain("DELETE FROM quizzes");
+    expect(deleted).toBe(true);
+  });
+
+  test("deleteQuiz returns false when nothing deleted", () => {
+    runResults.push({ changes: 0 });
+
+    const deleted = deleteQuiz(99);
+
+    expect(deleted).toBe(false);
   });
 });

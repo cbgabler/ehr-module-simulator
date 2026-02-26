@@ -45,6 +45,7 @@ async function loadMainModule({ isPackaged = false } = {}) {
     authenticateUser: jest.fn(),
     getRoleById: jest.fn(),
     getAllUsers: jest.fn(),
+    getUserById: jest.fn(),
   }));
 
   await jest.unstable_mockModule("../database/models/scenarios.js", () => ({
