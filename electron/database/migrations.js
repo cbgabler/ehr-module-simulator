@@ -11,7 +11,7 @@ To add a new migration:
 3. The migration will run automatically on next app start
 */
 
-export const CURRENT_VERSION = 3;
+export const CURRENT_VERSION = 4;
 
 export const migrations = [
   {
@@ -150,6 +150,26 @@ export const migrations = [
           isCorrect BOOLEAN NOT NULL DEFAULT 0,
           FOREIGN KEY (submissionId) REFERENCES quiz_submissions(id) ON DELETE CASCADE,
           FOREIGN KEY (questionId) REFERENCES quiz_questions(id) ON DELETE CASCADE
+        );
+      `);
+    },
+  },
+  {
+    version: 4,
+    description: "Extend quizzes with visibility and explanations",
+    up: (db) => {
+      db.exec(`
+        ALTER TABLE quizzes ADD COLUMN isPublic BOOLEAN NOT NULL DEFAULT 1;
+        ALTER TABLE quizzes ADD COLUMN showCorrectAnswers BOOLEAN NOT NULL DEFAULT 0;
+        ALTER TABLE quiz_questions ADD COLUMN explanation TEXT;
+
+        CREATE TABLE IF NOT EXISTS quiz_assignments (
+          id INTEGER PRIMARY KEY,
+          quizId INTEGER NOT NULL,
+          userId INTEGER NOT NULL,
+          FOREIGN KEY (quizId) REFERENCES quizzes(id) ON DELETE CASCADE,
+          FOREIGN KEY (userId) REFERENCES users(id) ON DELETE CASCADE,
+          UNIQUE(quizId, userId)
         );
       `);
     },

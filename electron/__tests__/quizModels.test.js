@@ -15,7 +15,7 @@ await jest.unstable_mockModule("../database/database.js", () => ({
 }));
 
 await jest.unstable_mockModule("../database/models/users.js", () => ({
-  getRoleById: jest.fn(() => ({ role: "student" })),
+  getRoleById: jest.fn(() => ({ role: "instructor" })),
 }));
 
 const {
@@ -80,7 +80,9 @@ describe("quiz data model helpers", () => {
     expect(preparedStatements[0].run).toHaveBeenCalledWith(
       "Vitals Basics",
       "Test quiz",
-      3
+      3,
+      1,
+      0
     );
     expect(preparedStatements[1].run).toHaveBeenCalledTimes(2);
   });
@@ -130,7 +132,7 @@ describe("quiz data model helpers", () => {
       { id: 3, title: "Quiz B", questionCount: 2 },
     ]);
 
-    const quizzes = getAllQuizzes();
+    const quizzes = getAllQuizzes(4);
 
     expect(preparedStatements[0].sql).toContain("FROM quizzes");
     expect(quizzes).toEqual([
@@ -150,8 +152,9 @@ describe("quiz data model helpers", () => {
         correctAnswerIndex: 1,
       },
     ]);
+    allResults.push([]);
 
-    const quiz = getQuizById(5);
+    const quiz = getQuizById(5, 4);
 
     expect(preparedStatements[0].sql).toContain("SELECT * FROM quizzes");
     expect(preparedStatements[1].sql).toContain("FROM quiz_questions");
@@ -195,7 +198,12 @@ describe("quiz data model helpers", () => {
       ],
     });
 
-    expect(result).toEqual({ submissionId: 100, score: 1, total: 2 });
+    expect(result).toEqual({
+      submissionId: 100,
+      score: 1,
+      total: 2,
+      showCorrectAnswers: false,
+    });
     const insertSubmission = preparedStatements.find((stmt) =>
       stmt.sql.includes("INSERT INTO quiz_submissions")
     );
