@@ -25,6 +25,14 @@ contextBridge.exposeInMainWorld("api", {
       return { success: false, error: error.message };
     }
   },
+  restoreSession: async ({ userId }) => {
+    try {
+      return await ipcRenderer.invoke("restore-session", { userId });
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
   getAllScenarios: async () => {
     try {
       return await ipcRenderer.invoke("get-all-scenarios");
@@ -89,6 +97,30 @@ contextBridge.exposeInMainWorld("api", {
       return { success: false, error: error.message };
     }
   },
+  updateQuiz: async (payload) => {
+    try {
+      return await ipcRenderer.invoke("update-quiz", payload);
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
+  deleteQuiz: async (quizId) => {
+    try {
+      return await ipcRenderer.invoke("delete-quiz", quizId);
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
+  copyQuiz: async (quizId) => {
+    try {
+      return await ipcRenderer.invoke("copy-quiz", quizId);
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
   submitQuiz: async (payload) => {
     try {
       return await ipcRenderer.invoke("submit-quiz", payload);
@@ -101,6 +133,30 @@ contextBridge.exposeInMainWorld("api", {
   getUserQuizSubmissions: async () => {
     try {
       return await ipcRenderer.invoke("get-user-quiz-submissions");
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
+  getAllUsers: async () => {
+    try {
+      return await ipcRenderer.invoke("get-all-users");
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
+  exportQuiz: async ({ quizId, filePath }) => {
+    try {
+      return await ipcRenderer.invoke("export-quiz", { quizId, filePath });
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
+  importQuiz: async ({ filePath }) => {
+    try {
+      return await ipcRenderer.invoke("import-quiz", { filePath });
     } catch (error) {
       console.error("IPC error:", error);
       return { success: false, error: error.message };

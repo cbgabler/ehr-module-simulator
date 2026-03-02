@@ -1,4 +1,9 @@
-function QuizHeader({ isInstructor, showCreate, onToggleCreate }) {
+function QuizHeader({
+  isInstructor,
+  showCreate,
+  onToggleCreate,
+  onImportQuiz,
+}) {
   return (
     <div className="quizzes-header">
       <div>
@@ -8,9 +13,14 @@ function QuizHeader({ isInstructor, showCreate, onToggleCreate }) {
         </p>
       </div>
       {isInstructor && (
-        <button type="button" onClick={onToggleCreate}>
-          {showCreate ? "Close Creator" : "Create Quiz"}
-        </button>
+        <div className="quiz-header-actions">
+          <button type="button" onClick={onImportQuiz}>
+            Import Quiz
+          </button>
+          <button type="button" onClick={onToggleCreate}>
+            {showCreate ? "Close Creator" : "Create Quiz"}
+          </button>
+        </div>
       )}
     </div>
   );
