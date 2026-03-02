@@ -93,12 +93,16 @@ ipcMain.handle("register-user", async (event, payload = {}) => {
 
 ipcMain.handle("restore-session", async (event, payload = {}) => {
   try {
-    const { id, username, role } = payload ?? {};
-    if (!id) {
+    const { userId } = payload ?? {};
+    if (!userId) {
       throw new Error("User id is required to restore session.");
     }
-    currentSession = { userId: id, user: { id, username, role } };
-    return { success: true };
+    const user = getUserById(userId);
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+    currentSession = { userId: user.id, user: { id: user.id, username: user.username, role: user.role } };
+    return { success: true, user: { id: user.id, username: user.username, role: user.role } };
   } catch (error) {
     console.error("Error restoring session:", error);
     return { success: false, error: error.message };
