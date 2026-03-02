@@ -44,6 +44,8 @@ async function loadMainModule({ isPackaged = false } = {}) {
     registerUser: jest.fn(),
     authenticateUser: jest.fn(),
     getRoleById: jest.fn(),
+    getAllUsers: jest.fn(),
+    getUserById: jest.fn(),
   }));
 
   await jest.unstable_mockModule("../database/models/scenarios.js", () => ({
@@ -66,6 +68,9 @@ async function loadMainModule({ isPackaged = false } = {}) {
     getQuizById: jest.fn(),
     submitQuiz: jest.fn(),
     getUserQuizSubmissions: jest.fn(),
+    updateQuiz: jest.fn(),
+    deleteQuiz: jest.fn(),
+    copyQuiz: jest.fn(),
   }));
 
   await jest.unstable_mockModule("../database/models/sessionLogs.js", () => ({

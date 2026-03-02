@@ -1,10 +1,12 @@
 function QuizCreatePanel({
   newQuiz,
   setNewQuiz,
+  isEditing,
   creating,
   createError,
   createSuccess,
   onSubmit,
+  onCancelEdit,
   addQuestion,
   removeQuestion,
   updateQuestion,
@@ -12,10 +14,11 @@ function QuizCreatePanel({
   addOption,
   updateOption,
   removeOption,
+  students = [],
 }) {
   return (
     <section className="quiz-create-panel">
-      <h2>Create a Quiz</h2>
+      <h2>{isEditing ? "Edit Quiz" : "Create a Quiz"}</h2>
       <form onSubmit={onSubmit} className="quiz-create-form">
         <label className="quiz-label">
           Title
@@ -44,6 +47,70 @@ function QuizCreatePanel({
             }
             placeholder="Add a short description"
           />
+        </label>
+        <div className="quiz-visibility">
+          <label className="quiz-label">
+            Visibility
+            <select
+              value={newQuiz.isPublic ? "public" : "assigned"}
+              onChange={(event) =>
+                setNewQuiz((previous) => ({
+                  ...previous,
+                  isPublic: event.target.value === "public",
+                }))
+              }
+            >
+              <option value="public">Public to all students</option>
+              <option value="assigned">Assign to students</option>
+            </select>
+          </label>
+          {!newQuiz.isPublic && (
+            <div className="quiz-assignees">
+              <p className="quiz-helper">Select students who should see this quiz.</p>
+              <div className="quiz-assignee-grid">
+                {students.length === 0 && (
+                  <span className="quiz-hint">No students found.</span>
+                )}
+                {students.map((student) => (
+                  <label key={student.id} className="quiz-inline-label">
+                    <input
+                      type="checkbox"
+                      checked={newQuiz.assignedStudentIds.includes(student.id)}
+                      onChange={(event) => {
+                        const checked = event.target.checked;
+                        setNewQuiz((previous) => {
+                          const next = new Set(previous.assignedStudentIds);
+                          if (checked) {
+                            next.add(student.id);
+                          } else {
+                            next.delete(student.id);
+                          }
+                          return {
+                            ...previous,
+                            assignedStudentIds: Array.from(next),
+                          };
+                        });
+                      }}
+                    />
+                    {student.username}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <label className="quiz-inline-label quiz-toggle">
+          <input
+            type="checkbox"
+            checked={newQuiz.showCorrectAnswers}
+            onChange={(event) =>
+              setNewQuiz((previous) => ({
+                ...previous,
+                showCorrectAnswers: event.target.checked,
+              }))
+            }
+          />
+          Show correct answers after submission
         </label>
 
         <div className="quiz-questions">
@@ -170,6 +237,20 @@ function QuizCreatePanel({
                   </label>
                 </div>
               )}
+
+              <label className="quiz-label">
+                Explanation (optional)
+                <textarea
+                  rows="2"
+                  value={question.explanation || ""}
+                  onChange={(event) =>
+                    updateQuestion(question.tempId, {
+                      explanation: event.target.value,
+                    })
+                  }
+                  placeholder="Explain why this is the correct answer"
+                />
+              </label>
             </div>
           ))}
         </div>
@@ -182,8 +263,23 @@ function QuizCreatePanel({
           >
             Add Question
           </button>
+          {isEditing && (
+            <button
+              type="button"
+              className="quiz-secondary-button"
+              onClick={onCancelEdit}
+            >
+              Cancel Edit
+            </button>
+          )}
           <button type="submit" disabled={creating}>
-            {creating ? "Creating..." : "Save Quiz"}
+            {creating
+              ? isEditing
+                ? "Saving..."
+                : "Creating..."
+              : isEditing
+                ? "Save Changes"
+                : "Save Quiz"}
           </button>
         </div>
 

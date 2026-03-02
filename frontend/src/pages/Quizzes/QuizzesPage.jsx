@@ -8,7 +8,7 @@ import { createEmptyQuestion, normalizeQuizQuestions } from "./quizUtils.js";
 import "./QuizzesPage.css";
 
 function QuizzesPage() {
-  const { user } = useAuth();
+  const { user, restoring } = useAuth();
   const isInstructor = user?.role === "instructor" || user?.role === "admin";
 
   const [quizzes, setQuizzes] = useState([]);
@@ -21,18 +21,31 @@ function QuizzesPage() {
   const [createError, setCreateError] = useState(null);
   const [createSuccess, setCreateSuccess] = useState(null);
   const [creating, setCreating] = useState(false);
+  const [editingQuizId, setEditingQuizId] = useState(null);
+  const [actionMessage, setActionMessage] = useState(null);
+  const [actionError, setActionError] = useState(null);
   const [newQuiz, setNewQuiz] = useState({
     title: "",
     description: "",
+    isPublic: true,
+    assignedStudentIds: [],
+    showCorrectAnswers: false,
     questions: [createEmptyQuestion()],
   });
+  const [students, setStudents] = useState([]);
 
   const [answers, setAnswers] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
   const [submitResult, setSubmitResult] = useState(null);
+  const [submissions, setSubmissions] = useState([]);
+  const [submissionsError, setSubmissionsError] = useState(null);
+  const [submissionPage, setSubmissionPage] = useState(0);
 
   const loadQuizzes = useCallback(async () => {
+    if (restoring) {
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -52,11 +65,61 @@ function QuizzesPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [restoring]);
 
   useEffect(() => {
-    loadQuizzes();
-  }, [loadQuizzes]);
+    if (!restoring) {
+      loadQuizzes();
+    }
+  }, [loadQuizzes, restoring]);
+
+  const loadStudents = useCallback(async () => {
+    if (!isInstructor || !window.api?.getAllUsers) {
+      return;
+    }
+    if (restoring) {
+      return;
+    }
+    try {
+      const result = await window.api.getAllUsers();
+      if (result.success) {
+        setStudents((result.users || []).filter((userItem) => userItem.role === "student"));
+      } else {
+        setStudents([]);
+      }
+    } catch {
+      setStudents([]);
+    }
+  }, [isInstructor, restoring]);
+
+  useEffect(() => {
+    loadStudents();
+  }, [loadStudents]);
+
+  const loadSubmissions = useCallback(async () => {
+    if (!window.api?.getUserQuizSubmissions || !user?.id) {
+      return;
+    }
+    if (restoring) {
+      return;
+    }
+    try {
+      setSubmissionsError(null);
+      const result = await window.api.getUserQuizSubmissions();
+      if (result.success) {
+        setSubmissions(result.submissions || []);
+        setSubmissionPage(0);
+      } else {
+        setSubmissionsError(result.error || "Unable to load quiz history.");
+      }
+    } catch (err) {
+      setSubmissionsError(err.message || "Unable to load quiz history.");
+    }
+  }, [user, restoring]);
+
+  useEffect(() => {
+    loadSubmissions();
+  }, [loadSubmissions]);
 
   const handleSelectQuiz = async (quizId) => {
     setSelectedQuiz(null);
@@ -94,7 +157,6 @@ function QuizzesPage() {
     try {
       const payload = {
         quizId: selectedQuiz.id,
-        userId: user.id,
         answers: selectedQuiz.questions.map((question) => ({
           questionId: question.id,
           selectedAnswerIndex: answers[question.id] ?? null,
@@ -103,6 +165,8 @@ function QuizzesPage() {
       const response = await window.api.submitQuiz(payload);
       if (response.success) {
         setSubmitResult(response.result);
+        loadSubmissions();
+        setSubmissionPage(0);
       } else {
         setSubmitError(response.error || "Unable to submit quiz.");
       }
@@ -126,12 +190,27 @@ function QuizzesPage() {
     setShowCreate((previous) => !previous);
     setCreateError(null);
     setCreateSuccess(null);
+    setActionMessage(null);
+    setActionError(null);
+    if (showCreate) {
+      setEditingQuizId(null);
+      setNewQuiz({
+        title: "",
+        description: "",
+        isPublic: true,
+        assignedStudentIds: [],
+        showCorrectAnswers: false,
+        questions: [createEmptyQuestion()],
+      });
+    }
   };
 
   const handleCreateQuiz = async (event) => {
     event.preventDefault();
     setCreateError(null);
     setCreateSuccess(null);
+    setActionMessage(null);
+    setActionError(null);
 
     const title = newQuiz.title.trim();
     if (!title) {
@@ -167,22 +246,40 @@ function QuizzesPage() {
       return;
     }
 
+    if (!newQuiz.isPublic && newQuiz.assignedStudentIds.length === 0) {
+      setCreateError("Select at least one student or set the quiz to public.");
+      return;
+    }
+
     setCreating(true);
     try {
-      const response = await window.api.createQuiz({
+      const payload = {
         title,
         description: newQuiz.description.trim(),
-        createdBy: user?.id,
         questions: normalizedQuestions,
-      });
+        isPublic: newQuiz.isPublic,
+        assignedStudentIds: newQuiz.assignedStudentIds,
+        showCorrectAnswers: newQuiz.showCorrectAnswers,
+      };
+      const response = editingQuizId
+        ? await window.api.updateQuiz({ quizId: editingQuizId, updates: payload })
+        : await window.api.createQuiz(payload);
       if (response.success) {
-        setCreateSuccess("Quiz created successfully.");
+        setCreateSuccess(
+          editingQuizId ? "Quiz updated successfully." : "Quiz created successfully."
+        );
+        setEditingQuizId(null);
+        setShowCreate(false);
         setNewQuiz({
           title: "",
           description: "",
+          isPublic: true,
+          assignedStudentIds: [],
+          showCorrectAnswers: false,
           questions: [createEmptyQuestion()],
         });
         await loadQuizzes();
+        await loadStudents();
       } else {
         setCreateError(response.error || "Unable to create quiz.");
       }
@@ -190,6 +287,154 @@ function QuizzesPage() {
       setCreateError(err.message || "Unable to create quiz.");
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingQuizId(null);
+    setCreateError(null);
+    setCreateSuccess(null);
+    setNewQuiz({
+      title: "",
+      description: "",
+      isPublic: true,
+      assignedStudentIds: [],
+      showCorrectAnswers: false,
+      questions: [createEmptyQuestion()],
+    });
+  };
+
+  const handleEditQuiz = async (quizId) => {
+    setActionMessage(null);
+    setActionError(null);
+    setCreateError(null);
+    setCreateSuccess(null);
+    try {
+      const response = await window.api.getQuiz(quizId);
+      if (!response.success) {
+        setActionError(response.error || "Unable to load quiz.");
+        return;
+      }
+      const quiz = response.quiz;
+      setEditingQuizId(quizId);
+      setShowCreate(true);
+      setNewQuiz({
+        title: quiz.title ?? "",
+        description: quiz.description ?? "",
+        isPublic: Boolean(quiz.isPublic),
+        assignedStudentIds: quiz.assignedStudentIds || [],
+        showCorrectAnswers: Boolean(quiz.showCorrectAnswers),
+        questions: (quiz.questions || []).map((question) => ({
+          tempId: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+          prompt: question.prompt ?? "",
+          type: question.type ?? "multiple_choice",
+          options: question.options || ["", ""],
+          correctAnswerIndex: question.correctAnswerIndex ?? 0,
+          explanation: question.explanation ?? "",
+        })),
+      });
+    } catch (err) {
+      setActionError(err.message || "Unable to load quiz.");
+    }
+  };
+
+  const handleDeleteQuiz = async (quizId) => {
+    setActionMessage(null);
+    setActionError(null);
+    if (!window.confirm("Delete this quiz? This cannot be undone.")) {
+      return;
+    }
+    try {
+      const response = await window.api.deleteQuiz(quizId);
+      if (response.success) {
+        setActionMessage("Quiz deleted.");
+        if (selectedQuiz?.id === quizId) {
+          setSelectedQuiz(null);
+        }
+        await loadQuizzes();
+        setSubmissionPage(0);
+      } else {
+        setActionError(response.error || "Unable to delete quiz.");
+      }
+    } catch (err) {
+      setActionError(err.message || "Unable to delete quiz.");
+    }
+  };
+
+  const handleCopyQuiz = async (quizId) => {
+    setActionMessage(null);
+    setActionError(null);
+    try {
+      const response = await window.api.copyQuiz(quizId);
+      if (response.success) {
+        setActionMessage("Quiz copied.");
+        await loadQuizzes();
+        setSubmissionPage(0);
+      } else {
+        setActionError(response.error || "Unable to copy quiz.");
+      }
+    } catch (err) {
+      setActionError(err.message || "Unable to copy quiz.");
+    }
+  };
+
+  const handleExportQuiz = async (quizId) => {
+    setActionMessage(null);
+    setActionError(null);
+    if (!window.api?.showSaveDialog || !window.api?.exportQuiz) {
+      setActionError("Quiz export is only available in the desktop app.");
+      return;
+    }
+    try {
+      const dialogResult = await window.api.showSaveDialog({
+        title: "Export Quiz",
+        defaultPath: "quiz.json",
+        filters: [{ name: "Quiz JSON", extensions: ["json"] }],
+      });
+      if (dialogResult.canceled || !dialogResult.filePath) {
+        return;
+      }
+      const response = await window.api.exportQuiz({
+        quizId,
+        filePath: dialogResult.filePath,
+      });
+      if (response.success) {
+        setActionMessage("Quiz exported.");
+      } else {
+        setActionError(response.error || "Unable to export quiz.");
+      }
+    } catch (err) {
+      setActionError(err.message || "Unable to export quiz.");
+    }
+  };
+
+  const handleImportQuiz = async () => {
+    setActionMessage(null);
+    setActionError(null);
+    if (!window.api?.showOpenDialog || !window.api?.importQuiz) {
+      setActionError("Quiz import is only available in the desktop app.");
+      return;
+    }
+    try {
+      const dialogResult = await window.api.showOpenDialog({
+        title: "Import Quiz",
+        properties: ["openFile"],
+        filters: [{ name: "Quiz JSON", extensions: ["json"] }],
+      });
+      if (dialogResult.canceled || dialogResult.filePaths?.length === 0) {
+        return;
+      }
+      const filePath = dialogResult.filePaths[0];
+      const response = await window.api.importQuiz({ filePath });
+      if (response.success) {
+        setActionMessage("Quiz imported.");
+        await loadQuizzes();
+        setSubmissionPage(0);
+      } else {
+        setActionError(response.error || "Unable to import quiz.");
+      }
+    } catch (err) {
+      setActionError(err.message || "Unable to import quiz.");
     }
   };
 
@@ -290,7 +535,7 @@ function QuizzesPage() {
     }));
   };
 
-  if (loading) {
+  if (loading || restoring) {
     return (
       <div className="page-container">
         <div className="quizzes-loading">Loading quizzes...</div>
@@ -317,16 +562,19 @@ function QuizzesPage() {
         isInstructor={isInstructor}
         showCreate={showCreate}
         onToggleCreate={handleToggleCreate}
+        onImportQuiz={handleImportQuiz}
       />
 
       {isInstructor && showCreate && (
         <QuizCreatePanel
           newQuiz={newQuiz}
           setNewQuiz={setNewQuiz}
+          isEditing={Boolean(editingQuizId)}
           creating={creating}
           createError={createError}
           createSuccess={createSuccess}
           onSubmit={handleCreateQuiz}
+          onCancelEdit={handleCancelEdit}
           addQuestion={addQuestion}
           removeQuestion={removeQuestion}
           updateQuestion={updateQuestion}
@@ -334,10 +582,22 @@ function QuizzesPage() {
           addOption={addOption}
           updateOption={updateOption}
           removeOption={removeOption}
+          students={students}
         />
       )}
 
-      <QuizGrid quizzes={quizzes} onSelectQuiz={handleSelectQuiz} />
+      {actionError && <p className="quiz-error">{actionError}</p>}
+      {actionMessage && <p className="quiz-success">{actionMessage}</p>}
+
+      <QuizGrid
+        quizzes={quizzes}
+        onSelectQuiz={handleSelectQuiz}
+        isInstructor={isInstructor}
+        onEditQuiz={handleEditQuiz}
+        onDeleteQuiz={handleDeleteQuiz}
+        onCopyQuiz={handleCopyQuiz}
+        onExportQuiz={handleExportQuiz}
+      />
 
       {quizError && <p className="quiz-error">{quizError}</p>}
 
@@ -352,6 +612,75 @@ function QuizzesPage() {
         submitResult={submitResult}
         onClose={() => setSelectedQuiz(null)}
       />
+
+      {user?.id && (
+        <section className="quiz-history">
+          <div className="quiz-history-header">
+            <h2>Past Quiz Scores</h2>
+            <button
+              type="button"
+              className="quiz-secondary-button"
+              onClick={loadSubmissions}
+            >
+              Refresh
+            </button>
+          </div>
+          {submissionsError && <p className="quiz-error">{submissionsError}</p>}
+          {submissions.length === 0 ? (
+            <p className="quiz-hint">No quiz submissions yet.</p>
+          ) : (
+            (() => {
+              const pageSize = 5;
+              const totalPages = Math.ceil(submissions.length / pageSize);
+              const startIndex = submissionPage * pageSize;
+              const pageItems = submissions.slice(startIndex, startIndex + pageSize);
+
+              return (
+                <>
+                  <div className="quiz-history-list">
+                    {pageItems.map((submission) => (
+                      <div key={submission.id} className="quiz-history-card">
+                        <div>
+                          <strong>{submission.title}</strong>
+                          <p className="quiz-history-meta">
+                            Score: {submission.score} / {submission.total}
+                          </p>
+                        </div>
+                        <span className="quiz-history-date">{submission.submittedAt}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {totalPages > 1 && (
+                    <div className="quiz-history-pagination">
+                      <button
+                        type="button"
+                        className="quiz-secondary-button"
+                        onClick={() => setSubmissionPage((prev) => Math.max(prev - 1, 0))}
+                        disabled={submissionPage === 0}
+                      >
+                        Previous
+                      </button>
+                      <span className="quiz-history-page">
+                        Page {submissionPage + 1} of {totalPages}
+                      </span>
+                      <button
+                        type="button"
+                        className="quiz-secondary-button"
+                        onClick={() =>
+                          setSubmissionPage((prev) => Math.min(prev + 1, totalPages - 1))
+                        }
+                        disabled={submissionPage >= totalPages - 1}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
+            })()
+          )}
+        </section>
+      )}
     </div>
   );
 }
