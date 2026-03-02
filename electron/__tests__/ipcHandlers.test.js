@@ -43,6 +43,7 @@ async function loadMainWithScenarioMocks() {
     getQuizById: jest.fn(),
     submitQuiz: jest.fn(),
     getUserQuizSubmissions: jest.fn(),
+    getSubmissionDetails: jest.fn(),
     updateQuiz: jest.fn(),
     deleteQuiz: jest.fn(),
     copyQuiz: jest.fn(),
@@ -286,6 +287,23 @@ describe("auth IPC handlers", () => {
       success: false,
       error: "Invalid credentials",
     });
+  });
+
+  test("sign-out clears the current session", async () => {
+    const { mockIpcHandle, userMocks } = await loadMainWithScenarioMocks();
+
+    const mockUser = { id: 5, username: "student1", role: "student" };
+    userMocks.authenticateUser.mockReturnValueOnce(mockUser);
+    const loginHandler = findHandler(mockIpcHandle, "login-user");
+    await loginHandler(null, { username: "student1", password: "pass" });
+
+    const signOutHandler = findHandler(mockIpcHandle, "sign-out");
+    const signOutResponse = await signOutHandler();
+    expect(signOutResponse).toEqual({ success: true });
+
+    const submissionsHandler = findHandler(mockIpcHandle, "get-user-quiz-submissions");
+    const response = await submissionsHandler();
+    expect(response).toEqual({ success: false, error: "No user logged in" });
   });
 
   test("restore-session hydrates current user when found", async () => {
@@ -698,6 +716,28 @@ describe("quiz IPC handlers", () => {
     const response = await handler();
 
     expect(response).toEqual({ success: false, error: "No user logged in" });
+  });
+
+  test("get-quiz-submission-details returns breakdown when found", async () => {
+    const { mockIpcHandle, quizMocks } = await loadMainWithScenarioMocks();
+    const details = { id: 1, title: "Quiz", score: 3, total: 4, answers: [] };
+    quizMocks.getSubmissionDetails.mockReturnValueOnce(details);
+
+    const handler = findHandler(mockIpcHandle, "get-quiz-submission-details");
+    const response = await handler(null, { submissionId: 1 });
+
+    expect(quizMocks.getSubmissionDetails).toHaveBeenCalledWith(1);
+    expect(response).toEqual({ success: true, details });
+  });
+
+  test("get-quiz-submission-details returns error when not found", async () => {
+    const { mockIpcHandle, quizMocks } = await loadMainWithScenarioMocks();
+    quizMocks.getSubmissionDetails.mockReturnValueOnce(null);
+
+    const handler = findHandler(mockIpcHandle, "get-quiz-submission-details");
+    const response = await handler(null, { submissionId: 99 });
+
+    expect(response).toEqual({ success: false, error: "Submission not found." });
   });
 });
 

@@ -1,81 +1,22 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 
 const AuthContext = createContext(null);
 const STORAGE_KEY = "ehrSimulatorUser";
 
-const readStoredUser = () => {
-  if (typeof window === "undefined") {
-    return null;
-  }
+// Always clear any persisted session on startup so the app opens at the login screen
+if (typeof window !== "undefined") {
   try {
-    const storedValue = window.localStorage.getItem(STORAGE_KEY);
-    return storedValue ? JSON.parse(storedValue) : null;
-  } catch {
-    return null;
-  }
-};
-
-const persistUser = (user) => {
-  if (typeof window === "undefined") {
-    return;
-  }
-  try {
-    if (user) {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    } else {
-      window.localStorage.removeItem(STORAGE_KEY);
-    }
+    window.localStorage.removeItem(STORAGE_KEY);
   } catch {
     // ignore storage errors
   }
-};
+}
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => readStoredUser());
-  const [restoring, setRestoring] = useState(() => Boolean(readStoredUser()));
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const restore = async () => {
-      if (!user?.id || !window.api?.restoreSession) {
-        setRestoring(false);
-        return;
-      }
-      try {
-        const result = await window.api.restoreSession({ userId: user.id });
-        if (cancelled) {
-          return;
-        }
-        if (result.success) {
-          setUser(result.user);
-          persistUser(result.user);
-        } else {
-          setUser(null);
-          persistUser(null);
-        }
-      } catch {
-        if (!cancelled) {
-          setUser(null);
-          persistUser(null);
-        }
-      } finally {
-        if (!cancelled) {
-          setRestoring(false);
-        }
-      }
-    };
-
-    restore();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id]);
+  const [user, setUser] = useState(null);
 
   const updateUser = (nextUser) => {
     setUser(nextUser);
-    persistUser(nextUser);
   };
 
   const signIn = async ({ username, password }) => {
@@ -104,18 +45,23 @@ export function AuthProvider({ children }) {
     return nextUser;
   };
 
-  const signOut = () => updateUser(null);
+  const signOut = () => {
+    if (window.api?.signOut) {
+      window.api.signOut();
+    }
+    setUser(null);
+  };
 
   const value = useMemo(
     () => ({
       user,
       isAuthenticated: Boolean(user?.id),
-      restoring,
+      restoring: false,
       signIn,
       signOut,
       register,
     }),
-    [user, restoring]
+    [user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

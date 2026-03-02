@@ -17,17 +17,25 @@ contextBridge.exposeInMainWorld("api", {
       return { success: false, error: error.message };
     }
   },
-  loginUser: async (credentials) => {
+  restoreSession: async ({ userId }) => {
     try {
-      return await ipcRenderer.invoke("login-user", credentials);
+      return await ipcRenderer.invoke("restore-session", { userId });
     } catch (error) {
       console.error("IPC error:", error);
       return { success: false, error: error.message };
     }
   },
-  restoreSession: async ({ userId }) => {
+  signOut: async () => {
     try {
-      return await ipcRenderer.invoke("restore-session", { userId });
+      return await ipcRenderer.invoke("sign-out");
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
+  loginUser: async (credentials) => {
+    try {
+      return await ipcRenderer.invoke("login-user", credentials);
     } catch (error) {
       console.error("IPC error:", error);
       return { success: false, error: error.message };
@@ -133,6 +141,14 @@ contextBridge.exposeInMainWorld("api", {
   getUserQuizSubmissions: async () => {
     try {
       return await ipcRenderer.invoke("get-user-quiz-submissions");
+    } catch (error) {
+      console.error("IPC error:", error);
+      return { success: false, error: error.message };
+    }
+  },
+  getQuizSubmissionDetails: async (submissionId) => {
+    try {
+      return await ipcRenderer.invoke("get-quiz-submission-details", { submissionId });
     } catch (error) {
       console.error("IPC error:", error);
       return { success: false, error: error.message };

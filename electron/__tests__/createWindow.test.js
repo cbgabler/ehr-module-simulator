@@ -71,6 +71,7 @@ async function loadMainModule({ isPackaged = false } = {}) {
     getQuizById: jest.fn(),
     submitQuiz: jest.fn(),
     getUserQuizSubmissions: jest.fn(),
+    getSubmissionDetails: jest.fn(),
     updateQuiz: jest.fn(),
     deleteQuiz: jest.fn(),
     copyQuiz: jest.fn(),

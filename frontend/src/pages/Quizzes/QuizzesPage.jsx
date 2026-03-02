@@ -3,6 +3,7 @@ import { useAuth } from "../Auth/AuthContext.jsx";
 import QuizCreatePanel from "./components/QuizCreatePanel.jsx";
 import QuizGrid from "./components/QuizGrid.jsx";
 import QuizHeader from "./components/QuizHeader.jsx";
+import QuizHistory from "./components/QuizHistory.jsx";
 import QuizTakePanel from "./components/QuizTakePanel.jsx";
 import { createEmptyQuestion, normalizeQuizQuestions } from "./quizUtils.js";
 import "./QuizzesPage.css";
@@ -120,6 +121,13 @@ function QuizzesPage() {
   useEffect(() => {
     loadSubmissions();
   }, [loadSubmissions]);
+
+  useEffect(() => {
+    setSubmissions([]);
+    if (user?.id) {
+      loadSubmissions();
+    }
+  }, [user?.id, loadSubmissions]);
 
   const handleSelectQuiz = async (quizId) => {
     setSelectedQuiz(null);
@@ -613,74 +621,7 @@ function QuizzesPage() {
         onClose={() => setSelectedQuiz(null)}
       />
 
-      {user?.id && (
-        <section className="quiz-history">
-          <div className="quiz-history-header">
-            <h2>Past Quiz Scores</h2>
-            <button
-              type="button"
-              className="quiz-secondary-button"
-              onClick={loadSubmissions}
-            >
-              Refresh
-            </button>
-          </div>
-          {submissionsError && <p className="quiz-error">{submissionsError}</p>}
-          {submissions.length === 0 ? (
-            <p className="quiz-hint">No quiz submissions yet.</p>
-          ) : (
-            (() => {
-              const pageSize = 5;
-              const totalPages = Math.ceil(submissions.length / pageSize);
-              const startIndex = submissionPage * pageSize;
-              const pageItems = submissions.slice(startIndex, startIndex + pageSize);
-
-              return (
-                <>
-                  <div className="quiz-history-list">
-                    {pageItems.map((submission) => (
-                      <div key={submission.id} className="quiz-history-card">
-                        <div>
-                          <strong>{submission.title}</strong>
-                          <p className="quiz-history-meta">
-                            Score: {submission.score} / {submission.total}
-                          </p>
-                        </div>
-                        <span className="quiz-history-date">{submission.submittedAt}</span>
-                      </div>
-                    ))}
-                  </div>
-                  {totalPages > 1 && (
-                    <div className="quiz-history-pagination">
-                      <button
-                        type="button"
-                        className="quiz-secondary-button"
-                        onClick={() => setSubmissionPage((prev) => Math.max(prev - 1, 0))}
-                        disabled={submissionPage === 0}
-                      >
-                        Previous
-                      </button>
-                      <span className="quiz-history-page">
-                        Page {submissionPage + 1} of {totalPages}
-                      </span>
-                      <button
-                        type="button"
-                        className="quiz-secondary-button"
-                        onClick={() =>
-                          setSubmissionPage((prev) => Math.min(prev + 1, totalPages - 1))
-                        }
-                        disabled={submissionPage >= totalPages - 1}
-                      >
-                        Next
-                      </button>
-                    </div>
-                  )}
-                </>
-              );
-            })()
-          )}
-        </section>
-      )}
+      <QuizHistory submissions={submissions} />
     </div>
   );
 }

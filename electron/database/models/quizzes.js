@@ -513,3 +513,41 @@ export function getUserQuizSubmissions(userId) {
     )
     .all(userId);
 }
+
+export function getSubmissionDetails(submissionId) {
+  const db = getDb();
+
+  const submission = db
+    .prepare(`SELECT s.*, q.title FROM quiz_submissions s JOIN quizzes q ON q.id = s.quizId WHERE s.id = ?`)
+    .get(submissionId);
+
+  if (!submission) {
+    return null;
+  }
+
+  const answers = db
+    .prepare(
+      `
+      SELECT
+        qa.selectedAnswerIndex,
+        qa.isCorrect,
+        qq.id AS questionId,
+        qq.prompt,
+        qq.type,
+        qq.options,
+        qq.correctAnswerIndex,
+        qq.orderIndex
+      FROM quiz_submission_answers qa
+      JOIN quiz_questions qq ON qq.id = qa.questionId
+      WHERE qa.submissionId = ?
+      ORDER BY qq.orderIndex;
+    `
+    )
+    .all(submissionId)
+    .map((row) => ({
+      ...row,
+      options: row.options ? JSON.parse(row.options) : [],
+    }));
+
+  return { ...submission, answers };
+}
