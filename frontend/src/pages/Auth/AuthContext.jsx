@@ -15,6 +15,14 @@ const readStoredUser = () => {
   }
 };
 
+const initUser = () => {
+  const stored = readStoredUser();
+  if (stored?.id && window.api?.restoreSession) {
+    window.api.restoreSession(stored);
+  }
+  return stored;
+};
+
 const persistUser = (user) => {
   if (typeof window === "undefined") {
     return;
@@ -31,7 +39,7 @@ const persistUser = (user) => {
 };
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => readStoredUser());
+  const [user, setUser] = useState(initUser);
 
   const updateUser = (nextUser) => {
     setUser(nextUser);
@@ -64,7 +72,12 @@ export function AuthProvider({ children }) {
     return nextUser;
   };
 
-  const signOut = () => updateUser(null);
+  const signOut = () => {
+    if (window.api?.signOut) {
+      window.api.signOut();
+    }
+    updateUser(null);
+  };
 
   const value = useMemo(
     () => ({

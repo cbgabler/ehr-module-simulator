@@ -24,6 +24,7 @@ const {
   getQuizById,
   submitQuiz,
   getUserQuizSubmissions,
+  getSubmissionDetails,
 } = await import("../database/models/quizzes.js");
 
 beforeEach(() => {
@@ -218,5 +219,52 @@ describe("quiz data model helpers", () => {
 
     expect(preparedStatements[0].sql).toContain("FROM quiz_submissions");
     expect(submissions).toEqual([{ id: 1, quizId: 2, title: "Quiz" }]);
+  });
+
+  test("getSubmissionDetails returns breakdown with parsed options", () => {
+    getResults.push({ id: 5, quizId: 2, score: 1, total: 2, title: "Quiz" });
+    allResults.push([
+      {
+        selectedAnswerIndex: 0,
+        isCorrect: 1,
+        questionId: 10,
+        prompt: "Heart rate normal range?",
+        type: "multiple_choice",
+        options: JSON.stringify(["60-100 bpm", "10-20 bpm"]),
+        correctAnswerIndex: 0,
+        orderIndex: 0,
+      },
+      {
+        selectedAnswerIndex: 1,
+        isCorrect: 0,
+        questionId: 11,
+        prompt: "Fever is above 100.4F",
+        type: "true_false",
+        options: JSON.stringify(["True", "False"]),
+        correctAnswerIndex: 0,
+        orderIndex: 1,
+      },
+    ]);
+
+    const details = getSubmissionDetails(5);
+
+    expect(preparedStatements[0].sql).toContain("FROM quiz_submissions");
+    expect(preparedStatements[1].sql).toContain("FROM quiz_submission_answers");
+    expect(details.id).toBe(5);
+    expect(details.title).toBe("Quiz");
+    expect(details.answers).toHaveLength(2);
+    expect(details.answers[0].options).toEqual(["60-100 bpm", "10-20 bpm"]);
+    expect(details.answers[0].isCorrect).toBe(1);
+    expect(details.answers[1].options).toEqual(["True", "False"]);
+    expect(details.answers[1].isCorrect).toBe(0);
+  });
+
+  test("getSubmissionDetails returns null when submission not found", () => {
+    getResults.push(undefined);
+
+    const details = getSubmissionDetails(999);
+
+    expect(details).toBeNull();
+    expect(preparedStatements).toHaveLength(1);
   });
 });

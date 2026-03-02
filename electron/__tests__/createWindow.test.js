@@ -66,6 +66,7 @@ async function loadMainModule({ isPackaged = false } = {}) {
     getQuizById: jest.fn(),
     submitQuiz: jest.fn(),
     getUserQuizSubmissions: jest.fn(),
+    getSubmissionDetails: jest.fn(),
   }));
 
   await jest.unstable_mockModule("../database/models/sessionLogs.js", () => ({

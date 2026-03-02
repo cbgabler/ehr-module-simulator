@@ -3,6 +3,7 @@ import { useAuth } from "../Auth/AuthContext.jsx";
 import QuizCreatePanel from "./components/QuizCreatePanel.jsx";
 import QuizGrid from "./components/QuizGrid.jsx";
 import QuizHeader from "./components/QuizHeader.jsx";
+import QuizHistory from "./components/QuizHistory.jsx";
 import QuizTakePanel from "./components/QuizTakePanel.jsx";
 import { createEmptyQuestion, normalizeQuizQuestions } from "./quizUtils.js";
 import "./QuizzesPage.css";
@@ -32,6 +33,8 @@ function QuizzesPage() {
   const [submitError, setSubmitError] = useState(null);
   const [submitResult, setSubmitResult] = useState(null);
 
+  const [submissions, setSubmissions] = useState([]);
+
   const loadQuizzes = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -54,9 +57,28 @@ function QuizzesPage() {
     }
   }, []);
 
+  const loadSubmissions = useCallback(async () => {
+    if (!window.api?.getUserQuizSubmissions) return;
+    try {
+      const result = await window.api.getUserQuizSubmissions();
+      if (result.success) {
+        setSubmissions(result.submissions || []);
+      }
+    } catch {
+      // Non-critical — history stays empty on failure
+    }
+  }, []);
+
   useEffect(() => {
     loadQuizzes();
   }, [loadQuizzes]);
+
+  useEffect(() => {
+    setSubmissions([]);
+    if (user?.id) {
+      loadSubmissions();
+    }
+  }, [user?.id, loadSubmissions]);
 
   const handleSelectQuiz = async (quizId) => {
     setSelectedQuiz(null);
@@ -103,6 +125,7 @@ function QuizzesPage() {
       const response = await window.api.submitQuiz(payload);
       if (response.success) {
         setSubmitResult(response.result);
+        loadSubmissions();
       } else {
         setSubmitError(response.error || "Unable to submit quiz.");
       }
@@ -352,6 +375,8 @@ function QuizzesPage() {
         submitResult={submitResult}
         onClose={() => setSelectedQuiz(null)}
       />
+
+      <QuizHistory submissions={submissions} />
     </div>
   );
 }

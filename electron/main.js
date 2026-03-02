@@ -26,6 +26,7 @@ import {
   getQuizById,
   submitQuiz,
   getUserQuizSubmissions,
+  getSubmissionDetails,
 } from "./database/models/quizzes.js";
 
 // Sessions
@@ -74,11 +75,31 @@ ipcMain.handle("register-user", async (event, payload = {}) => {
     });
     const user = registerUser(payload);
     console.log("User registered successfully with ID:", user?.id);
+    currentSession = { userId: user.id, user };
     return { success: true, user };
   } catch (error) {
     console.error("Error registering user:", error);
     return { success: false, error: error.message };
   }
+});
+
+ipcMain.handle("restore-session", async (event, payload = {}) => {
+  try {
+    const { id, username, role } = payload ?? {};
+    if (!id) {
+      throw new Error("User id is required to restore session.");
+    }
+    currentSession = { userId: id, user: { id, username, role } };
+    return { success: true };
+  } catch (error) {
+    console.error("Error restoring session:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("sign-out", async () => {
+  currentSession = null;
+  return { success: true };
 });
 
 ipcMain.handle("login-user", async (event, payload = {}) => {
@@ -225,6 +246,22 @@ ipcMain.handle("get-user-quiz-submissions", async () => {
     return { success: true, submissions };
   } catch (error) {
     console.error("Error getting quiz submissions:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle("get-quiz-submission-details", async (event, { submissionId } = {}) => {
+  try {
+    if (!submissionId) {
+      throw new Error("submissionId is required.");
+    }
+    const details = getSubmissionDetails(submissionId);
+    if (!details) {
+      throw new Error("Submission not found.");
+    }
+    return { success: true, details };
+  } catch (error) {
+    console.error("Error getting quiz submission details:", error);
     return { success: false, error: error.message };
   }
 });

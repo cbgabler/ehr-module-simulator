@@ -3,7 +3,7 @@ import { useAuth } from "../../pages/Auth/AuthContext.jsx";
 
 function Navigation() {
   const navigate = useNavigate();
-  const { isAuthenticated, signOut } = useAuth();
+  const { user, isAuthenticated, signOut } = useAuth();
 
   const handleSignOut = () => {
     signOut();
@@ -41,13 +41,26 @@ function Navigation() {
           )}
           <li className="nav-item nav-auth">
             {isAuthenticated ? (
-              <button
-                type="button"
-                className="nav-link nav-button"
-                onClick={handleSignOut}
-              >
-                Sign Out
-              </button>
+              <div className="nav-user-area">
+                <div className="nav-user-info">
+                  <div className="nav-user-avatar">
+                    {user?.username?.[0]?.toUpperCase() ?? "?"}
+                  </div>
+                  <div className="nav-user-details">
+                    <span className="nav-user-name">{user?.username}</span>
+                    <span className={`nav-user-role nav-user-role--${user?.role}`}>
+                      {user?.role}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="nav-link nav-button"
+                  onClick={handleSignOut}
+                >
+                  Sign Out
+                </button>
+              </div>
             ) : (
               <NavLink
                 to="/sign-in"
