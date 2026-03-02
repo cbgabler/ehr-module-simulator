@@ -89,6 +89,11 @@
   transform: none;
 }
 
+.app-navigation .nav-feedback-btn:hover:not(:disabled) {
+  color: #16a34a;
+  background-color: rgba(22, 163, 74, 0.08);
+}
+
 /* Main Content Area */
 .app-content {
   flex: 1;

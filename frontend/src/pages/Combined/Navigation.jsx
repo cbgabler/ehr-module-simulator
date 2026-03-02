@@ -1,6 +1,8 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../pages/Auth/AuthContext.jsx";
 
+const FEEDBACK_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScYWwx7_N7xtM6iyEJtOtsEtQyiroWIUEwemN_s1W-8Bk2JWg/viewform?usp=header";
+
 function Navigation() {
   const navigate = useNavigate();
   const { isAuthenticated, signOut } = useAuth();
@@ -8,6 +10,15 @@ function Navigation() {
   const handleSignOut = () => {
     signOut();
     navigate("/sign-in", { replace: true });
+  };
+
+  const handleFeedbackClick = () => {
+    if (window.api?.openExternalUrl) {
+      window.api.openExternalUrl(FEEDBACK_FORM_URL);
+    } else {
+      // Fallback for non-Electron environments (e.g. browser dev)
+      window.open(FEEDBACK_FORM_URL, "_blank", "noopener,noreferrer");
+    }
   };
 
   return (
@@ -39,6 +50,17 @@ function Navigation() {
               </NavLink>
             </li>
           )}
+          <li className="nav-item nav-feedback">
+            <button
+              type="button"
+              id="feedback-link"
+              className="nav-link nav-button nav-feedback-btn"
+              onClick={handleFeedbackClick}
+              title="Open faculty evaluation form"
+            >
+              Feedback ↗
+            </button>
+          </li>
           <li className="nav-item nav-auth">
             {isAuthenticated ? (
               <button

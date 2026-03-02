@@ -33,6 +33,9 @@ async function loadMainModule({ isPackaged = false } = {}) {
       showOpenDialog: jest.fn(),
       showSaveDialog: jest.fn(),
     },
+    shell: {
+      openExternal: jest.fn(() => Promise.resolve()),
+    },
   }));
 
   await jest.unstable_mockModule("../database/database.js", () => ({
