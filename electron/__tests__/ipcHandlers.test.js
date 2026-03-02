@@ -71,6 +71,9 @@ async function loadMainWithScenarioMocks() {
       showOpenDialog: jest.fn(),
       showSaveDialog: jest.fn(),
     },
+    shell: {
+      openExternal: jest.fn(() => Promise.resolve()),
+    },
   }));
 
   await jest.unstable_mockModule("../database/database.js", () => ({
@@ -674,7 +677,7 @@ describe("quiz IPC handlers", () => {
     const { mockIpcHandle, quizMocks, userMocks } = await loadMainWithScenarioMocks();
     const submissions = [{ id: 1, quizId: 2 }];
     quizMocks.getUserQuizSubmissions.mockReturnValueOnce(submissions);
-    
+
     // Log in first to establish session
     const mockUser = { id: 3, username: "testuser", role: "student" };
     userMocks.authenticateUser.mockReturnValueOnce(mockUser);
@@ -697,7 +700,7 @@ describe("quiz IPC handlers", () => {
     expect(response).toEqual({ success: false, error: "No user logged in" });
   });
 });
-    
+
 describe("summary export IPC handler", () => {
   test("export-session-summary-pdf returns util payload", async () => {
     const { mockIpcHandle, summaryExportMocks } =
@@ -728,5 +731,41 @@ describe("summary export IPC handler", () => {
     const result = await handler(null, { summaryText: "Summary" });
 
     expect(result).toEqual({ success: false, error: "export failed" });
+  });
+});
+
+describe("open-external-url IPC handler", () => {
+  test("opens URL via shell.openExternal", async () => {
+    const { electron, mockIpcHandle } = await loadMainWithScenarioMocks();
+    const handler = findHandler(mockIpcHandle, "open-external-url");
+    const result = await handler(null, "https://forms.google.com/test");
+
+    expect(electron.shell.openExternal).toHaveBeenCalledWith(
+      "https://forms.google.com/test"
+    );
+    expect(result).toEqual({ success: true });
+  });
+
+  test("reports shell errors", async () => {
+    const { electron, mockIpcHandle } = await loadMainWithScenarioMocks();
+    electron.shell.openExternal.mockRejectedValueOnce(
+      new Error("Failed to open")
+    );
+
+    const handler = findHandler(mockIpcHandle, "open-external-url");
+    const result = await handler(null, "https://example.com");
+
+    expect(result).toEqual({ success: false, error: "Failed to open" });
+  });
+
+  test("rejects missing or invalid URL", async () => {
+    const { mockIpcHandle } = await loadMainWithScenarioMocks();
+    const handler = findHandler(mockIpcHandle, "open-external-url");
+
+    const result = await handler(null, undefined);
+    expect(result).toEqual({
+      success: false,
+      error: "A valid URL string is required",
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, shell } from "electron";
 import path from "path";
 import { fileURLToPath } from "url";
 import { promises as fs } from "fs";
@@ -649,6 +649,20 @@ ipcMain.handle("export-data", async (event, payload = {}) => {
     return result;
   } catch (error) {
     console.error("Error exporting data:", error);
+    return { success: false, error: error.message };
+  }
+});
+
+// External URL handler (for Feedback form, etc.)
+ipcMain.handle("open-external-url", async (event, url) => {
+  try {
+    if (!url || typeof url !== "string") {
+      throw new Error("A valid URL string is required");
+    }
+    await shell.openExternal(url);
+    return { success: true };
+  } catch (error) {
+    console.error("Error opening external URL:", error);
     return { success: false, error: error.message };
   }
 });
