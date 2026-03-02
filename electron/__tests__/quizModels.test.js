@@ -15,7 +15,7 @@ await jest.unstable_mockModule("../database/database.js", () => ({
 }));
 
 await jest.unstable_mockModule("../database/models/users.js", () => ({
-  getRoleById: jest.fn(() => ({ role: "student" })),
+  getRoleById: jest.fn(() => ({ role: "instructor" })),
 }));
 
 const {
@@ -25,6 +25,8 @@ const {
   submitQuiz,
   getUserQuizSubmissions,
   getSubmissionDetails,
+  updateQuiz,
+  deleteQuiz,
 } = await import("../database/models/quizzes.js");
 
 beforeEach(() => {
@@ -81,7 +83,9 @@ describe("quiz data model helpers", () => {
     expect(preparedStatements[0].run).toHaveBeenCalledWith(
       "Vitals Basics",
       "Test quiz",
-      3
+      3,
+      1,
+      0
     );
     expect(preparedStatements[1].run).toHaveBeenCalledTimes(2);
   });
@@ -131,7 +135,7 @@ describe("quiz data model helpers", () => {
       { id: 3, title: "Quiz B", questionCount: 2 },
     ]);
 
-    const quizzes = getAllQuizzes();
+    const quizzes = getAllQuizzes(4);
 
     expect(preparedStatements[0].sql).toContain("FROM quizzes");
     expect(quizzes).toEqual([
@@ -151,8 +155,9 @@ describe("quiz data model helpers", () => {
         correctAnswerIndex: 1,
       },
     ]);
+    allResults.push([]);
 
-    const quiz = getQuizById(5);
+    const quiz = getQuizById(5, 4);
 
     expect(preparedStatements[0].sql).toContain("SELECT * FROM quizzes");
     expect(preparedStatements[1].sql).toContain("FROM quiz_questions");
@@ -196,7 +201,12 @@ describe("quiz data model helpers", () => {
       ],
     });
 
-    expect(result).toEqual({ submissionId: 100, score: 1, total: 2 });
+    expect(result).toEqual({
+      submissionId: 100,
+      score: 1,
+      total: 2,
+      showCorrectAnswers: false,
+    });
     const insertSubmission = preparedStatements.find((stmt) =>
       stmt.sql.includes("INSERT INTO quiz_submissions")
     );
@@ -266,5 +276,66 @@ describe("quiz data model helpers", () => {
 
     expect(details).toBeNull();
     expect(preparedStatements).toHaveLength(1);
+  });
+
+  test("updateQuiz rewrites quiz and questions", () => {
+    runResults.push({ changes: 1 });
+
+    const updated = updateQuiz(5, {
+      title: "Updated Quiz",
+      description: "New description",
+      isPublic: false,
+      showCorrectAnswers: true,
+      assignedStudentIds: [2, 3],
+      questions: [
+        {
+          prompt: "New Question",
+          type: "multiple_choice",
+          options: ["A", "B"],
+          correctAnswerIndex: 1,
+          explanation: "Because B is correct",
+        },
+      ],
+    });
+
+    expect(updated).toBe(true);
+    expect(preparedStatements[0].sql).toContain("UPDATE quizzes");
+    expect(preparedStatements[1].sql).toContain("DELETE FROM quiz_questions");
+    expect(preparedStatements[2].sql).toContain("INSERT INTO quiz_questions");
+    expect(preparedStatements[3].sql).toContain("DELETE FROM quiz_assignments");
+  });
+
+  test("updateQuiz returns false when quiz missing", () => {
+    runResults.push({ changes: 0 });
+
+    const updated = updateQuiz(12, {
+      title: "Missing Quiz",
+      questions: [
+        {
+          prompt: "Q",
+          type: "true_false",
+          correctAnswerIndex: 0,
+        },
+      ],
+    });
+
+    expect(updated).toBe(false);
+  });
+
+  test("deleteQuiz removes quiz when found", () => {
+    runResults.push({ changes: 1 });
+
+    const deleted = deleteQuiz(3);
+
+    expect(preparedStatements[0].sql).toContain("DELETE FROM quizzes");
+    expect(deleted).toBe(true);
+  });
+
+  test("deleteQuiz returns false when nothing deleted", () => {
+    runResults.push({ changes: 0 });
+
+    const deleted = deleteQuiz(99);
+
+    expect(deleted).toBe(false);
   });
 });
