@@ -290,6 +290,21 @@ export function getExampleHypertensionScenario() {
       },
     },
 
+    // Custom Tabs (specialty sections — instructors define fields, students fill in values)
+    customTabs: [
+      {
+        id: "urineOutput",
+        label: "Urine Output",
+        fields: [
+          { key: "totalOutput", label: "Total Output", type: "number", placeholder: "Enter mL", unit: "mL" },
+          { key: "color", label: "Color", type: "text", placeholder: "e.g. Clear yellow" },
+          { key: "frequency", label: "Frequency", type: "text", placeholder: "e.g. Every 2 hours" },
+          { key: "lastVoided", label: "Last Voided", type: "text", placeholder: "e.g. 1:00 PM" },
+          { key: "notes", label: "Additional Notes", type: "textarea", placeholder: "Enter observations..." },
+        ],
+      },
+    ],
+
     // Simulation Parameters
     simulation: {
       tickIntervalMs: 3000,

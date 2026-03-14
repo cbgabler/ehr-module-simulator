@@ -312,6 +312,7 @@ function createInitialState({
   const medications = deepClone(scenario.definition?.medications ?? []);
   const medicationState = createMedicationState(medications);
   const orders = deepClone(scenario.definition?.orders ?? []);
+  const customTabs = deepClone(scenario.definition?.customTabs ?? []);
 
   return {
     sessionId,
@@ -326,6 +327,7 @@ function createInitialState({
     medications,
     medicationState,
     orders,
+    customTabs,
   };
 }
 
@@ -539,6 +541,7 @@ function formatState(session) {
     medications: deepClone(session.medications),
     medicationState: deepClone(session.medicationState),
     orders: deepClone(session.orders),
+    customTabs: deepClone(session.customTabs ?? []),
     targetStatus: session.targetStatus ?? DEFAULT_TARGET_STATUS,
     completionReason: session.completionReason,
     completionReasonCode: session.completionReasonCode,

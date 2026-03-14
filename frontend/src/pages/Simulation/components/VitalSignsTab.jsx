@@ -4,8 +4,12 @@ function VitalSignsTab({ vitals }) {
   }
 
   const formatBloodPressure = (bp) => {
-    if (!bp) return null;
-    return `${bp.systolic || "—"}/${bp.diastolic || "—"}`;
+    if (!bp) {
+      return null;
+    }
+    const systolic = bp.systolic != null ? Math.round(bp.systolic) : "—";
+    const diastolic = bp.diastolic != null ? Math.round(bp.diastolic) : "—";
+    return `${systolic}/${diastolic}`;
   };
 
   const getVitalStatus = (label, value) => {

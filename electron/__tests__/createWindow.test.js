@@ -46,6 +46,9 @@ async function loadMainModule({ isPackaged = false } = {}) {
         setPermissionRequestHandler: jest.fn(),
       },
     },
+    shell: {
+      openExternal: jest.fn(() => Promise.resolve()),
+    },
   }));
 
   await jest.unstable_mockModule("../database/database.js", () => ({
@@ -56,6 +59,9 @@ async function loadMainModule({ isPackaged = false } = {}) {
   await jest.unstable_mockModule("../database/models/users.js", () => ({
     registerUser: jest.fn(),
     authenticateUser: jest.fn(),
+    getRoleById: jest.fn(),
+    getAllUsers: jest.fn(),
+    getUserById: jest.fn(),
   }));
 
   await jest.unstable_mockModule("../database/models/scenarios.js", () => ({
@@ -70,6 +76,27 @@ async function loadMainModule({ isPackaged = false } = {}) {
     addSessionNote: jest.fn(),
     getSessionNotes: jest.fn(),
     deleteSessionNote: jest.fn(),
+  }));
+
+  await jest.unstable_mockModule("../database/models/quizzes.js", () => ({
+    createQuiz: jest.fn(),
+    getAllQuizzes: jest.fn(),
+    getQuizById: jest.fn(),
+    submitQuiz: jest.fn(),
+    getUserQuizSubmissions: jest.fn(),
+    getSubmissionDetails: jest.fn(),
+    updateQuiz: jest.fn(),
+    deleteQuiz: jest.fn(),
+    copyQuiz: jest.fn(),
+  }));
+
+  await jest.unstable_mockModule("../database/models/sessionLogs.js", () => ({
+    getSessionSummaryBySessionId: jest.fn(),
+    getUserSessionSummaries: jest.fn(),
+  }));
+
+  await jest.unstable_mockModule("../utils/summaryExport.js", () => ({
+    exportSessionSummaryPdf: jest.fn(),
   }));
 
   await jest.unstable_mockModule("../database/exampleScenarios.js", () => ({

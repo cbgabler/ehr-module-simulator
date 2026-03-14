@@ -8,6 +8,7 @@ import LearningObjectivesForm from "./forms/LearningObjectivesForm.jsx";
 import TagsForm from "./forms/TagsForm.jsx";
 import SimulationParamsForm from "./forms/SimulationParamsForm.jsx";
 import MetadataForm from "./forms/MetadataForm.jsx";
+import CustomTabsForm from "./forms/CustomTabsForm.jsx";
 
 function CreateScenarioModal({ onClose, onCreateSuccess }) {
   const [scenarioName, setScenarioName] = useState("");
@@ -40,6 +41,7 @@ function CreateScenarioModal({ onClose, onCreateSuccess }) {
   const [difficulty, setDifficulty] = useState("Intermediate");
   const [estimatedDuration, setEstimatedDuration] = useState("30-45 minutes");
   const [specialty, setSpecialty] = useState("General Nursing");
+  const [customTabs, setCustomTabs] = useState([]);
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const isSuccessMessage = message.toLowerCase().includes("success");
@@ -160,6 +162,21 @@ function CreateScenarioModal({ onClose, onCreateSuccess }) {
           status: order.status || "Active",
           priority: order.priority || "Routine",
         })),
+        customTabs: customTabs
+          .filter((t) => t.label.trim() && t.fields.some((f) => f.label.trim()))
+          .map((t) => ({
+            id: t.id,
+            label: t.label.trim(),
+            fields: t.fields
+              .filter((f) => f.label.trim())
+              .map((f) => ({
+                key: f.key,
+                label: f.label.trim(),
+                type: f.type || "text",
+                placeholder: f.placeholder?.trim() || "",
+                ...(f.unit?.trim() ? { unit: f.unit.trim() } : {}),
+              })),
+          })),
         labs: [],
         notes: [],
         assessment: {},
@@ -323,6 +340,9 @@ function CreateScenarioModal({ onClose, onCreateSuccess }) {
               holdTicks={holdTicks}
               setHoldTicks={setHoldTicks}
             />
+
+            {/* Custom Sections */}
+            <CustomTabsForm customTabs={customTabs} setCustomTabs={setCustomTabs} />
 
             {/* Scenario Metadata */}
             <MetadataForm

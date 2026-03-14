@@ -135,3 +135,8 @@ export function getAllUsers() {
   const db = getDb();
   return db.prepare("SELECT * FROM users").all();
 }
+
+export function getRoleById(userId) {
+  const db = getDb();
+  return db.prepare("SELECT role FROM users WHERE id=?").get(userId);
+}
