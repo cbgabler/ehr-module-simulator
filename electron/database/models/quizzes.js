@@ -42,10 +42,75 @@ const normalizeQuestion = (question = {}, index) => {
     type,
     options,
     correctAnswerIndex,
+    explanation: String(question.explanation ?? "").trim() || null,
   };
 };
 
-export function createQuiz({ title, description, createdBy, questions } = {}) {
+const normalizeQuizVisibility = (value) =>
+  value === false || value === 0 || value === "false" ? 0 : 1;
+
+const normalizeShowCorrect = (value) =>
+  value === true || value === 1 || value === "true" ? 1 : 0;
+
+const normalizeAssignedStudents = (assignedStudentIds) => {
+  if (!Array.isArray(assignedStudentIds)) {
+    return [];
+  }
+  const unique = new Set();
+  assignedStudentIds.forEach((id) => {
+    const numericId = Number(id);
+    if (Number.isInteger(numericId) && numericId > 0) {
+      unique.add(numericId);
+    }
+  });
+  return Array.from(unique);
+};
+
+const hasInstructorAccess = (role) =>
+  role === "admin" || role === "instructor";
+
+const shuffleArray = (items) => {
+  const shuffled = [...items];
+  for (let i = shuffled.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
+const getQuizAssignments = (db, quizId) =>
+  db
+    .prepare("SELECT userId FROM quiz_assignments WHERE quizId = ?")
+    .all(quizId)
+    .map((row) => row.userId);
+
+const canStudentAccessQuiz = (db, quizId, userId) => {
+  const quiz = db
+    .prepare("SELECT isPublic FROM quizzes WHERE id = ?")
+    .get(quizId);
+  if (!quiz) {
+    return false;
+  }
+  if (quiz.isPublic) {
+    return true;
+  }
+  const assignment = db
+    .prepare(
+      "SELECT 1 FROM quiz_assignments WHERE quizId = ? AND userId = ?"
+    )
+    .get(quizId, userId);
+  return Boolean(assignment);
+};
+
+export function createQuiz({
+  title,
+  description,
+  createdBy,
+  questions,
+  isPublic = true,
+  showCorrectAnswers = false,
+  assignedStudentIds = [],
+} = {}) {
   const trimmedTitle = String(title ?? "").trim();
   if (!trimmedTitle) {
     throw new Error("Quiz title is required.");
@@ -57,21 +122,33 @@ export function createQuiz({ title, description, createdBy, questions } = {}) {
 
   const db = getDb();
   const insertQuiz = db.prepare(
-    `INSERT INTO quizzes (title, description, createdBy) VALUES (?, ?, ?);`
+    `INSERT INTO quizzes (title, description, createdBy, isPublic, showCorrectAnswers)
+     VALUES (?, ?, ?, ?, ?);`
   );
   const insertQuestion = db.prepare(
     `
     INSERT INTO quiz_questions
-      (quizId, prompt, type, options, correctAnswerIndex, orderIndex)
-    VALUES (?, ?, ?, ?, ?, ?);
+      (quizId, prompt, type, options, correctAnswerIndex, explanation, orderIndex)
+    VALUES (?, ?, ?, ?, ?, ?, ?);
+  `
+  );
+  const insertAssignment = db.prepare(
+    `
+    INSERT OR IGNORE INTO quiz_assignments (quizId, userId)
+    VALUES (?, ?);
   `
   );
 
   const create = db.transaction(() => {
+    const normalizedAssigned = normalizeAssignedStudents(assignedStudentIds);
+    const isQuizPublic = normalizeQuizVisibility(isPublic);
+    const showAnswers = normalizeShowCorrect(showCorrectAnswers);
     const quizInfo = insertQuiz.run(
       trimmedTitle,
       String(description ?? "").trim() || null,
-      createdBy ?? null
+      createdBy ?? null,
+      isQuizPublic,
+      showAnswers
     );
     const quizId = quizInfo.lastInsertRowid;
 
@@ -83,9 +160,16 @@ export function createQuiz({ title, description, createdBy, questions } = {}) {
         normalized.type,
         JSON.stringify(normalized.options),
         normalized.correctAnswerIndex,
+        normalized.explanation,
         index
       );
     });
+
+    if (!isQuizPublic && normalizedAssigned.length > 0) {
+      normalizedAssigned.forEach((userId) => {
+        insertAssignment.run(quizId, userId);
+      });
+    }
 
     return quizId;
   });
@@ -93,19 +177,161 @@ export function createQuiz({ title, description, createdBy, questions } = {}) {
   return create();
 }
 
-export function getAllQuizzes() {
+export function updateQuiz(quizId, {
+  title,
+  description,
+  questions,
+  isPublic = true,
+  showCorrectAnswers = false,
+  assignedStudentIds = [],
+} = {}) {
+  const trimmedTitle = String(title ?? "").trim();
+  if (!trimmedTitle) {
+    throw new Error("Quiz title is required.");
+  }
+
+  if (!Array.isArray(questions) || questions.length === 0) {
+    throw new Error("Quiz must include at least one question.");
+  }
+
   const db = getDb();
+  const updateQuizStmt = db.prepare(
+    `
+    UPDATE quizzes
+    SET title = ?, description = ?, isPublic = ?, showCorrectAnswers = ?
+    WHERE id = ?;
+  `
+  );
+  const deleteQuestions = db.prepare("DELETE FROM quiz_questions WHERE quizId = ?");
+  const insertQuestion = db.prepare(
+    `
+    INSERT INTO quiz_questions
+      (quizId, prompt, type, options, correctAnswerIndex, explanation, orderIndex)
+    VALUES (?, ?, ?, ?, ?, ?, ?);
+  `
+  );
+  const deleteAssignments = db.prepare(
+    "DELETE FROM quiz_assignments WHERE quizId = ?"
+  );
+  const insertAssignment = db.prepare(
+    `
+    INSERT OR IGNORE INTO quiz_assignments (quizId, userId)
+    VALUES (?, ?);
+  `
+  );
+
+  const update = db.transaction(() => {
+    const normalizedAssigned = normalizeAssignedStudents(assignedStudentIds);
+    const isQuizPublic = normalizeQuizVisibility(isPublic);
+    const showAnswers = normalizeShowCorrect(showCorrectAnswers);
+
+    const info = updateQuizStmt.run(
+      trimmedTitle,
+      String(description ?? "").trim() || null,
+      isQuizPublic,
+      showAnswers,
+      quizId
+    );
+    if (info.changes === 0) {
+      return false;
+    }
+
+    deleteQuestions.run(quizId);
+    questions.forEach((question, index) => {
+      const normalized = normalizeQuestion(question, index);
+      insertQuestion.run(
+        quizId,
+        normalized.prompt,
+        normalized.type,
+        JSON.stringify(normalized.options),
+        normalized.correctAnswerIndex,
+        normalized.explanation,
+        index
+      );
+    });
+
+    deleteAssignments.run(quizId);
+    if (!isQuizPublic && normalizedAssigned.length > 0) {
+      normalizedAssigned.forEach((userId) => {
+        insertAssignment.run(quizId, userId);
+      });
+    }
+
+    return true;
+  });
+
+  return update();
+}
+
+export function deleteQuiz(quizId) {
+  const db = getDb();
+  const info = db.prepare("DELETE FROM quizzes WHERE id = ?").run(quizId);
+  return info.changes > 0;
+}
+
+export function copyQuiz(quizId, createdBy) {
+  const db = getDb();
+  const quiz = db.prepare("SELECT * FROM quizzes WHERE id = ?").get(quizId);
+  if (!quiz) {
+    return null;
+  }
+
+  const questions = db
+    .prepare("SELECT * FROM quiz_questions WHERE quizId = ? ORDER BY orderIndex")
+    .all(quizId)
+    .map((question) => ({
+      ...question,
+      options: question.options ? JSON.parse(question.options) : [],
+    }));
+
+  const assignedStudentIds = getQuizAssignments(db, quizId);
+
+  const newQuizId = createQuiz({
+    title: `Copy of ${quiz.title}`,
+    description: quiz.description,
+    createdBy: createdBy ?? quiz.createdBy ?? null,
+    questions,
+    isPublic: quiz.isPublic ?? 1,
+    showCorrectAnswers: quiz.showCorrectAnswers ?? 0,
+    assignedStudentIds,
+  });
+
+  return newQuizId;
+}
+
+export function getAllQuizzes(userId) {
+  const db = getDb();
+  const role = getRoleById(userId)?.role;
+  const baseQuery = `
+    SELECT q.*, (
+      SELECT COUNT(*) FROM quiz_questions WHERE quizId = q.id
+    ) AS questionCount
+    FROM quizzes q
+  `;
+  if (hasInstructorAccess(role)) {
+    return db
+      .prepare(
+        `
+        ${baseQuery}
+        ORDER BY q.createdAt DESC, q.id DESC;
+      `
+      )
+      .all();
+  }
+
   return db
     .prepare(
       `
-      SELECT q.*, (
-        SELECT COUNT(*) FROM quiz_questions WHERE quizId = q.id
-      ) AS questionCount
-      FROM quizzes q
+      ${baseQuery}
+      WHERE q.isPublic = 1
+         OR EXISTS (
+           SELECT 1 FROM quiz_assignments qa
+           WHERE qa.quizId = q.id AND qa.userId = ?
+         )
       ORDER BY q.createdAt DESC, q.id DESC;
     `
     )
-    .all();
+    .all(userId);
 }
 
 // Internal helper for server-side use - always includes correctAnswerIndex
@@ -136,10 +362,10 @@ export function getQuizById(quizId, userId) {
     return null;
   }
 
-  const role = getRoleById(userId);
+  const role = getRoleById(userId)?.role;
 
   // Check roles to see if we should be allowed to look at correctAnswerIndex
-  if (role === "admin" || role === "instructor") {
+  if (hasInstructorAccess(role)) {
     const questions = db
       .prepare(
         "SELECT * FROM quiz_questions WHERE quizId = ? ORDER BY orderIndex"
@@ -150,7 +376,12 @@ export function getQuizById(quizId, userId) {
         options: question.options ? JSON.parse(question.options) : [],
       }));
 
-    return { ...quiz, questions };
+    const assignedStudentIds = getQuizAssignments(db, quizId);
+    return { ...quiz, questions, assignedStudentIds };
+  }
+
+  if (!canStudentAccessQuiz(db, quizId, userId)) {
+    return null;
   }
 
   // Secure questions for students - excludes correctAnswerIndex
@@ -164,7 +395,7 @@ export function getQuizById(quizId, userId) {
       options: question.options ? JSON.parse(question.options) : [],
     }));
 
-  return { ...quiz, questions };
+  return { ...quiz, questions: shuffleArray(questions) };
 }
 
 export function submitQuiz({ quizId, userId, answers } = {}) {
@@ -178,6 +409,14 @@ export function submitQuiz({ quizId, userId, answers } = {}) {
   const quiz = getQuizWithAnswers(quizId);
   if (!quiz) {
     throw new Error("Quiz not found.");
+  }
+
+  const role = getRoleById(userId)?.role;
+  if (!hasInstructorAccess(role)) {
+    const db = getDb();
+    if (!canStudentAccessQuiz(db, quizId, userId)) {
+      throw new Error("You do not have access to this quiz.");
+    }
   }
 
   const answerMap = new Map();
@@ -239,7 +478,22 @@ export function submitQuiz({ quizId, userId, answers } = {}) {
       "UPDATE quiz_submissions SET score = ? WHERE id = ?"
     ).run(score, submissionId);
 
-    return { submissionId, score, total };
+    const result = {
+      submissionId,
+      score,
+      total,
+      showCorrectAnswers: Boolean(quiz.showCorrectAnswers),
+    };
+
+    if (quiz.showCorrectAnswers) {
+      result.answerKey = quiz.questions.map((question) => ({
+        questionId: question.id,
+        correctAnswerIndex: question.correctAnswerIndex,
+        explanation: question.explanation ?? null,
+      }));
+    }
+
+    return result;
   });
 
   return submit();
@@ -250,7 +504,7 @@ export function getUserQuizSubmissions(userId) {
   return db
     .prepare(
       `
-      SELECT s.*, q.title
+      SELECT s.*, q.title, q.isPublic, q.showCorrectAnswers
       FROM quiz_submissions s
       JOIN quizzes q ON q.id = s.quizId
       WHERE s.userId = ?
@@ -258,4 +512,42 @@ export function getUserQuizSubmissions(userId) {
     `
     )
     .all(userId);
+}
+
+export function getSubmissionDetails(submissionId) {
+  const db = getDb();
+
+  const submission = db
+    .prepare(`SELECT s.*, q.title FROM quiz_submissions s JOIN quizzes q ON q.id = s.quizId WHERE s.id = ?`)
+    .get(submissionId);
+
+  if (!submission) {
+    return null;
+  }
+
+  const answers = db
+    .prepare(
+      `
+      SELECT
+        qa.selectedAnswerIndex,
+        qa.isCorrect,
+        qq.id AS questionId,
+        qq.prompt,
+        qq.type,
+        qq.options,
+        qq.correctAnswerIndex,
+        qq.orderIndex
+      FROM quiz_submission_answers qa
+      JOIN quiz_questions qq ON qq.id = qa.questionId
+      WHERE qa.submissionId = ?
+      ORDER BY qq.orderIndex;
+    `
+    )
+    .all(submissionId)
+    .map((row) => ({
+      ...row,
+      options: row.options ? JSON.parse(row.options) : [],
+    }));
+
+  return { ...submission, answers };
 }

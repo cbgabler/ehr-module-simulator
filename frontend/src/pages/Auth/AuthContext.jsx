@@ -3,39 +3,20 @@ import { createContext, useContext, useMemo, useState } from "react";
 const AuthContext = createContext(null);
 const STORAGE_KEY = "ehrSimulatorUser";
 
-const readStoredUser = () => {
-  if (typeof window === "undefined") {
-    return null;
-  }
+// Always clear any persisted session on startup so the app opens at the login screen
+if (typeof window !== "undefined") {
   try {
-    const storedValue = window.localStorage.getItem(STORAGE_KEY);
-    return storedValue ? JSON.parse(storedValue) : null;
-  } catch {
-    return null;
-  }
-};
-
-const persistUser = (user) => {
-  if (typeof window === "undefined") {
-    return;
-  }
-  try {
-    if (user) {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    } else {
-      window.localStorage.removeItem(STORAGE_KEY);
-    }
+    window.localStorage.removeItem(STORAGE_KEY);
   } catch {
     // ignore storage errors
   }
-};
+}
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => readStoredUser());
+  const [user, setUser] = useState(null);
 
   const updateUser = (nextUser) => {
     setUser(nextUser);
-    persistUser(nextUser);
   };
 
   const signIn = async ({ username, password }) => {
@@ -64,12 +45,18 @@ export function AuthProvider({ children }) {
     return nextUser;
   };
 
-  const signOut = () => updateUser(null);
+  const signOut = () => {
+    if (window.api?.signOut) {
+      window.api.signOut();
+    }
+    setUser(null);
+  };
 
   const value = useMemo(
     () => ({
       user,
       isAuthenticated: Boolean(user?.id),
+      restoring: false,
       signIn,
       signOut,
       register,

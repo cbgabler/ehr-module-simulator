@@ -4,6 +4,7 @@ export const createEmptyQuestion = () => ({
   type: "multiple_choice",
   options: ["", ""],
   correctAnswerIndex: 0,
+  explanation: "",
 });
 
 export const normalizeQuizQuestions = (questions) => {
@@ -17,6 +18,7 @@ export const normalizeQuizQuestions = (questions) => {
         type,
         options: ["True", "False"],
         correctAnswerIndex: question.correctAnswerIndex ?? 0,
+        explanation: question.explanation?.trim() || null,
       };
     }
 
@@ -27,6 +29,7 @@ export const normalizeQuizQuestions = (questions) => {
       type: "multiple_choice",
       options,
       correctAnswerIndex: question.correctAnswerIndex ?? 0,
+      explanation: question.explanation?.trim() || null,
     };
   });
 };
