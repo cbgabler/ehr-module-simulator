@@ -1,60 +1,60 @@
-import { useState } from "react";
-import FormInput from "./shared/FormInput.jsx";
-import PatientInfoForm from "./forms/PatientInfoForm.jsx";
-import VitalsForm from "./forms/VitalsForm.jsx";
-import MedicationsForm from "./forms/MedicationsForm.jsx";
-import OrdersForm from "./forms/OrdersForm.jsx";
-import LearningObjectivesForm from "./forms/LearningObjectivesForm.jsx";
-import TagsForm from "./forms/TagsForm.jsx";
-import SimulationParamsForm from "./forms/SimulationParamsForm.jsx";
-import MetadataForm from "./forms/MetadataForm.jsx";
-import CustomTabsForm from "./forms/CustomTabsForm.jsx";
+import { useState } from 'react';
+import FormInput from './shared/FormInput.jsx';
+import PatientInfoForm from './forms/PatientInfoForm.jsx';
+import VitalsForm from './forms/VitalsForm.jsx';
+import MedicationsForm from './forms/MedicationsForm.jsx';
+import OrdersForm from './forms/OrdersForm.jsx';
+import LearningObjectivesForm from './forms/LearningObjectivesForm.jsx';
+import TagsForm from './forms/TagsForm.jsx';
+import SimulationParamsForm from './forms/SimulationParamsForm.jsx';
+import MetadataForm from './forms/MetadataForm.jsx';
+import CustomTabsForm from './forms/CustomTabsForm.jsx';
 
 function CreateScenarioModal({ onClose, onCreateSuccess }) {
-  const [scenarioName, setScenarioName] = useState("");
-  const [patientName, setPatientName] = useState("");
-  const [patientAge, setPatientAge] = useState("");
-  const [patientGender, setPatientGender] = useState("Male");
-  const [patientMRN, setPatientMRN] = useState("");
-  const [primaryDiagnosis, setPrimaryDiagnosis] = useState("");
-  const [room, setRoom] = useState("");
-  const [attendingPhysician, setAttendingPhysician] = useState("");
+  const [scenarioName, setScenarioName] = useState('');
+  const [patientName, setPatientName] = useState('');
+  const [patientAge, setPatientAge] = useState('');
+  const [patientGender, setPatientGender] = useState('Male');
+  const [patientMRN, setPatientMRN] = useState('');
+  const [primaryDiagnosis, setPrimaryDiagnosis] = useState('');
+  const [room, setRoom] = useState('');
+  const [attendingPhysician, setAttendingPhysician] = useState('');
   const [allergies, setAllergies] = useState([]);
-  const [systolicBP, setSystolicBP] = useState("");
-  const [diastolicBP, setDiastolicBP] = useState("");
-  const [heartRate, setHeartRate] = useState("");
-  const [respiratoryRate, setRespiratoryRate] = useState("");
-  const [temperature, setTemperature] = useState("");
-  const [oxygenSaturation, setOxygenSaturation] = useState("");
-  const [painLevel, setPainLevel] = useState("0");
-  const [weight, setWeight] = useState("");
+  const [systolicBP, setSystolicBP] = useState('');
+  const [diastolicBP, setDiastolicBP] = useState('');
+  const [heartRate, setHeartRate] = useState('');
+  const [respiratoryRate, setRespiratoryRate] = useState('');
+  const [temperature, setTemperature] = useState('');
+  const [oxygenSaturation, setOxygenSaturation] = useState('');
+  const [painLevel, setPainLevel] = useState('0');
+  const [weight, setWeight] = useState('');
   const [medications, setMedications] = useState([
-    { id: 1, name: "", dosage: "", route: "PO", frequency: "", indication: "", prn: false, titration: { min: 1, max: 100, step: 1, unit: "mg" } }
+    { id: 1, name: '', dosage: '', route: 'PO', frequency: '', indication: '', prn: false, titration: { min: 1, max: 100, step: 1, unit: 'mg' } }
   ]);
   const [orders, setOrders] = useState([]);
-  const [learningObjectives, setLearningObjectives] = useState([""]);
+  const [learningObjectives, setLearningObjectives] = useState(['']);
   const [tags, setTags] = useState([]);
-  const [tickInterval, setTickInterval] = useState("5000");
-  const [targetSystolic, setTargetSystolic] = useState("");
-  const [targetDiastolic, setTargetDiastolic] = useState("");
-  const [holdTicks, setHoldTicks] = useState("3");
-  const [difficulty, setDifficulty] = useState("Intermediate");
-  const [estimatedDuration, setEstimatedDuration] = useState("30-45 minutes");
-  const [specialty, setSpecialty] = useState("General Nursing");
+  const [tickInterval, setTickInterval] = useState('5000');
+  const [targetSystolic, setTargetSystolic] = useState('');
+  const [targetDiastolic, setTargetDiastolic] = useState('');
+  const [holdTicks, setHoldTicks] = useState('3');
+  const [difficulty, setDifficulty] = useState('Intermediate');
+  const [estimatedDuration, setEstimatedDuration] = useState('30-45 minutes');
+  const [specialty, setSpecialty] = useState('General Nursing');
   const [customTabs, setCustomTabs] = useState([]);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const isSuccessMessage = message.toLowerCase().includes("success");
+  const isSuccessMessage = message.toLowerCase().includes('success');
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setIsLoading(true);
-    setMessage("");
+    setMessage('');
 
     try {
       if (!window.api?.createScenario) {
         setMessage(
-          "Error: Electron API is not available. Please run this in Electron."
+          'Error: Electron API is not available. Please run this in Electron.'
         );
         setIsLoading(false);
         return;
@@ -62,26 +62,26 @@ function CreateScenarioModal({ onClose, onCreateSuccess }) {
 
       // Validation
       if (!scenarioName.trim()) {
-        setMessage("Please enter a scenario name.");
+        setMessage('Please enter a scenario name.');
         setIsLoading(false);
         return;
       }
 
       if (!patientName.trim() || !patientAge || !primaryDiagnosis.trim()) {
-        setMessage("Please fill in all required patient information.");
+        setMessage('Please fill in all required patient information.');
         setIsLoading(false);
         return;
       }
 
       if (!systolicBP || !diastolicBP || !heartRate || !respiratoryRate) {
-        setMessage("Please fill in all required vital signs.");
+        setMessage('Please fill in all required vital signs.');
         setIsLoading(false);
         return;
       }
 
       const validMedications = medications.filter(m => m.name.trim() && m.dosage.trim());
       if (validMedications.length === 0) {
-        setMessage("Please enter at least one medication with name and dosage.");
+        setMessage('Please enter at least one medication with name and dosage.');
         setIsLoading(false);
         return;
       }
@@ -99,13 +99,13 @@ function CreateScenarioModal({ onClose, onCreateSuccess }) {
           mrn: mrn,
           dob: new Date(new Date().setFullYear(new Date().getFullYear() - parseInt(patientAge, 10))).toISOString().split('T')[0],
           admissionDate: currentTime,
-          room: room.trim() || "TBD",
-          attendingPhysician: attendingPhysician.trim() || "TBD",
+          room: room.trim() || 'TBD',
+          attendingPhysician: attendingPhysician.trim() || 'TBD',
           primaryDiagnosis: primaryDiagnosis.trim(),
           allergies: allergies.filter(a => a.substance.trim()).map(a => ({
             substance: a.substance.trim(),
             reaction: a.reaction.trim(),
-            severity: a.severity || "Mild",
+            severity: a.severity || 'Mild',
           })),
         },
         vitals: {
@@ -114,16 +114,16 @@ function CreateScenarioModal({ onClose, onCreateSuccess }) {
             bloodPressure: {
               systolic: parseInt(systolicBP, 10),
               diastolic: parseInt(diastolicBP, 10),
-              unit: "mmHg",
+              unit: 'mmHg',
             },
             heartRate: parseInt(heartRate, 10),
             respiratoryRate: parseInt(respiratoryRate, 10),
             temperature: temperature ? parseFloat(temperature) : 98.6,
-            temperatureUnit: "F",
+            temperatureUnit: 'F',
             oxygenSaturation: oxygenSaturation ? parseInt(oxygenSaturation, 10) : 98,
             painLevel: parseInt(painLevel, 10) || 0,
             weight: weight ? parseFloat(weight) : 150,
-            weightUnit: "lbs",
+            weightUnit: 'lbs',
           },
           history: [],
         },
@@ -134,10 +134,10 @@ function CreateScenarioModal({ onClose, onCreateSuccess }) {
             id: medId,
             name: med.name.trim(),
             dosage: med.dosage.trim(),
-            route: med.route || "PO",
-            frequency: med.frequency.trim() || "As ordered",
+            route: med.route || 'PO',
+            frequency: med.frequency.trim() || 'As ordered',
             startDate: currentTime,
-            status: "Active",
+            status: 'Active',
             indication: med.indication.trim() || primaryDiagnosis.trim(),
             lastGiven: currentTime,
             nextDue: currentTime,
@@ -147,7 +147,7 @@ function CreateScenarioModal({ onClose, onCreateSuccess }) {
                 min: med.titration.min || 1,
                 max: med.titration.max || 100,
                 step: med.titration.step || 1,
-                unit: med.titration.unit || "mg",
+                unit: med.titration.unit || 'mg',
                 current: doseValue,
               },
             }),
@@ -155,12 +155,12 @@ function CreateScenarioModal({ onClose, onCreateSuccess }) {
         }),
         orders: orders.filter(o => o.description.trim()).map((order, index) => ({
           id: `order-${String(index + 1).padStart(3, '0')}`,
-          type: order.type || "Medication",
+          type: order.type || 'Medication',
           description: order.description.trim(),
-          orderedBy: order.orderedBy.trim() || attendingPhysician.trim() || "TBD",
+          orderedBy: order.orderedBy.trim() || attendingPhysician.trim() || 'TBD',
           orderedAt: currentTime,
-          status: order.status || "Active",
-          priority: order.priority || "Routine",
+          status: order.status || 'Active',
+          priority: order.priority || 'Routine',
         })),
         customTabs: customTabs
           .filter((t) => t.label.trim() && t.fields.some((f) => f.label.trim()))
@@ -172,8 +172,8 @@ function CreateScenarioModal({ onClose, onCreateSuccess }) {
               .map((f) => ({
                 key: f.key,
                 label: f.label.trim(),
-                type: f.type || "text",
-                placeholder: f.placeholder?.trim() || "",
+                type: f.type || 'text',
+                placeholder: f.placeholder?.trim() || '',
                 ...(f.unit?.trim() ? { unit: f.unit.trim() } : {}),
               })),
           })),
@@ -236,13 +236,13 @@ function CreateScenarioModal({ onClose, onCreateSuccess }) {
       });
 
       if (result.success) {
-        setMessage("Scenario created successfully!");
+        setMessage('Scenario created successfully!');
         setTimeout(() => {
           onCreateSuccess?.();
           onClose?.();
         }, 1500);
       } else {
-        setMessage(result.error || "Failed to create scenario. Please try again.");
+        setMessage(result.error || 'Failed to create scenario. Please try again.');
       }
     } catch (err) {
       setMessage(`Error creating scenario: ${err.message}`);
@@ -264,7 +264,7 @@ function CreateScenarioModal({ onClose, onCreateSuccess }) {
         <div className="modal-body">
           <form onSubmit={handleSubmit}>
             {/* Scenario Name */}
-            <div style={{ marginBottom: "var(--ehr-spacing-lg)" }}>
+            <div style={{ marginBottom: 'var(--ehr-spacing-lg)' }}>
               <FormInput
                 label="Scenario Name"
                 value={scenarioName}
@@ -357,15 +357,15 @@ function CreateScenarioModal({ onClose, onCreateSuccess }) {
             {message && (
               <div
                 style={{
-                  padding: "var(--ehr-spacing-md)",
-                  borderRadius: "var(--ehr-radius-md)",
+                  padding: 'var(--ehr-spacing-md)',
+                  borderRadius: 'var(--ehr-radius-md)',
                   backgroundColor: isSuccessMessage
-                    ? "rgba(16, 185, 129, 0.1)"
-                    : "rgba(239, 68, 68, 0.1)",
+                    ? 'rgba(16, 185, 129, 0.1)'
+                    : 'rgba(239, 68, 68, 0.1)',
                   color: isSuccessMessage
-                    ? "var(--ehr-success)"
-                    : "var(--ehr-error)",
-                  marginBottom: "var(--ehr-spacing-md)",
+                    ? 'var(--ehr-success)'
+                    : 'var(--ehr-error)',
+                  marginBottom: 'var(--ehr-spacing-md)',
                 }}
               >
                 {message}
@@ -385,7 +385,7 @@ function CreateScenarioModal({ onClose, onCreateSuccess }) {
               disabled={isLoading}
               type="button"
             >
-              {isLoading ? "Creating..." : "Create Scenario"}
+              {isLoading ? 'Creating...' : 'Create Scenario'}
             </button>
           </div>
         </div>

@@ -1,25 +1,25 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "../Auth/AuthContext.jsx";
-import useKeyboardShortcuts from "../../utils/useKeyboardShortcuts.js";
-import PatientInfoSidebar from "./components/PatientInfoSidebar.jsx";
-import VitalSignsTab from "./components/VitalSignsTab.jsx";
-import ActiveMedicationsTab from "./components/ActiveMedicationsTab.jsx";
-import ProviderOrdersTab from "./components/ProviderOrdersTab.jsx";
-import MedicationAdminTab from "./components/MedicationAdminTab.jsx";
-import CustomTab from "./components/CustomTab.jsx";
-import NotesSection from "./components/NotesSection.jsx";
-import { buildSummaryFileName } from "../../utils/summaryExport.js";
-import "./SimulationPage.css";
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../Auth/AuthContext.jsx';
+import useKeyboardShortcuts from '../../utils/useKeyboardShortcuts.js';
+import PatientInfoSidebar from './components/PatientInfoSidebar.jsx';
+import VitalSignsTab from './components/VitalSignsTab.jsx';
+import ActiveMedicationsTab from './components/ActiveMedicationsTab.jsx';
+import ProviderOrdersTab from './components/ProviderOrdersTab.jsx';
+import MedicationAdminTab from './components/MedicationAdminTab.jsx';
+import CustomTab from './components/CustomTab.jsx';
+import NotesSection from './components/NotesSection.jsx';
+import { buildSummaryFileName } from '../../utils/summaryExport.js';
+import './SimulationPage.css';
 
 const POLL_INTERVAL_MS = 2500;
 
 const STATIC_TABS = [
-  { id: "vitals", label: "Vital Signs" },
-  { id: "medications", label: "Active Medications" },
-  { id: "orders", label: "Provider Orders" },
-  { id: "medAdmin", label: "Medication Administration" },
-  { id: "dataAssessment", label: "Data Assessment" },
+  { id: 'vitals', label: 'Vital Signs' },
+  { id: 'medications', label: 'Active Medications' },
+  { id: 'orders', label: 'Provider Orders' },
+  { id: 'medAdmin', label: 'Medication Administration' },
+  { id: 'dataAssessment', label: 'Data Assessment' },
 ];
 
 function SimulationPage() {
@@ -27,7 +27,7 @@ function SimulationPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const [activeTab, setActiveTab] = useState("vitals");
+  const [activeTab, setActiveTab] = useState('vitals');
   const [sessionState, setSessionState] = useState(null);
   const [scenario, setScenario] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -36,7 +36,7 @@ function SimulationPage() {
 
   // notes state
   const [notes, setNotes] = useState([]);
-  const [noteContent, setNoteContent] = useState("");
+  const [noteContent, setNoteContent] = useState('');
   const [noteSubmitting, setNoteSubmitting] = useState(false);
   const [noteError, setNoteError] = useState(null);
   const [noteDeletingId, setNoteDeletingId] = useState(null);
@@ -67,15 +67,15 @@ function SimulationPage() {
       const response = await window.api.getSimulationState(sessionId);
       if (response.success) {
         setSessionState(response.state);
-        if (response.state?.status === "ended") {
+        if (response.state?.status === 'ended') {
           stopPolling();
         }
       } else {
-        setSessionError(response.error || "Failed to read simulation state");
+        setSessionError(response.error || 'Failed to read simulation state');
         stopPolling();
       }
     } catch (err) {
-      setSessionError(err.message || "Failed to read simulation state");
+      setSessionError(err.message || 'Failed to read simulation state');
       stopPolling();
     }
   }, [sessionId, stopPolling]);
@@ -92,7 +92,7 @@ function SimulationPage() {
   useEffect(() => {
     const loadSession = async () => {
       if (!sessionId) {
-        setError("No session ID provided");
+        setError('No session ID provided');
         setLoading(false);
         return;
       }
@@ -100,14 +100,14 @@ function SimulationPage() {
       try {
         // get session state
         if (!window.api?.getSimulationState) {
-          setError("Simulation API not available");
+          setError('Simulation API not available');
           setLoading(false);
           return;
         }
 
         const response = await window.api.getSimulationState(sessionId);
         if (!response.success) {
-          setError(response.error || "Failed to load session");
+          setError(response.error || 'Failed to load session');
           setLoading(false);
           return;
         }
@@ -123,13 +123,13 @@ function SimulationPage() {
         }
 
         // start polling if session is active
-        if (response.state?.status !== "ended") {
+        if (response.state?.status !== 'ended') {
           startPolling();
         }
 
         setLoading(false);
       } catch (err) {
-        setError(err.message || "Failed to load session");
+        setError(err.message || 'Failed to load session');
         setLoading(false);
       }
     };
@@ -149,10 +149,10 @@ function SimulationPage() {
         setNotes(response.notes || []);
         setNoteError(null);
       } else {
-        setNoteError(response.error || "Unable to fetch notes");
+        setNoteError(response.error || 'Unable to fetch notes');
       }
     } catch (err) {
-      setNoteError(err.message || "Unable to fetch notes");
+      setNoteError(err.message || 'Unable to fetch notes');
     }
   }, [sessionId]);
 
@@ -165,14 +165,14 @@ function SimulationPage() {
   // load session summary when ended
   useEffect(() => {
     const loadSummary = async () => {
-      if (sessionState?.status === "ended" && sessionId && window.api?.getSessionSummary) {
+      if (sessionState?.status === 'ended' && sessionId && window.api?.getSessionSummary) {
         try {
           const response = await window.api.getSessionSummary(sessionId);
           if (response.success && response.summary) {
             setSessionSummary(response.summary);
           }
         } catch (err) {
-          console.error("Failed to load session summary:", err);
+          console.error('Failed to load session summary:', err);
         }
       }
     };
@@ -182,15 +182,15 @@ function SimulationPage() {
   const handleAddNote = async (event) => {
     event?.preventDefault?.();
     if (!sessionId) {
-      setNoteError("No active session");
+      setNoteError('No active session');
       return;
     }
     if (!noteContent.trim()) {
-      setNoteError("Enter a note before saving");
+      setNoteError('Enter a note before saving');
       return;
     }
     if (!window.api?.addNote) {
-      setNoteError("Notes API unavailable");
+      setNoteError('Notes API unavailable');
       return;
     }
 
@@ -205,12 +205,12 @@ function SimulationPage() {
       });
       if (response.success) {
         setNotes((prev) => [...prev, response.note]);
-        setNoteContent("");
+        setNoteContent('');
       } else {
-        setNoteError(response.error || "Unable to save note");
+        setNoteError(response.error || 'Unable to save note');
       }
     } catch (err) {
-      setNoteError(err.message || "Unable to save note");
+      setNoteError(err.message || 'Unable to save note');
     } finally {
       setNoteSubmitting(false);
     }
@@ -230,10 +230,10 @@ function SimulationPage() {
       if (response.success) {
         setNotes((prev) => prev.filter((note) => note.id !== noteId));
       } else {
-        setNoteError(response.error || "Unable to delete note");
+        setNoteError(response.error || 'Unable to delete note');
       }
     } catch (err) {
-      setNoteError(err.message || "Unable to delete note");
+      setNoteError(err.message || 'Unable to delete note');
     } finally {
       setNoteDeletingId(null);
     }
@@ -253,10 +253,10 @@ function SimulationPage() {
         setSessionState(response.state);
         setSessionError(null);
       } else {
-        setSessionError(response.error || "Unable to adjust medication");
+        setSessionError(response.error || 'Unable to adjust medication');
       }
     } catch (err) {
-      setSessionError(err.message || "Unable to adjust medication");
+      setSessionError(err.message || 'Unable to adjust medication');
     }
   };
 
@@ -270,10 +270,10 @@ function SimulationPage() {
         setSessionState(response.state);
         setSessionError(null);
       } else {
-        setSessionError(response.error || "Unable to pause simulation");
+        setSessionError(response.error || 'Unable to pause simulation');
       }
     } catch (err) {
-      setSessionError(err.message || "Unable to pause simulation");
+      setSessionError(err.message || 'Unable to pause simulation');
     }
   };
 
@@ -287,10 +287,10 @@ function SimulationPage() {
         setSessionState(response.state);
         setSessionError(null);
       } else {
-        setSessionError(response.error || "Unable to resume simulation");
+        setSessionError(response.error || 'Unable to resume simulation');
       }
     } catch (err) {
-      setSessionError(err.message || "Unable to resume simulation");
+      setSessionError(err.message || 'Unable to resume simulation');
     }
   };
 
@@ -310,15 +310,15 @@ function SimulationPage() {
         setSessionError(null);
         stopPolling();
       } else {
-        setSessionError(response.error || "Unable to end simulation");
+        setSessionError(response.error || 'Unable to end simulation');
       }
     } catch (err) {
-      setSessionError(err.message || "Unable to end simulation");
+      setSessionError(err.message || 'Unable to end simulation');
     }
   };
 
   const handleBackToHome = () => {
-    navigate("/home");
+    navigate('/home');
   };
 
   const handleExportSummaryPdf = async () => {
@@ -328,7 +328,7 @@ function SimulationPage() {
     if (!window.api?.exportSessionSummaryPdf) {
       setSummaryExportStatus({
         isError: true,
-        message: "Export API not available.",
+        message: 'Export API not available.',
       });
       return;
     }
@@ -350,7 +350,7 @@ function SimulationPage() {
       });
 
       if (response?.canceled) {
-        setSummaryExportStatus({ isError: false, message: "Export canceled." });
+        setSummaryExportStatus({ isError: false, message: 'Export canceled.' });
       } else if (response?.success) {
         setSummaryExportStatus({
           isError: false,
@@ -359,13 +359,13 @@ function SimulationPage() {
       } else {
         setSummaryExportStatus({
           isError: true,
-          message: response?.error || "Unable to export summary.",
+          message: response?.error || 'Unable to export summary.',
         });
       }
     } catch (err) {
       setSummaryExportStatus({
         isError: true,
-        message: err.message || "Unable to export summary.",
+        message: err.message || 'Unable to export summary.',
       });
     } finally {
       setSummaryExporting(false);
@@ -402,16 +402,16 @@ function SimulationPage() {
   const shortcuts = useMemo(
     () => ({
       Space: () => {
-        const ended = sessionState?.status === "ended";
+        const ended = sessionState?.status === 'ended';
         if (ended) return;
-        if (sessionState?.status === "running") {
+        if (sessionState?.status === 'running') {
           handlePause();
-        } else if (sessionState?.status === "paused") {
+        } else if (sessionState?.status === 'paused') {
           handleResume();
         }
       },
       Escape: () => {
-        const ended = sessionState?.status === "ended";
+        const ended = sessionState?.status === 'ended';
         if (!ended) setShowEndConfirm(true);
       },
       ...Object.fromEntries(
@@ -451,7 +451,7 @@ function SimulationPage() {
   }
 
   const patient = scenario?.definition?.patient;
-  const isEnded = sessionState?.status === "ended";
+  const isEnded = sessionState?.status === 'ended';
 
   return (
     <div className="simulation-page">
@@ -469,7 +469,7 @@ function SimulationPage() {
               <button
                 key={tab.id}
                 type="button"
-                className={`simulation-tab ${activeTab === tab.id ? "active" : ""}`}
+                className={`simulation-tab ${activeTab === tab.id ? 'active' : ''}`}
                 onClick={() => setActiveTab(tab.id)}
               >
                 {tab.label} <span className="keyboard-hint">[{index + 1}]</span>
@@ -482,14 +482,14 @@ function SimulationPage() {
             <div className="status-info">
               <span className="status-label">Session:</span>
               <span className="status-value">#{sessionId}</span>
-              <span className={`status-badge status-${sessionState?.status || "unknown"}`}>
-                {sessionState?.status || "Unknown"}
+              <span className={`status-badge status-${sessionState?.status || 'unknown'}`}>
+                {sessionState?.status || 'Unknown'}
               </span>
               <span className="status-label">Tick:</span>
               <span className="status-value">{sessionState?.tickCount || 0}</span>
             </div>
             {sessionState?.targetStatus?.configured && (
-              <div className={`target-status ${sessionState.targetStatus.met ? "met" : ""}`}>
+              <div className={`target-status ${sessionState.targetStatus.met ? 'met' : ''}`}>
                 <span className="target-label">Target:</span>
                 <span className="target-description">
                   {sessionState.targetStatus.description}
@@ -508,16 +508,16 @@ function SimulationPage() {
 
           {/* tab content */}
           <div className="simulation-content">
-            {activeTab === "vitals" && (
+            {activeTab === 'vitals' && (
               <VitalSignsTab vitals={sessionState?.currentVitals} />
             )}
-            {activeTab === "medications" && (
+            {activeTab === 'medications' && (
               <ActiveMedicationsTab medications={sessionState?.medications || []} />
             )}
-            {activeTab === "orders" && (
+            {activeTab === 'orders' && (
               <ProviderOrdersTab orders={sessionState?.orders || []} />
             )}
-            {activeTab === "medAdmin" && (
+            {activeTab === 'medAdmin' && (
               <MedicationAdminTab
                 medicationState={sessionState?.medicationState || {}}
                 onAdjustMedication={handleAdjustMedication}
@@ -536,7 +536,7 @@ function SimulationPage() {
                   />
                 )
             )}
-            {activeTab === "dataAssessment" && (
+            {activeTab === 'dataAssessment' && (
               <NotesSection
                 notes={notes}
                 noteContent={noteContent}
@@ -563,14 +563,14 @@ function SimulationPage() {
                   onClick={handleExportSummaryPdf}
                   disabled={summaryExporting}
                 >
-                  {summaryExporting ? "Exporting..." : "Download PDF"}
+                  {summaryExporting ? 'Exporting...' : 'Download PDF'}
                 </button>
               </div>
               <pre className="summary-content">{sessionSummary.summary}</pre>
               {summaryExportStatus && (
                 <div
-                  className={`summary-export-status ${summaryExportStatus.isError ? "error" : "success"
-                    }`}
+                  className={`summary-export-status ${summaryExportStatus.isError ? 'error' : 'success'
+                  }`}
                 >
                   {summaryExportStatus.message}
                 </div>
@@ -622,12 +622,12 @@ function SimulationPage() {
           Back to Home
         </button>
         <div className="control-actions">
-          {!isEnded && sessionState?.status === "running" && (
+          {!isEnded && sessionState?.status === 'running' && (
             <button type="button" className="control-btn warning" onClick={handlePause}>
               Pause <span className="keyboard-hint">[Space]</span>
             </button>
           )}
-          {!isEnded && sessionState?.status === "paused" && (
+          {!isEnded && sessionState?.status === 'paused' && (
             <button type="button" className="control-btn success" onClick={handleResume}>
               Resume <span className="keyboard-hint">[Space]</span>
             </button>

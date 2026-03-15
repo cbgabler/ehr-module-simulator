@@ -1,31 +1,31 @@
-import { getDb } from "../database.js";
-import { getRoleById } from "./users.js";
+import { getDb } from '../database.js';
+import { getRoleById } from './users.js';
 
-const VALID_TYPES = new Set(["true_false", "multiple_choice"]);
+const VALID_TYPES = new Set(['true_false', 'multiple_choice']);
 
 const normalizeQuestion = (question = {}, index) => {
-  const prompt = String(question.prompt ?? "").trim();
+  const prompt = String(question.prompt ?? '').trim();
   if (!prompt) {
     throw new Error(`Question ${index + 1} is missing a prompt.`);
   }
 
   const type = VALID_TYPES.has(question.type)
     ? question.type
-    : "multiple_choice";
+    : 'multiple_choice';
 
   let options = Array.isArray(question.options)
-    ? question.options.map((option) => String(option ?? "").trim())
+    ? question.options.map((option) => String(option ?? '').trim())
     : [];
 
-  if (type === "true_false") {
-    options = ["True", "False"];
+  if (type === 'true_false') {
+    options = ['True', 'False'];
   }
 
-  if (type === "multiple_choice" && options.length < 2) {
+  if (type === 'multiple_choice' && options.length < 2) {
     throw new Error(`Question ${index + 1} must have at least two options.`);
   }
 
-  if (type === "multiple_choice" && options.some((option) => option.length === 0)) {
+  if (type === 'multiple_choice' && options.some((option) => option.length === 0)) {
     throw new Error(`Question ${index + 1} has empty options.`);
   }
 
@@ -42,15 +42,15 @@ const normalizeQuestion = (question = {}, index) => {
     type,
     options,
     correctAnswerIndex,
-    explanation: String(question.explanation ?? "").trim() || null,
+    explanation: String(question.explanation ?? '').trim() || null,
   };
 };
 
 const normalizeQuizVisibility = (value) =>
-  value === false || value === 0 || value === "false" ? 0 : 1;
+  value === false || value === 0 || value === 'false' ? 0 : 1;
 
 const normalizeShowCorrect = (value) =>
-  value === true || value === 1 || value === "true" ? 1 : 0;
+  value === true || value === 1 || value === 'true' ? 1 : 0;
 
 const normalizeAssignedStudents = (assignedStudentIds) => {
   if (!Array.isArray(assignedStudentIds)) {
@@ -67,7 +67,7 @@ const normalizeAssignedStudents = (assignedStudentIds) => {
 };
 
 const hasInstructorAccess = (role) =>
-  role === "admin" || role === "instructor";
+  role === 'admin' || role === 'instructor';
 
 const shuffleArray = (items) => {
   const shuffled = [...items];
@@ -80,13 +80,13 @@ const shuffleArray = (items) => {
 
 const getQuizAssignments = (db, quizId) =>
   db
-    .prepare("SELECT userId FROM quiz_assignments WHERE quizId = ?")
+    .prepare('SELECT userId FROM quiz_assignments WHERE quizId = ?')
     .all(quizId)
     .map((row) => row.userId);
 
 const canStudentAccessQuiz = (db, quizId, userId) => {
   const quiz = db
-    .prepare("SELECT isPublic FROM quizzes WHERE id = ?")
+    .prepare('SELECT isPublic FROM quizzes WHERE id = ?')
     .get(quizId);
   if (!quiz) {
     return false;
@@ -96,7 +96,7 @@ const canStudentAccessQuiz = (db, quizId, userId) => {
   }
   const assignment = db
     .prepare(
-      "SELECT 1 FROM quiz_assignments WHERE quizId = ? AND userId = ?"
+      'SELECT 1 FROM quiz_assignments WHERE quizId = ? AND userId = ?'
     )
     .get(quizId, userId);
   return Boolean(assignment);
@@ -111,13 +111,13 @@ export function createQuiz({
   showCorrectAnswers = false,
   assignedStudentIds = [],
 } = {}) {
-  const trimmedTitle = String(title ?? "").trim();
+  const trimmedTitle = String(title ?? '').trim();
   if (!trimmedTitle) {
-    throw new Error("Quiz title is required.");
+    throw new Error('Quiz title is required.');
   }
 
   if (!Array.isArray(questions) || questions.length === 0) {
-    throw new Error("Quiz must include at least one question.");
+    throw new Error('Quiz must include at least one question.');
   }
 
   const db = getDb();
@@ -145,7 +145,7 @@ export function createQuiz({
     const showAnswers = normalizeShowCorrect(showCorrectAnswers);
     const quizInfo = insertQuiz.run(
       trimmedTitle,
-      String(description ?? "").trim() || null,
+      String(description ?? '').trim() || null,
       createdBy ?? null,
       isQuizPublic,
       showAnswers
@@ -185,13 +185,13 @@ export function updateQuiz(quizId, {
   showCorrectAnswers = false,
   assignedStudentIds = [],
 } = {}) {
-  const trimmedTitle = String(title ?? "").trim();
+  const trimmedTitle = String(title ?? '').trim();
   if (!trimmedTitle) {
-    throw new Error("Quiz title is required.");
+    throw new Error('Quiz title is required.');
   }
 
   if (!Array.isArray(questions) || questions.length === 0) {
-    throw new Error("Quiz must include at least one question.");
+    throw new Error('Quiz must include at least one question.');
   }
 
   const db = getDb();
@@ -202,7 +202,7 @@ export function updateQuiz(quizId, {
     WHERE id = ?;
   `
   );
-  const deleteQuestions = db.prepare("DELETE FROM quiz_questions WHERE quizId = ?");
+  const deleteQuestions = db.prepare('DELETE FROM quiz_questions WHERE quizId = ?');
   const insertQuestion = db.prepare(
     `
     INSERT INTO quiz_questions
@@ -211,7 +211,7 @@ export function updateQuiz(quizId, {
   `
   );
   const deleteAssignments = db.prepare(
-    "DELETE FROM quiz_assignments WHERE quizId = ?"
+    'DELETE FROM quiz_assignments WHERE quizId = ?'
   );
   const insertAssignment = db.prepare(
     `
@@ -227,7 +227,7 @@ export function updateQuiz(quizId, {
 
     const info = updateQuizStmt.run(
       trimmedTitle,
-      String(description ?? "").trim() || null,
+      String(description ?? '').trim() || null,
       isQuizPublic,
       showAnswers,
       quizId
@@ -265,19 +265,19 @@ export function updateQuiz(quizId, {
 
 export function deleteQuiz(quizId) {
   const db = getDb();
-  const info = db.prepare("DELETE FROM quizzes WHERE id = ?").run(quizId);
+  const info = db.prepare('DELETE FROM quizzes WHERE id = ?').run(quizId);
   return info.changes > 0;
 }
 
 export function copyQuiz(quizId, createdBy) {
   const db = getDb();
-  const quiz = db.prepare("SELECT * FROM quizzes WHERE id = ?").get(quizId);
+  const quiz = db.prepare('SELECT * FROM quizzes WHERE id = ?').get(quizId);
   if (!quiz) {
     return null;
   }
 
   const questions = db
-    .prepare("SELECT * FROM quiz_questions WHERE quizId = ? ORDER BY orderIndex")
+    .prepare('SELECT * FROM quiz_questions WHERE quizId = ? ORDER BY orderIndex')
     .all(quizId)
     .map((question) => ({
       ...question,
@@ -337,14 +337,14 @@ export function getAllQuizzes(userId) {
 // Internal helper for server-side use - always includes correctAnswerIndex
 function getQuizWithAnswers(quizId) {
   const db = getDb();
-  const quiz = db.prepare("SELECT * FROM quizzes WHERE id = ?").get(quizId);
+  const quiz = db.prepare('SELECT * FROM quizzes WHERE id = ?').get(quizId);
   if (!quiz) {
     return null;
   }
 
   const questions = db
     .prepare(
-      "SELECT * FROM quiz_questions WHERE quizId = ? ORDER BY orderIndex"
+      'SELECT * FROM quiz_questions WHERE quizId = ? ORDER BY orderIndex'
     )
     .all(quizId)
     .map((question) => ({
@@ -357,7 +357,7 @@ function getQuizWithAnswers(quizId) {
 
 export function getQuizById(quizId, userId) {
   const db = getDb();
-  const quiz = db.prepare("SELECT * FROM quizzes WHERE id = ?").get(quizId);
+  const quiz = db.prepare('SELECT * FROM quizzes WHERE id = ?').get(quizId);
   if (!quiz) {
     return null;
   }
@@ -368,7 +368,7 @@ export function getQuizById(quizId, userId) {
   if (hasInstructorAccess(role)) {
     const questions = db
       .prepare(
-        "SELECT * FROM quiz_questions WHERE quizId = ? ORDER BY orderIndex"
+        'SELECT * FROM quiz_questions WHERE quizId = ? ORDER BY orderIndex'
       )
       .all(quizId)
       .map((question) => ({
@@ -387,7 +387,7 @@ export function getQuizById(quizId, userId) {
   // Secure questions for students - excludes correctAnswerIndex
   const questions = db
     .prepare(
-      "SELECT id, quizId, prompt, type, options, orderIndex FROM quiz_questions WHERE quizId = ? ORDER BY orderIndex"
+      'SELECT id, quizId, prompt, type, options, orderIndex FROM quiz_questions WHERE quizId = ? ORDER BY orderIndex'
     )
     .all(quizId)
     .map((question) => ({
@@ -400,22 +400,22 @@ export function getQuizById(quizId, userId) {
 
 export function submitQuiz({ quizId, userId, answers } = {}) {
   if (!quizId) {
-    throw new Error("quizId is required.");
+    throw new Error('quizId is required.');
   }
   if (!userId) {
-    throw new Error("userId is required.");
+    throw new Error('userId is required.');
   }
 
   const quiz = getQuizWithAnswers(quizId);
   if (!quiz) {
-    throw new Error("Quiz not found.");
+    throw new Error('Quiz not found.');
   }
 
   const role = getRoleById(userId)?.role;
   if (!hasInstructorAccess(role)) {
     const db = getDb();
     if (!canStudentAccessQuiz(db, quizId, userId)) {
-      throw new Error("You do not have access to this quiz.");
+      throw new Error('You do not have access to this quiz.');
     }
   }
 
@@ -475,7 +475,7 @@ export function submitQuiz({ quizId, userId, answers } = {}) {
     });
 
     db.prepare(
-      "UPDATE quiz_submissions SET score = ? WHERE id = ?"
+      'UPDATE quiz_submissions SET score = ? WHERE id = ?'
     ).run(score, submissionId);
 
     const result = {
@@ -518,7 +518,7 @@ export function getSubmissionDetails(submissionId) {
   const db = getDb();
 
   const submission = db
-    .prepare(`SELECT s.*, q.title FROM quiz_submissions s JOIN quizzes q ON q.id = s.quizId WHERE s.id = ?`)
+    .prepare('SELECT s.*, q.title FROM quiz_submissions s JOIN quizzes q ON q.id = s.quizId WHERE s.id = ?')
     .get(submissionId);
 
   if (!submission) {

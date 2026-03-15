@@ -5,7 +5,7 @@ function FormInput({
   label,
   value,
   onChange,
-  type = "text",
+  type = 'text',
   placeholder,
   required = false,
   min,
@@ -14,7 +14,7 @@ function FormInput({
   id,
   ...props
 }) {
-  const inputId = id || `input-${label?.toLowerCase().replace(/\s+/g, "-") || "input"}`;
+  const inputId = id || `input-${label?.toLowerCase().replace(/\s+/g, '-') || 'input'}`;
 
   return (
     <div>
@@ -22,14 +22,14 @@ function FormInput({
         <label
           htmlFor={inputId}
           style={{
-            display: "block",
-            marginBottom: "var(--ehr-spacing-sm)",
-            color: "var(--ehr-text-primary)",
+            display: 'block',
+            marginBottom: 'var(--ehr-spacing-sm)',
+            color: 'var(--ehr-text-primary)',
             fontWeight: 500,
           }}
         >
           {label}
-          {required && <span style={{ color: "var(--ehr-error)" }}> *</span>}
+          {required && <span style={{ color: 'var(--ehr-error)' }}> *</span>}
         </label>
       )}
       <input
@@ -43,12 +43,12 @@ function FormInput({
         max={max}
         step={step}
         style={{
-          width: "100%",
-          padding: "var(--ehr-spacing-sm)",
-          borderRadius: "var(--ehr-radius-md)",
-          border: "1px solid var(--ehr-border)",
-          backgroundColor: "var(--ehr-bg-primary)",
-          color: "var(--ehr-text-primary)",
+          width: '100%',
+          padding: 'var(--ehr-spacing-sm)',
+          borderRadius: 'var(--ehr-radius-md)',
+          border: '1px solid var(--ehr-border)',
+          backgroundColor: 'var(--ehr-bg-primary)',
+          color: 'var(--ehr-text-primary)',
         }}
         {...props}
       />

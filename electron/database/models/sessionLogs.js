@@ -1,4 +1,4 @@
-import { getDb } from "../database.js";
+import { getDb } from '../database.js';
 
 export function logSessionAction({
   sessionId,
@@ -8,7 +8,7 @@ export function logSessionAction({
   details = null,
 }) {
   if (!sessionId || !userId || !actionType || !actionLabel) {
-    throw new Error("sessionId, userId, actionType, and actionLabel are required");
+    throw new Error('sessionId, userId, actionType, and actionLabel are required');
   }
   const db = getDb();
   const createdAt = new Date().toISOString();
@@ -41,7 +41,7 @@ export function logSessionAction({
 
 export function getSessionActions(sessionId) {
   if (!sessionId) {
-    throw new Error("sessionId is required");
+    throw new Error('sessionId is required');
   }
   const db = getDb();
   const rows = db
@@ -63,7 +63,7 @@ export function getSessionActions(sessionId) {
 
 export function getSessionSummaryBySessionId(sessionId) {
   if (!sessionId) {
-    throw new Error("sessionId is required");
+    throw new Error('sessionId is required');
   }
   const db = getDb();
   return db
@@ -81,7 +81,7 @@ export function getSessionSummaryBySessionId(sessionId) {
 
 export function getUserSessionSummaries(userId) {
   if (!userId) {
-    throw new Error("userId is required");
+    throw new Error('userId is required');
   }
   const db = getDb();
   return db
@@ -112,7 +112,7 @@ export function createSessionSummary({
   createdAt = null,
 }) {
   if (!sessionId || !userId || !scenarioId || !summary) {
-    throw new Error("sessionId, userId, scenarioId, and summary are required");
+    throw new Error('sessionId, userId, scenarioId, and summary are required');
   }
   const db = getDb();
   const timestamp = createdAt || new Date().toISOString();

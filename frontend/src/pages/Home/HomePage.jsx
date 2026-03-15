@@ -1,15 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../Auth/AuthContext.jsx";
-import useKeyboardShortcuts from "../../utils/useKeyboardShortcuts.js";
-import ScenarioGrid from "./components/ScenarioGrid.jsx";
-import ScenarioDetailsModal from "./components/ScenarioDetailsModal.jsx";
-import ImportModal from "./components/ImportModal.jsx";
-import ExportModal from "./components/ExportModal.jsx";
-import CreateScenarioModal from "./components/CreateScenarioModal.jsx";
-import ScenarioFilters from "./components/ScenarioFilters.jsx";
-import { buildSummaryFileName } from "../../utils/summaryExport.js";
-import "./HomePage.css";
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../Auth/AuthContext.jsx';
+import useKeyboardShortcuts from '../../utils/useKeyboardShortcuts.js';
+import ScenarioGrid from './components/ScenarioGrid.jsx';
+import ScenarioDetailsModal from './components/ScenarioDetailsModal.jsx';
+import ImportModal from './components/ImportModal.jsx';
+import ExportModal from './components/ExportModal.jsx';
+import CreateScenarioModal from './components/CreateScenarioModal.jsx';
+import ScenarioFilters from './components/ScenarioFilters.jsx';
+import { buildSummaryFileName } from '../../utils/summaryExport.js';
+import './HomePage.css';
 
 function HomePage() {
   const { user } = useAuth();
@@ -22,7 +22,6 @@ function HomePage() {
   const [startError, setStartError] = useState(null);
   const [isStarting, setIsStarting] = useState(false);
   const [sessionSummaries, setSessionSummaries] = useState([]);
-  const [vitalsHistory, setVitalsHistory] = useState([]);
   const [sessionSummariesLoading, setSessionSummariesLoading] = useState(false);
   const [sessionSummariesError, setSessionSummariesError] = useState(null);
   const [expandedSummaryId, setExpandedSummaryId] = useState(null);
@@ -37,19 +36,19 @@ function HomePage() {
   const [duplicateError, setDuplicateError] = useState(null);
 
   // Filter state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDifficulty, setSelectedDifficulty] = useState("");
-  const [selectedSpecialty, setSelectedSpecialty] = useState("");
-  const [selectedTag, setSelectedTag] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDifficulty, setSelectedDifficulty] = useState('');
+  const [selectedSpecialty, setSelectedSpecialty] = useState('');
+  const [selectedTag, setSelectedTag] = useState('');
 
-  const electronApiAvailable = typeof window !== "undefined" && window.api;
+  const electronApiAvailable = typeof window !== 'undefined' && window.api;
 
   const loadScenarios = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       if (!electronApiAvailable || !window.api.getAllScenarios) {
-        setError("Electron API not available. Please run this in Electron.");
+        setError('Electron API not available. Please run this in Electron.');
         setLoading(false);
         return;
       }
@@ -57,10 +56,10 @@ function HomePage() {
       if (result.success) {
         setScenarios(result.scenarios || []);
       } else {
-        setError(result.error || "Failed to load scenarios");
+        setError(result.error || 'Failed to load scenarios');
       }
     } catch (err) {
-      setError(err.message || "An unexpected error occurred");
+      setError(err.message || 'An unexpected error occurred');
     } finally {
       setLoading(false);
     }
@@ -70,22 +69,22 @@ function HomePage() {
     setStartError(null);
     try {
       if (!window.api?.getScenario) {
-        setError("Electron API not available.");
+        setError('Electron API not available.');
         return;
       }
       const result = await window.api.getScenario(scenarioId);
       if (result.success) {
         setSelectedScenario(result.scenario);
       } else {
-        setError(result.error || "Failed to load scenario details");
+        setError(result.error || 'Failed to load scenario details');
       }
     } catch (err) {
-      setError(err.message || "An unexpected error occurred");
+      setError(err.message || 'An unexpected error occurred');
     }
   };
 
   const handleDeleteScenario = async (scenarioId) => {
-    if (!window.confirm("Are you sure you want to delete this scenario? This action cannot be undone.")) {
+    if (!window.confirm('Are you sure you want to delete this scenario? This action cannot be undone.')) {
       return;
     }
 
@@ -93,7 +92,7 @@ function HomePage() {
     setDeleteError(null);
     try {
       if (!window.api?.deleteScenario) {
-        setDeleteError("Electron API not available.");
+        setDeleteError('Electron API not available.');
         setDeletingScenarioId(null);
         return;
       }
@@ -104,10 +103,10 @@ function HomePage() {
         }
         await loadScenarios();
       } else {
-        setDeleteError(result.error || "Failed to delete scenario");
+        setDeleteError(result.error || 'Failed to delete scenario');
       }
     } catch (err) {
-      setDeleteError(err.message || "An unexpected error occurred");
+      setDeleteError(err.message || 'An unexpected error occurred');
     } finally {
       setDeletingScenarioId(null);
     }
@@ -118,7 +117,7 @@ function HomePage() {
     setDuplicateError(null);
     try {
       if (!window.api?.duplicateScenario) {
-        setDuplicateError("Electron API not available.");
+        setDuplicateError('Electron API not available.');
         setDuplicatingScenarioId(null);
         return;
       }
@@ -128,10 +127,10 @@ function HomePage() {
         setSelectedScenario(null);
         await loadScenarios();
       } else {
-        setDuplicateError(result.error || "Failed to duplicate scenario");
+        setDuplicateError(result.error || 'Failed to duplicate scenario');
       }
     } catch (err) {
-      setDuplicateError(err.message || "An unexpected error occurred");
+      setDuplicateError(err.message || 'An unexpected error occurred');
     } finally {
       setDuplicatingScenarioId(null);
     }
@@ -182,12 +181,12 @@ function HomePage() {
         setSessionSummaries(response.summaries || []);
       } else {
         setSessionSummariesError(
-          response.error || "Unable to load session summaries"
+          response.error || 'Unable to load session summaries'
         );
       }
     } catch (err) {
       setSessionSummariesError(
-        err.message || "Unable to load session summaries"
+        err.message || 'Unable to load session summaries'
       );
     } finally {
       setSessionSummariesLoading(false);
@@ -202,18 +201,18 @@ function HomePage() {
 
   const handleStartScenario = async (scenario) => {
     if (!scenario) {
-      setStartError("Select a scenario to start.");
+      setStartError('Select a scenario to start.');
       return false;
     }
     setStartError(null);
 
     const parsedUserId = Number.parseInt(user?.id, 10);
     if (!Number.isFinite(parsedUserId) || parsedUserId <= 0) {
-      setStartError("You must be signed in with a valid user.");
+      setStartError('You must be signed in with a valid user.');
       return false;
     }
     if (!window.api?.startSimulation) {
-      setStartError("Simulation API unavailable in this environment.");
+      setStartError('Simulation API unavailable in this environment.');
       return false;
     }
 
@@ -228,10 +227,10 @@ function HomePage() {
         navigate(`/simulation/${response.sessionId}`);
         return true;
       }
-      setStartError(response.error || "Unable to start simulation");
+      setStartError(response.error || 'Unable to start simulation');
       return false;
     } catch (err) {
-      setStartError(err.message || "Unable to start simulation");
+      setStartError(err.message || 'Unable to start simulation');
       return false;
     } finally {
       setIsStarting(false);
@@ -246,7 +245,7 @@ function HomePage() {
       setSummaryExportStatus({
         summaryId: summary.id,
         isError: true,
-        message: "Export API not available.",
+        message: 'Export API not available.',
       });
       return;
     }
@@ -270,7 +269,7 @@ function HomePage() {
         setSummaryExportStatus({
           summaryId: summary.id,
           isError: false,
-          message: "Export canceled.",
+          message: 'Export canceled.',
         });
       } else if (response?.success) {
         setSummaryExportStatus({
@@ -282,14 +281,14 @@ function HomePage() {
         setSummaryExportStatus({
           summaryId: summary.id,
           isError: true,
-          message: response?.error || "Unable to export summary.",
+          message: response?.error || 'Unable to export summary.',
         });
       }
     } catch (err) {
       setSummaryExportStatus({
         summaryId: summary.id,
         isError: true,
-        message: err.message || "Unable to export summary.",
+        message: err.message || 'Unable to export summary.',
       });
     } finally {
       setSummaryExportingId(null);
@@ -368,7 +367,7 @@ function HomePage() {
 
   const formatSummaryTimestamp = (timestamp) => {
     if (!timestamp) {
-      return "";
+      return '';
     }
     try {
       return new Date(timestamp).toLocaleString();
@@ -400,7 +399,7 @@ function HomePage() {
     );
   }
 
-  const isInstructor = user?.role === "instructor" || user?.role === "admin";
+  const isInstructor = user?.role === 'instructor' || user?.role === 'admin';
 
   return (
     <div className="page-container">
@@ -500,67 +499,67 @@ function HomePage() {
           {!sessionSummariesLoading &&
             !sessionSummariesError &&
             sessionSummaries.length === 0 && (
-              <p className="session-summaries-empty">
+            <p className="session-summaries-empty">
                 No session summaries yet.
-              </p>
-            )}
+            </p>
+          )}
           {!sessionSummariesLoading &&
             !sessionSummariesError &&
             sessionSummaries.length > 0 && (
-              <div className="session-summaries-list">
-                {sessionSummaries.map((summary) => (
-                  <article
-                    key={`${summary.id}-${summary.sessionId}`}
-                    className="session-summary-card"
+            <div className="session-summaries-list">
+              {sessionSummaries.map((summary) => (
+                <article
+                  key={`${summary.id}-${summary.sessionId}`}
+                  className="session-summary-card"
+                >
+                  <button
+                    type="button"
+                    className="session-summary-toggle"
+                    onClick={() => toggleSummary(summary.id)}
+                    aria-expanded={expandedSummaryId === summary.id}
                   >
-                    <button
-                      type="button"
-                      className="session-summary-toggle"
-                      onClick={() => toggleSummary(summary.id)}
-                      aria-expanded={expandedSummaryId === summary.id}
-                    >
-                      <span className="session-summary-title">
-                        {summary.scenarioName || "Unknown scenario"}
-                      </span>
-                      <span className="session-summary-date">
-                        {formatSummaryTimestamp(summary.createdAt)}
-                      </span>
-                      <span className="session-summary-chevron">
-                        {expandedSummaryId === summary.id ? "▲" : "▼"}
-                      </span>
-                    </button>
-                    {expandedSummaryId === summary.id && (
-                      <div className="session-summary-body">
-                        <pre className="session-summary-content">
-                          {summary.summary}
-                        </pre>
-                        <div className="session-summary-actions">
-                          <button
-                            type="button"
-                            className="session-summary-export"
-                            onClick={() => handleExportSummary(summary)}
-                            disabled={summaryExportingId === summary.id}
+                    <span className="session-summary-title">
+                      {summary.scenarioName || 'Unknown scenario'}
+                    </span>
+                    <span className="session-summary-date">
+                      {formatSummaryTimestamp(summary.createdAt)}
+                    </span>
+                    <span className="session-summary-chevron">
+                      {expandedSummaryId === summary.id ? '▲' : '▼'}
+                    </span>
+                  </button>
+                  {expandedSummaryId === summary.id && (
+                    <div className="session-summary-body">
+                      <pre className="session-summary-content">
+                        {summary.summary}
+                      </pre>
+                      <div className="session-summary-actions">
+                        <button
+                          type="button"
+                          className="session-summary-export"
+                          onClick={() => handleExportSummary(summary)}
+                          disabled={summaryExportingId === summary.id}
+                        >
+                          {summaryExportingId === summary.id
+                            ? 'Exporting...'
+                            : 'Download PDF'}
+                        </button>
+                        {summaryExportStatus?.summaryId === summary.id && (
+                          <span
+                            className={`summary-export-status ${
+                              summaryExportStatus.isError ? 'error' : 'success'
+                            }`}
                           >
-                            {summaryExportingId === summary.id
-                              ? "Exporting..."
-                              : "Download PDF"}
-                          </button>
-                          {summaryExportStatus?.summaryId === summary.id && (
-                            <span
-                              className={`summary-export-status ${
-                                summaryExportStatus.isError ? "error" : "success"
-                              }`}
-                            >
-                              {summaryExportStatus.message}
-                            </span>
-                          )}
-                        </div>
+                            {summaryExportStatus.message}
+                          </span>
+                        )}
                       </div>
-                    )}
-                  </article>
-                ))}
-              </div>
-            )}
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
         </section>
       )}
     </div>

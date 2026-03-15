@@ -4,7 +4,7 @@ function ActiveMedicationsTab({ medications }) {
   }
 
   const formatDateTime = (dateStr) => {
-    if (!dateStr) return "N/A";
+    if (!dateStr) return 'N/A';
     try {
       return new Date(dateStr).toLocaleString();
     } catch {
@@ -21,15 +21,15 @@ function ActiveMedicationsTab({ medications }) {
             <div className="medication-details">
               <div className="medication-detail">
                 <span className="medication-detail-label">Dose:</span>
-                <span>{med.dosage || "N/A"}</span>
+                <span>{med.dosage || 'N/A'}</span>
               </div>
               <div className="medication-detail">
                 <span className="medication-detail-label">Route:</span>
-                <span>{med.route || "N/A"}</span>
+                <span>{med.route || 'N/A'}</span>
               </div>
               <div className="medication-detail">
                 <span className="medication-detail-label">Frequency:</span>
-                <span>{med.frequency || "N/A"}</span>
+                <span>{med.frequency || 'N/A'}</span>
               </div>
               {med.lastGiven && (
                 <div className="medication-detail">
@@ -53,8 +53,8 @@ function ActiveMedicationsTab({ medications }) {
           </div>
           <div className="medication-badges">
             {med.prn && <span className="medication-status prn">PRN</span>}
-            <span className={`medication-status ${med.status?.toLowerCase() || "active"}`}>
-              {med.status || "Active"}
+            <span className={`medication-status ${med.status?.toLowerCase() || 'active'}`}>
+              {med.status || 'Active'}
             </span>
           </div>
         </div>

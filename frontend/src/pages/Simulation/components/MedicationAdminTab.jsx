@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback } from 'react';
 
 function MedicationAdminTab({ medicationState, onAdjustMedication, disabled }) {
   const handleIncrement = useCallback(
@@ -42,9 +42,9 @@ function MedicationAdminTab({ medicationState, onAdjustMedication, disabled }) {
 
   const formatLimit = (value, unit) => {
     if (value === null || value === undefined) {
-      return "No limit";
+      return 'No limit';
     }
-    return `${value} ${unit || "units"}`;
+    return `${value} ${unit || 'units'}`;
   };
 
   if (!medicationState || Object.keys(medicationState).length === 0) {
@@ -102,7 +102,7 @@ function MedicationAdminTab({ medicationState, onAdjustMedication, disabled }) {
                   onChange={(e) => handleInputChange(medId, e.target.value, med.min, med.max)}
                   disabled={disabled}
                 />
-                <span className="med-admin-unit">{med.unit || "units"}</span>
+                <span className="med-admin-unit">{med.unit || 'units'}</span>
               </div>
               <button
                 type="button"

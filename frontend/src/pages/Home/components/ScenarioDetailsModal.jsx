@@ -12,7 +12,7 @@ function ScenarioDetailsModal({
   isDuplicating,
   duplicateError,
 }) {
-  const isInstructor = currentUser?.role === "instructor" || currentUser?.role === "admin";
+  const isInstructor = currentUser?.role === 'instructor' || currentUser?.role === 'admin';
   const definition = scenario.definition || {};
   const patient = definition.patient || {};
   const vitals = definition.vitals?.current || {};
@@ -92,9 +92,9 @@ function ScenarioDetailsModal({
               <div className="scenario-details-grid">
                 {vitals.bloodPressure && (
                   <div>
-                    <strong>Blood Pressure:</strong>{" "}
-                    {vitals.bloodPressure.systolic}/{vitals.bloodPressure.diastolic}{" "}
-                    {vitals.bloodPressure.unit || "mmHg"}
+                    <strong>Blood Pressure:</strong>{' '}
+                    {vitals.bloodPressure.systolic}/{vitals.bloodPressure.diastolic}{' '}
+                    {vitals.bloodPressure.unit || 'mmHg'}
                   </div>
                 )}
                 {vitals.heartRate && (
@@ -110,7 +110,7 @@ function ScenarioDetailsModal({
                 {vitals.temperature && (
                   <div>
                     <strong>Temperature:</strong> {vitals.temperature}
-                    {vitals.temperatureUnit || "F"}
+                    {vitals.temperatureUnit || 'F'}
                   </div>
                 )}
                 {vitals.oxygenSaturation && (
@@ -228,12 +228,12 @@ function ScenarioDetailsModal({
                   onClick={() => onDuplicateScenario?.(scenario.id)}
                   disabled={isDuplicating || isDeleting}
                   style={{
-                    backgroundColor: "var(--ehr-info)",
-                    color: "var(--ehr-text-inverse)",
-                    marginRight: "auto",
+                    backgroundColor: 'var(--ehr-info)',
+                    color: 'var(--ehr-text-inverse)',
+                    marginRight: 'auto',
                   }}
                 >
-                  {isDuplicating ? "Duplicating..." : "Duplicate Scenario"}
+                  {isDuplicating ? 'Duplicating...' : 'Duplicate Scenario'}
                 </button>
                 <button
                   className="modal-button"
@@ -241,11 +241,11 @@ function ScenarioDetailsModal({
                   onClick={() => onDeleteScenario?.(scenario.id)}
                   disabled={isDeleting || isDuplicating}
                   style={{
-                    backgroundColor: "var(--ehr-error)",
-                    color: "var(--ehr-text-inverse)",
+                    backgroundColor: 'var(--ehr-error)',
+                    color: 'var(--ehr-text-inverse)',
                   }}
                 >
-                  {isDeleting ? "Deleting..." : "Delete Scenario"}
+                  {isDeleting ? 'Deleting...' : 'Delete Scenario'}
                 </button>
               </>
             )}
@@ -258,17 +258,17 @@ function ScenarioDetailsModal({
               onClick={() => onStartScenario?.(scenario)}
               disabled={isStarting || isDeleting || isDuplicating}
             >
-              {isStarting ? "Starting..." : "Start Scenario"}
+              {isStarting ? 'Starting...' : 'Start Scenario'}
             </button>
           </div>
           {deleteError && (
             <div
               style={{
-                padding: "var(--ehr-spacing-md)",
-                borderRadius: "var(--ehr-radius-md)",
-                backgroundColor: "rgba(239, 68, 68, 0.1)",
-                color: "var(--ehr-error)",
-                marginTop: "var(--ehr-spacing-md)",
+                padding: 'var(--ehr-spacing-md)',
+                borderRadius: 'var(--ehr-radius-md)',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                color: 'var(--ehr-error)',
+                marginTop: 'var(--ehr-spacing-md)',
               }}
             >
               {deleteError}
@@ -277,11 +277,11 @@ function ScenarioDetailsModal({
           {duplicateError && (
             <div
               style={{
-                padding: "var(--ehr-spacing-md)",
-                borderRadius: "var(--ehr-radius-md)",
-                backgroundColor: "rgba(239, 68, 68, 0.1)",
-                color: "var(--ehr-error)",
-                marginTop: "var(--ehr-spacing-md)",
+                padding: 'var(--ehr-spacing-md)',
+                borderRadius: 'var(--ehr-radius-md)',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                color: 'var(--ehr-error)',
+                marginTop: 'var(--ehr-spacing-md)',
               }}
             >
               {duplicateError}

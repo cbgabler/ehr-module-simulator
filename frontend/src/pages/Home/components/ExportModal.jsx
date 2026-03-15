@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState } from 'react';
 
 function ExportModal({ onClose, scenarios }) {
-  const [filePath, setFilePath] = useState("");
-  const [message, setMessage] = useState("");
+  const [filePath, setFilePath] = useState('');
+  const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedScenarios, setSelectedScenarios] = useState([]);
-  const isSuccessMessage = message.toLowerCase().includes("success");
+  const isSuccessMessage = message.toLowerCase().includes('success');
 
   const handleCheckboxChange = (id) => {
     setSelectedScenarios((prev) =>
@@ -17,19 +17,19 @@ function ExportModal({ onClose, scenarios }) {
     try {
       if (!window.api?.showSaveDialog) {
         setMessage(
-          "Error: File dialog API is not available. Please run this in Electron."
+          'Error: File dialog API is not available. Please run this in Electron.'
         );
         return;
       }
       const result = await window.api.showSaveDialog({
         filters: [
-          { name: "Database Files", extensions: ["db", "sqlite", "sqlite3"] },
+          { name: 'Database Files', extensions: ['db', 'sqlite', 'sqlite3'] },
         ],
-        defaultPath: "ehr_scenarios.db",
+        defaultPath: 'ehr_scenarios.db',
       });
       if (!result.canceled && result.filePath) {
         setFilePath(result.filePath);
-        setMessage("");
+        setMessage('');
       }
     } catch (err) {
       setMessage(`Error selecting file: ${err.message}`);
@@ -40,22 +40,22 @@ function ExportModal({ onClose, scenarios }) {
     event.preventDefault();
 
     if (!filePath) {
-      setMessage("Please select a location to save the export file.");
+      setMessage('Please select a location to save the export file.');
       return;
     }
 
     if (selectedScenarios.length === 0) {
-      setMessage("Please select at least one scenario to export.");
+      setMessage('Please select at least one scenario to export.');
       return;
     }
 
     setIsLoading(true);
-    setMessage("");
+    setMessage('');
 
     try {
       if (!window.api?.exportData) {
         setMessage(
-          "Error: Electron API is not available. Please run this in Electron."
+          'Error: Electron API is not available. Please run this in Electron.'
         );
         setIsLoading(false);
         return;
@@ -74,7 +74,7 @@ function ExportModal({ onClose, scenarios }) {
           onClose?.();
         }, 1500);
       } else {
-        setMessage(result.error || "Export failed. Please try again.");
+        setMessage(result.error || 'Export failed. Please try again.');
       }
     } catch (err) {
       setMessage(`Error exporting file: ${err.message}`);
@@ -98,22 +98,22 @@ function ExportModal({ onClose, scenarios }) {
 
         <div className="modal-body">
           <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: "var(--ehr-spacing-lg)" }}>
+            <div style={{ marginBottom: 'var(--ehr-spacing-lg)' }}>
               <label
                 style={{
-                  display: "block",
-                  marginBottom: "var(--ehr-spacing-sm)",
-                  color: "var(--ehr-text-primary)",
-                  fontWeight: "500",
+                  display: 'block',
+                  marginBottom: 'var(--ehr-spacing-sm)',
+                  color: 'var(--ehr-text-primary)',
+                  fontWeight: '500',
                 }}
               >
                 Select Scenarios to Export
                 {selectedScenarios.length > 0 && (
                   <span
                     style={{
-                      marginLeft: "var(--ehr-spacing-xs)",
-                      color: "var(--ehr-text-secondary)",
-                      fontWeight: "normal",
+                      marginLeft: 'var(--ehr-spacing-xs)',
+                      color: 'var(--ehr-text-secondary)',
+                      fontWeight: 'normal',
                     }}
                   >
                     ({selectedScenarios.length} selected)
@@ -123,8 +123,8 @@ function ExportModal({ onClose, scenarios }) {
               {scenarios.length === 0 ? (
                 <p
                   style={{
-                    color: "var(--ehr-text-secondary)",
-                    fontStyle: "italic",
+                    color: 'var(--ehr-text-secondary)',
+                    fontStyle: 'italic',
                   }}
                 >
                   No scenarios available to export.
@@ -133,36 +133,36 @@ function ExportModal({ onClose, scenarios }) {
                 <div
                   className="scenario-list"
                   style={{
-                    maxHeight: "200px",
-                    overflowY: "auto",
-                    border: "1px solid var(--ehr-border)",
-                    borderRadius: "var(--ehr-radius-md)",
-                    padding: "var(--ehr-spacing-sm)",
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    border: '1px solid var(--ehr-border)',
+                    borderRadius: 'var(--ehr-radius-md)',
+                    padding: 'var(--ehr-spacing-sm)',
                   }}
                 >
                   {scenarios.map((scenario) => (
                     <label
                       key={scenario.id}
                       style={{
-                        display: "block",
-                        marginBottom: "8px",
-                        cursor: "pointer",
-                        padding: "4px",
-                        borderRadius: "var(--ehr-radius-sm)",
+                        display: 'block',
+                        marginBottom: '8px',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        borderRadius: 'var(--ehr-radius-sm)',
                       }}
                       onMouseEnter={(e) =>
                         (e.currentTarget.style.backgroundColor =
-                          "var(--ehr-bg-secondary)")
+                          'var(--ehr-bg-secondary)')
                       }
                       onMouseLeave={(e) =>
-                        (e.currentTarget.style.backgroundColor = "transparent")
+                        (e.currentTarget.style.backgroundColor = 'transparent')
                       }
                     >
                       <input
                         type="checkbox"
                         checked={selectedScenarios.includes(scenario.id)}
                         onChange={() => handleCheckboxChange(scenario.id)}
-                        style={{ marginRight: "8px" }}
+                        style={{ marginRight: '8px' }}
                       />
                       {scenario.name || `Scenario ${scenario.id}`}
                     </label>
@@ -170,17 +170,17 @@ function ExportModal({ onClose, scenarios }) {
                 </div>
               )}
             </div>
-            <div style={{ marginBottom: "var(--ehr-spacing-lg)" }}>
+            <div style={{ marginBottom: 'var(--ehr-spacing-lg)' }}>
               <label
                 style={{
-                  display: "block",
-                  marginBottom: "var(--ehr-spacing-sm)",
-                  color: "var(--ehr-text-primary)",
+                  display: 'block',
+                  marginBottom: 'var(--ehr-spacing-sm)',
+                  color: 'var(--ehr-text-primary)',
                 }}
               >
                 Save Location
               </label>
-              <div style={{ display: "flex", gap: "var(--ehr-spacing-sm)" }}>
+              <div style={{ display: 'flex', gap: 'var(--ehr-spacing-sm)' }}>
                 <input
                   type="text"
                   value={filePath}
@@ -188,27 +188,27 @@ function ExportModal({ onClose, scenarios }) {
                   placeholder="Enter file path or click Browse..."
                   style={{
                     flex: 1,
-                    padding: "var(--ehr-spacing-sm)",
-                    borderRadius: "var(--ehr-radius-md)",
-                    border: "1px solid var(--ehr-border)",
-                    backgroundColor: "var(--ehr-bg-primary)",
-                    color: "var(--ehr-text-primary)",
+                    padding: 'var(--ehr-spacing-sm)',
+                    borderRadius: 'var(--ehr-radius-md)',
+                    border: '1px solid var(--ehr-border)',
+                    backgroundColor: 'var(--ehr-bg-primary)',
+                    color: 'var(--ehr-text-primary)',
                   }}
                 />
                 <button
                   type="button"
                   onClick={handleFileSelect}
                   className="modal-button secondary"
-                  style={{ whiteSpace: "nowrap" }}
+                  style={{ whiteSpace: 'nowrap' }}
                 >
                   Browse...
                 </button>
               </div>
               <p
                 style={{
-                  fontSize: "0.875rem",
-                  color: "var(--ehr-text-secondary)",
-                  marginTop: "var(--ehr-spacing-xs)",
+                  fontSize: '0.875rem',
+                  color: 'var(--ehr-text-secondary)',
+                  marginTop: 'var(--ehr-spacing-xs)',
                 }}
               >
                 Choose where to save the exported scenarios database file.
@@ -218,15 +218,15 @@ function ExportModal({ onClose, scenarios }) {
             {message && (
               <div
                 style={{
-                  padding: "var(--ehr-spacing-md)",
-                  borderRadius: "var(--ehr-radius-md)",
+                  padding: 'var(--ehr-spacing-md)',
+                  borderRadius: 'var(--ehr-radius-md)',
                   backgroundColor: isSuccessMessage
-                    ? "rgba(16, 185, 129, 0.1)"
-                    : "rgba(239, 68, 68, 0.1)",
+                    ? 'rgba(16, 185, 129, 0.1)'
+                    : 'rgba(239, 68, 68, 0.1)',
                   color: isSuccessMessage
-                    ? "var(--ehr-success)"
-                    : "var(--ehr-error)",
-                  marginBottom: "var(--ehr-spacing-md)",
+                    ? 'var(--ehr-success)'
+                    : 'var(--ehr-error)',
+                  marginBottom: 'var(--ehr-spacing-md)',
                 }}
               >
                 {message}
@@ -252,7 +252,7 @@ function ExportModal({ onClose, scenarios }) {
               }
               type="submit"
             >
-              {isLoading ? "Exporting..." : "Export"}
+              {isLoading ? 'Exporting...' : 'Export'}
             </button>
           </div>
         </div>

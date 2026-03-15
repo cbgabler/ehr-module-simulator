@@ -11,7 +11,7 @@ function NotesSection({
   textareaRef,
 }) {
   const formatTimestamp = (timestamp) => {
-    if (!timestamp) return "";
+    if (!timestamp) return '';
     try {
       return new Date(timestamp).toLocaleString();
     } catch {
@@ -41,7 +41,7 @@ function NotesSection({
           className="notes-submit"
           disabled={disabled || noteSubmitting || !noteContent.trim()}
         >
-          {noteSubmitting ? "Saving..." : "Save Note"}
+          {noteSubmitting ? 'Saving...' : 'Save Note'}
         </button>
       </form>
 
@@ -62,7 +62,7 @@ function NotesSection({
                 disabled={noteDeletingId === note.id}
                 title="Delete note"
               >
-                {noteDeletingId === note.id ? "..." : "×"}
+                {noteDeletingId === note.id ? '...' : '×'}
               </button>
             </div>
           ))}
