@@ -9,6 +9,14 @@ import prettier from 'eslint-config-prettier';
 import babelParser from '@babel/eslint-parser';
 
 export default [
+  {
+    ignores: [
+      'frontend/dist/**',
+      'electron/build/**',
+      'electron/out/**',
+      '**/node_modules/**',
+    ],
+  },
   js.configs.recommended,
   prettier,
 
