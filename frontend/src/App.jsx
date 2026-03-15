@@ -1,5 +1,5 @@
 import {
-  BrowserRouter,
+  HashRouter,
   Navigate,
   Route,
   Routes,
@@ -31,7 +31,7 @@ function LandingRoute() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Navigation />
       <div className="app-content">
         <Routes>
@@ -64,7 +64,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
