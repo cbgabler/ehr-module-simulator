@@ -15,7 +15,9 @@ import './App.css';
 
 function ProtectedRoute({ children }) {
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, restoring } = useAuth();
+
+  if (restoring) return null;
 
   if (!isAuthenticated) {
     return <Navigate to="/sign-in" replace state={{ from: location }} />;
@@ -25,7 +27,8 @@ function ProtectedRoute({ children }) {
 }
 
 function LandingRoute() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, restoring } = useAuth();
+  if (restoring) return null;
   return <Navigate to={isAuthenticated ? '/home' : '/sign-in'} replace />;
 }
 
