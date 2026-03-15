@@ -1,7 +1,6 @@
-import { initDatabase } from "../database.js";
-import { app } from "electron";
-import fs from "fs";
-import path from "path";
+import { initDatabase } from '../database.js';
+import fs from 'fs';
+import path from 'path';
 
 /* 
 Import custom scenarios created by educators
@@ -12,19 +11,19 @@ Must be changed to uphold any schema changes (scenario_tabs/states... etc.)
 */
 export function importData(filePath) {
   if (!fs.existsSync(filePath)) {
-    throw new Error("File path does not exist");
+    throw new Error('File path does not exist');
   }
 
   if (
-    !filePath.endsWith(".db") &&
-    !filePath.endsWith(".sqlite") &&
-    !filePath.endsWith(".sqlite3")
+    !filePath.endsWith('.db') &&
+    !filePath.endsWith('.sqlite') &&
+    !filePath.endsWith('.sqlite3')
   ) {
-    throw new Error("File path does not have the correct suffix");
+    throw new Error('File path does not have the correct suffix');
   }
 
   const mainDb = initDatabase();
-  const normalizedPath = path.resolve(filePath).replace(/'/g, "''");
+  const normalizedPath = path.resolve(filePath).replace(/'/g, '\'\'');
 
   mainDb.exec(`ATTACH DATABASE '${normalizedPath}' AS source;`);
 

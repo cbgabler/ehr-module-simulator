@@ -40,8 +40,8 @@ function QuizzesPage() {
   const [submitError, setSubmitError] = useState(null);
   const [submitResult, setSubmitResult] = useState(null);
   const [submissions, setSubmissions] = useState([]);
-  const [submissionsError, setSubmissionsError] = useState(null);
-  const [submissionPage, setSubmissionPage] = useState(0);
+  const [, setSubmissionsError] = useState(null);
+  const [, setSubmissionPage] = useState(0);
 
   const loadQuizzes = useCallback(async () => {
     if (restoring) {

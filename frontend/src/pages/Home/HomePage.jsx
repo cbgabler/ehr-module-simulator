@@ -22,7 +22,6 @@ function HomePage() {
   const [startError, setStartError] = useState(null);
   const [isStarting, setIsStarting] = useState(false);
   const [sessionSummaries, setSessionSummaries] = useState([]);
-  const [vitalsHistory, setVitalsHistory] = useState([]);
   const [sessionSummariesLoading, setSessionSummariesLoading] = useState(false);
   const [sessionSummariesError, setSessionSummariesError] = useState(null);
   const [expandedSummaryId, setExpandedSummaryId] = useState(null);

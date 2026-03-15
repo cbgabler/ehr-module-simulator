@@ -1,6 +1,15 @@
 import { useCallback } from 'react';
 
 function CustomTab({ tab, values, onChange, disabled }) {
+  const handleChange = useCallback(
+    (fieldKey, newValue) => {
+      if (onChange) {
+        onChange(tab?.id, fieldKey, newValue);
+      }
+    },
+    [tab?.id, onChange]
+  );
+
   if (!tab || !tab.fields || tab.fields.length === 0) {
     return (
       <div className="custom-tab-empty">
@@ -8,15 +17,6 @@ function CustomTab({ tab, values, onChange, disabled }) {
       </div>
     );
   }
-
-  const handleChange = useCallback(
-    (fieldKey, newValue) => {
-      if (onChange) {
-        onChange(tab.id, fieldKey, newValue);
-      }
-    },
-    [tab.id, onChange]
-  );
 
   const fieldValues = values || {};
 

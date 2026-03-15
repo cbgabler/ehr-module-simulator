@@ -1,4 +1,3 @@
-import FormInput from '../shared/FormInput.jsx';
 import FormSelect from '../shared/FormSelect.jsx';
 import AddButton from '../shared/AddButton.jsx';
 import RemoveButton from '../shared/RemoveButton.jsx';

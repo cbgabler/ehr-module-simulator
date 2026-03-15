@@ -1,9 +1,9 @@
 export async function seedDefaultUsers() {
-  const { getUserByUsername, registerUser } = await import("./models/users.js");
+  const { getUserByUsername, registerUser } = await import('./models/users.js');
 
   const defaultUsers = [
-    { username: "instructor1", password: "password123", role: "instructor" },
-    { username: "student1", password: "password123", role: "student" },
+    { username: 'instructor1', password: 'password123', role: 'instructor' },
+    { username: 'student1', password: 'password123', role: 'student' },
   ];
 
   for (const user of defaultUsers) {

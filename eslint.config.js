@@ -52,6 +52,7 @@ export default [
     rules: {
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
+      'react/jsx-uses-vars': 'error',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
       quotes: ['error', 'single'],
@@ -62,13 +63,30 @@ export default [
 
   // Electron (Node.js)
   {
-    files: ['electron/**/*.{js,cjs}'],
+    files: ['electron/**/*.js'],
+    ignores: ['electron/build/**'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
+        console: true,
+      },
+    },
+    rules: {
+      quotes: ['error', 'single'],
+      semi: ['error', 'always'],
+    },
+  },
+
+  // Electron CJS (Node.js)
+  {
+    files: ['electron/**/*.cjs'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'script',
       globals: {
         ...globals.node,
-        console: true,
       },
     },
     rules: {

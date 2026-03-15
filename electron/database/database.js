@@ -1,10 +1,10 @@
-import path from "path";
-import { app } from "electron";
-import Database from "better-sqlite3";
-import { error } from "console";
-import { runMigrations, getSchemaVersion, CURRENT_VERSION } from "./migrations.js";
+import path from 'path';
+import { app } from 'electron';
+import Database from 'better-sqlite3';
+import { error } from 'console';
+import { runMigrations, getSchemaVersion, CURRENT_VERSION } from './migrations.js';
 
-const defaultDbPath = path.join(app.getPath("userData"), "ehr_scenarios.db");
+const defaultDbPath = path.join(app.getPath('userData'), 'ehr_scenarios.db');
 
 let db;
 
@@ -23,7 +23,7 @@ export function initDatabase(dbPath = defaultDbPath, skipMigrations = false) {
 
 export function getDb() {
   if (!db) {
-    throw new error("DB failed to initialize.");
+    throw new error('DB failed to initialize.');
   }
   return db;
 }

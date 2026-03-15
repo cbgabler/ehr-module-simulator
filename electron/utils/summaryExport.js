@@ -1,29 +1,29 @@
-import { app, BrowserWindow, dialog } from "electron";
-import path from "path";
-import { writeFile } from "fs/promises";
+import { app, BrowserWindow, dialog } from 'electron';
+import path from 'path';
+import { writeFile } from 'fs/promises';
 
-const escapeHtml = (value = "") =>
+const escapeHtml = (value = '') =>
   String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 
 const sanitizeFileSegment = (value) => {
   if (!value) {
-    return "";
+    return '';
   }
   return String(value)
     .trim()
-    .replace(/[^a-zA-Z0-9._-]+/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^_+|_+$/g, "");
+    .replace(/[^a-zA-Z0-9._-]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
 };
 
 const formatDisplayTimestamp = (timestamp) => {
   if (!timestamp) {
-    return "";
+    return '';
   }
   try {
     const parsed = new Date(timestamp);
@@ -40,10 +40,10 @@ const buildSummaryHtml = ({
   sessionId,
   userName,
 }) => {
-  const escapedSummary = escapeHtml(summaryText || "");
-  const escapedScenario = escapeHtml(scenarioName || "Unknown scenario");
-  const escapedUser = escapeHtml(userName || "Unknown user");
-  const escapedSession = escapeHtml(sessionId ?? "");
+  const escapedSummary = escapeHtml(summaryText || '');
+  const escapedScenario = escapeHtml(scenarioName || 'Unknown scenario');
+  const escapedUser = escapeHtml(userName || 'Unknown user');
+  const escapedSession = escapeHtml(sessionId ?? '');
   const createdAtLabel = formatDisplayTimestamp(createdAt);
 
   return `<!doctype html>
@@ -86,8 +86,8 @@ const buildSummaryHtml = ({
     <div class="meta">
       <div><strong>Scenario:</strong> ${escapedScenario}</div>
       <div><strong>User:</strong> ${escapedUser}</div>
-      ${escapedSession ? `<div><strong>Session:</strong> ${escapedSession}</div>` : ""}
-      ${createdAtLabel ? `<div><strong>Generated:</strong> ${escapeHtml(createdAtLabel)}</div>` : ""}
+      ${escapedSession ? `<div><strong>Session:</strong> ${escapedSession}</div>` : ''}
+      ${createdAtLabel ? `<div><strong>Generated:</strong> ${escapeHtml(createdAtLabel)}</div>` : ''}
     </div>
     <pre>${escapedSummary}</pre>
   </body>
@@ -105,27 +105,27 @@ export const exportSessionSummaryPdf = async ({
   let pdfWindow = null;
   try {
     if (!summaryText || !String(summaryText).trim()) {
-      throw new Error("summaryText is required");
+      throw new Error('summaryText is required');
     }
 
     const scenarioSegment = sanitizeFileSegment(scenarioName);
     const sessionSegment = sanitizeFileSegment(sessionId);
-    const fallbackSegments = ["session-summary", scenarioSegment, sessionSegment]
+    const fallbackSegments = ['session-summary', scenarioSegment, sessionSegment]
       .filter(Boolean);
     const fallbackBase = fallbackSegments.length
-      ? fallbackSegments.join("_")
-      : "session-summary";
+      ? fallbackSegments.join('_')
+      : 'session-summary';
 
-    const baseName = fileName ? path.basename(fileName) : "";
-    const requestedBase = baseName.replace(/\.pdf$/i, "");
+    const baseName = fileName ? path.basename(fileName) : '';
+    const requestedBase = baseName.replace(/\.pdf$/i, '');
     const safeRequestedBase = sanitizeFileSegment(requestedBase);
     const finalBase = safeRequestedBase || fallbackBase;
     const suggestedName = `${finalBase}.pdf`;
 
     const saveResult = await dialog.showSaveDialog({
-      title: "Save Session Summary",
-      defaultPath: path.join(app.getPath("documents"), suggestedName),
-      filters: [{ name: "PDF Files", extensions: ["pdf"] }],
+      title: 'Save Session Summary',
+      defaultPath: path.join(app.getPath('documents'), suggestedName),
+      filters: [{ name: 'PDF Files', extensions: ['pdf'] }],
     });
 
     if (saveResult.canceled || !saveResult.filePath) {
@@ -144,7 +144,7 @@ export const exportSessionSummaryPdf = async ({
       show: false,
       width: 900,
       height: 1200,
-      backgroundColor: "#ffffff",
+      backgroundColor: '#ffffff',
       webPreferences: {
         contextIsolation: true,
         sandbox: true,
@@ -157,7 +157,7 @@ export const exportSessionSummaryPdf = async ({
 
     const pdfBuffer = await pdfWindow.webContents.printToPDF({
       printBackground: true,
-      pageSize: "A4",
+      pageSize: 'A4',
     });
 
     await writeFile(saveResult.filePath, pdfBuffer);
