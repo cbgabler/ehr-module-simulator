@@ -79,7 +79,7 @@ function QuizTakePanel({
 
         <div className="quiz-submit-row">
           <button type="button" onClick={onSubmit} disabled={!canSubmit || submitting}>
-            {submitting ? "Submitting..." : "Submit Quiz"}
+            {submitting ? 'Submitting...' : 'Submit Quiz'}
           </button>
           {!canSubmit && (
             <span className="quiz-hint">Answer all questions to submit.</span>

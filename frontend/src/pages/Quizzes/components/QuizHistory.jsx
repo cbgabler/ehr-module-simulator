@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from 'react';
 
 function ScoreBar({ score, total }) {
   const pct = total > 0 ? Math.round((score / total) * 100) : 0;
   const colorClass =
-    pct >= 80 ? "quiz-score-bar--high" : pct >= 50 ? "quiz-score-bar--mid" : "quiz-score-bar--low";
+    pct >= 80 ? 'quiz-score-bar--high' : pct >= 50 ? 'quiz-score-bar--mid' : 'quiz-score-bar--low';
   return (
     <div className="quiz-score-bar-track" title={`${pct}%`}>
       <div className={`quiz-score-bar-fill ${colorClass}`} style={{ width: `${pct}%` }} />
@@ -31,10 +31,10 @@ function SubmissionBreakdown({ submissionId }) {
       if (response.success) {
         setDetails(response.details);
       } else {
-        setError(response.error || "Could not load details.");
+        setError(response.error || 'Could not load details.');
       }
     } catch (err) {
-      setError(err.message || "Could not load details.");
+      setError(err.message || 'Could not load details.');
     } finally {
       setLoading(false);
     }
@@ -48,7 +48,7 @@ function SubmissionBreakdown({ submissionId }) {
         onClick={handleToggle}
         aria-expanded={open}
       >
-        {open ? "Hide Details ▲" : "View Details ▼"}
+        {open ? 'Hide Details ▲' : 'View Details ▼'}
       </button>
 
       {open && (
@@ -62,21 +62,21 @@ function SubmissionBreakdown({ submissionId }) {
             details.answers.map((answer, index) => {
               const selectedLabel =
                 answer.selectedAnswerIndex !== null
-                  ? answer.options[answer.selectedAnswerIndex] ?? "—"
-                  : "No answer";
-              const correctLabel = answer.options[answer.correctAnswerIndex] ?? "—";
+                  ? answer.options[answer.selectedAnswerIndex] ?? '—'
+                  : 'No answer';
+              const correctLabel = answer.options[answer.correctAnswerIndex] ?? '—';
 
               return (
                 <div
                   key={answer.questionId}
-                  className={`quiz-breakdown-question ${answer.isCorrect ? "quiz-breakdown-question--correct" : "quiz-breakdown-question--incorrect"}`}
+                  className={`quiz-breakdown-question ${answer.isCorrect ? 'quiz-breakdown-question--correct' : 'quiz-breakdown-question--incorrect'}`}
                 >
                   <div className="quiz-breakdown-q-header">
                     <span className="quiz-breakdown-q-num">Q{index + 1}</span>
                     <span
-                      className={`quiz-breakdown-badge ${answer.isCorrect ? "quiz-breakdown-badge--correct" : "quiz-breakdown-badge--incorrect"}`}
+                      className={`quiz-breakdown-badge ${answer.isCorrect ? 'quiz-breakdown-badge--correct' : 'quiz-breakdown-badge--incorrect'}`}
                     >
-                      {answer.isCorrect ? "Correct" : "Incorrect"}
+                      {answer.isCorrect ? 'Correct' : 'Incorrect'}
                     </span>
                   </div>
                   <p className="quiz-breakdown-prompt">{answer.prompt}</p>
@@ -84,7 +84,7 @@ function SubmissionBreakdown({ submissionId }) {
                     <div className="quiz-breakdown-answer-row">
                       <span className="quiz-breakdown-answer-label">Your answer:</span>
                       <span
-                        className={`quiz-breakdown-answer-value ${answer.isCorrect ? "quiz-breakdown-answer--correct" : "quiz-breakdown-answer--incorrect"}`}
+                        className={`quiz-breakdown-answer-value ${answer.isCorrect ? 'quiz-breakdown-answer--correct' : 'quiz-breakdown-answer--incorrect'}`}
                       >
                         {selectedLabel}
                       </span>
@@ -128,8 +128,8 @@ function QuizHistory({ submissions }) {
           <h2 className="quiz-history-title">My Quiz History</h2>
           <p className="quiz-history-subtitle">
             {hasSubmissions
-              ? `${submissions.length} attempt${submissions.length !== 1 ? "s" : ""} recorded`
-              : "No attempts yet — submit a quiz to see your history here."}
+              ? `${submissions.length} attempt${submissions.length !== 1 ? 's' : ''} recorded`
+              : 'No attempts yet — submit a quiz to see your history here.'}
           </p>
         </div>
         {hasSubmissions && (
@@ -138,7 +138,7 @@ function QuizHistory({ submissions }) {
             className="quiz-secondary-button"
             onClick={() => setExpanded((prev) => !prev)}
           >
-            {expanded ? "Collapse ▲" : "Expand ▼"}
+            {expanded ? 'Collapse ▲' : 'Expand ▼'}
           </button>
         )}
       </div>
@@ -152,7 +152,7 @@ function QuizHistory({ submissions }) {
                 : 0;
             const date = submission.submittedAt
               ? new Date(submission.submittedAt).toLocaleString()
-              : "Unknown date";
+              : 'Unknown date';
 
             return (
               <div key={submission.id} className="quiz-history-card">

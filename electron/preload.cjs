@@ -1,328 +1,328 @@
-const { contextBridge, ipcRenderer } = require("electron");
+const { contextBridge, ipcRenderer } = require('electron');
 
-console.log("Preload script loaded");
+console.log('Preload script loaded');
 
 // Expose API to frontend to interact with local DB
-contextBridge.exposeInMainWorld("api", {
-  message: () => "test",
+contextBridge.exposeInMainWorld('api', {
+  message: () => 'test',
   registerUser: async (userData) => {
     // commented out bc it contains password
     //console.log("registerUser called with:", userData);
     try {
-      const result = await ipcRenderer.invoke("register-user", userData);
-      console.log("IPC result:", result);
+      const result = await ipcRenderer.invoke('register-user', userData);
+      console.log('IPC result:', result);
       return result;
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   restoreSession: async ({ userId }) => {
     try {
-      return await ipcRenderer.invoke("restore-session", { userId });
+      return await ipcRenderer.invoke('restore-session', { userId });
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   signOut: async () => {
     try {
-      return await ipcRenderer.invoke("sign-out");
+      return await ipcRenderer.invoke('sign-out');
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   loginUser: async (credentials) => {
     try {
-      return await ipcRenderer.invoke("login-user", credentials);
+      return await ipcRenderer.invoke('login-user', credentials);
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   getAllScenarios: async () => {
     try {
-      return await ipcRenderer.invoke("get-all-scenarios");
+      return await ipcRenderer.invoke('get-all-scenarios');
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   getScenario: async (scenarioId) => {
     try {
-      return await ipcRenderer.invoke("get-scenario", scenarioId);
+      return await ipcRenderer.invoke('get-scenario', scenarioId);
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   createScenario: async ({ name, definition }) => {
     try {
-      return await ipcRenderer.invoke("create-scenario", { name, definition });
+      return await ipcRenderer.invoke('create-scenario', { name, definition });
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   deleteScenario: async (scenarioId) => {
     try {
-      return await ipcRenderer.invoke("delete-scenario", scenarioId);
+      return await ipcRenderer.invoke('delete-scenario', scenarioId);
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   duplicateScenario: async (scenarioId) => {
     try {
-      return await ipcRenderer.invoke("duplicate-scenario", scenarioId);
+      return await ipcRenderer.invoke('duplicate-scenario', scenarioId);
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   getAllQuizzes: async () => {
     try {
-      return await ipcRenderer.invoke("get-all-quizzes");
+      return await ipcRenderer.invoke('get-all-quizzes');
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   getQuiz: async (quizId) => {
     try {
-      return await ipcRenderer.invoke("get-quiz", quizId);
+      return await ipcRenderer.invoke('get-quiz', quizId);
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   createQuiz: async (payload) => {
     try {
-      return await ipcRenderer.invoke("create-quiz", payload);
+      return await ipcRenderer.invoke('create-quiz', payload);
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   updateQuiz: async (payload) => {
     try {
-      return await ipcRenderer.invoke("update-quiz", payload);
+      return await ipcRenderer.invoke('update-quiz', payload);
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   deleteQuiz: async (quizId) => {
     try {
-      return await ipcRenderer.invoke("delete-quiz", quizId);
+      return await ipcRenderer.invoke('delete-quiz', quizId);
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   copyQuiz: async (quizId) => {
     try {
-      return await ipcRenderer.invoke("copy-quiz", quizId);
+      return await ipcRenderer.invoke('copy-quiz', quizId);
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   submitQuiz: async (payload) => {
     try {
-      return await ipcRenderer.invoke("submit-quiz", payload);
+      return await ipcRenderer.invoke('submit-quiz', payload);
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   // get user id from context rather than passing
   getUserQuizSubmissions: async () => {
     try {
-      return await ipcRenderer.invoke("get-user-quiz-submissions");
+      return await ipcRenderer.invoke('get-user-quiz-submissions');
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   getQuizSubmissionDetails: async (submissionId) => {
     try {
-      return await ipcRenderer.invoke("get-quiz-submission-details", { submissionId });
+      return await ipcRenderer.invoke('get-quiz-submission-details', { submissionId });
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   getAllUsers: async () => {
     try {
-      return await ipcRenderer.invoke("get-all-users");
+      return await ipcRenderer.invoke('get-all-users');
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   exportQuiz: async ({ quizId, filePath }) => {
     try {
-      return await ipcRenderer.invoke("export-quiz", { quizId, filePath });
+      return await ipcRenderer.invoke('export-quiz', { quizId, filePath });
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   importQuiz: async ({ filePath }) => {
     try {
-      return await ipcRenderer.invoke("import-quiz", { filePath });
+      return await ipcRenderer.invoke('import-quiz', { filePath });
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   startSimulation: async ({ scenarioId, userId }) => {
     try {
-      return await ipcRenderer.invoke("start-sim", { scenarioId, userId });
+      return await ipcRenderer.invoke('start-sim', { scenarioId, userId });
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   getSimulationState: async (sessionId) => {
     try {
-      return await ipcRenderer.invoke("get-sim-state", { sessionId });
+      return await ipcRenderer.invoke('get-sim-state', { sessionId });
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   adjustMedication: async ({ sessionId, medicationId, newDose }) => {
     try {
-      return await ipcRenderer.invoke("adjust-sim-medication", {
+      return await ipcRenderer.invoke('adjust-sim-medication', {
         sessionId,
         medicationId,
         newDose,
       });
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   pauseSimulation: async (sessionId) => {
     try {
-      return await ipcRenderer.invoke("pause-sim", { sessionId });
+      return await ipcRenderer.invoke('pause-sim', { sessionId });
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   resumeSimulation: async (sessionId) => {
     try {
-      return await ipcRenderer.invoke("resume-sim", { sessionId });
+      return await ipcRenderer.invoke('resume-sim', { sessionId });
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   endSimulation: async (sessionId) => {
     try {
-      return await ipcRenderer.invoke("end-sim", { sessionId });
+      return await ipcRenderer.invoke('end-sim', { sessionId });
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   getSessionSummary: async (sessionId) => {
     try {
-      return await ipcRenderer.invoke("get-session-summary", { sessionId });
+      return await ipcRenderer.invoke('get-session-summary', { sessionId });
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   getSessionSummaries: async (userId) => {
     try {
-      return await ipcRenderer.invoke("get-session-summaries", { userId });
+      return await ipcRenderer.invoke('get-session-summaries', { userId });
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   addNote: async ({ sessionId, userId, content, vitalsSnapshot }) => {
     try {
-      return await ipcRenderer.invoke("add-note", {
+      return await ipcRenderer.invoke('add-note', {
         sessionId,
         userId,
         content,
         vitalsSnapshot,
       });
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   getNotes: async (sessionId) => {
     try {
-      return await ipcRenderer.invoke("get-notes", { sessionId });
+      return await ipcRenderer.invoke('get-notes', { sessionId });
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   deleteNote: async ({ noteId, userId }) => {
     try {
-      return await ipcRenderer.invoke("delete-note", { noteId, userId });
+      return await ipcRenderer.invoke('delete-note', { noteId, userId });
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   importFile: async (filePath) => {
     try {
-      return ipcRenderer.invoke("import-file", filePath);
+      return ipcRenderer.invoke('import-file', filePath);
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   showOpenDialog: async (options) => {
     try {
-      return await ipcRenderer.invoke("show-open-dialog", options);
+      return await ipcRenderer.invoke('show-open-dialog', options);
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { canceled: true, error: error.message };
     }
   },
   showSaveDialog: async (options) => {
     try {
-      return await ipcRenderer.invoke("show-save-dialog", options);
+      return await ipcRenderer.invoke('show-save-dialog', options);
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { canceled: true, error: error.message };
     }
   },
   exportData: async ({ filePath, scenarioIds }) => {
     try {
-      return await ipcRenderer.invoke("export-data", { filePath, scenarioIds });
+      return await ipcRenderer.invoke('export-data', { filePath, scenarioIds });
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   exportSessionSummaryPdf: async (payload) => {
     try {
-      return await ipcRenderer.invoke("export-session-summary-pdf", payload);
+      return await ipcRenderer.invoke('export-session-summary-pdf', payload);
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
   openExternalUrl: async (url) => {
     try {
-      return await ipcRenderer.invoke("open-external-url", url);
+      return await ipcRenderer.invoke('open-external-url', url);
     } catch (error) {
-      console.error("IPC error:", error);
+      console.error('IPC error:', error);
       return { success: false, error: error.message };
     }
   },
 });
 
-console.log("API exposed to window.api");
+console.log('API exposed to window.api');

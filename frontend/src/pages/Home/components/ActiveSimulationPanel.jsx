@@ -1,8 +1,8 @@
-import VitalsTrendGraph from "./VitalsTrendGraph.jsx";
+import VitalsTrendGraph from './VitalsTrendGraph.jsx';
 
 function formatNoteTimestamp(timestamp) {
   if (!timestamp) {
-    return "";
+    return '';
   }
   try {
     return new Date(timestamp).toLocaleString();
@@ -50,7 +50,7 @@ function ActiveSimulationPanel({
           {activeScenario && (
             <p className="simulation-subtitle">
               {activeScenario.name}
-              {patientDetails?.name ? ` - Patient ${patientDetails.name}` : ""}
+              {patientDetails?.name ? ` - Patient ${patientDetails.name}` : ''}
             </p>
           )}
         </div>
@@ -61,12 +61,12 @@ function ActiveSimulationPanel({
               {activeSession.state.status.toUpperCase()}
             </span>
           )}
-          {typeof activeSession.state.tickCount === "number" && (
+          {typeof activeSession.state.tickCount === 'number' && (
             <span className="session-pill">
               Tick: {activeSession.state.tickCount}
             </span>
           )}
-          {typeof activeSession.state.tickIntervalMs === "number" && (
+          {typeof activeSession.state.tickIntervalMs === 'number' && (
             <span className="session-pill">
               Interval: {activeSession.state.tickIntervalMs}ms
             </span>
@@ -75,10 +75,10 @@ function ActiveSimulationPanel({
       </div>
 
       {targetStatus?.configured && (
-        <div className={`target-banner ${targetStatus.met ? "met" : ""}`}>
-          <strong>{targetStatus.description || "Scenario target"}</strong>
+        <div className={`target-banner ${targetStatus.met ? 'met' : ''}`}>
+          <strong>{targetStatus.description || 'Scenario target'}</strong>
           <div className="target-progress">
-            Progress:{" "}
+            Progress:{' '}
             {Math.min(
               targetStatus.consecutiveTicks || 0,
               targetStatus.holdTicksRequired || 0
@@ -104,7 +104,7 @@ function ActiveSimulationPanel({
           <h3>Vitals Trend</h3>
           <VitalsTrendGraph
             history={vitalsHistory}
-            selectedVitals={["heartRate", "oxygenSaturation", "systolic", "diastolic"]}
+            selectedVitals={['heartRate', 'oxygenSaturation', 'systolic', 'diastolic']}
           />
         </div>
       )}
@@ -118,26 +118,26 @@ function ActiveSimulationPanel({
               <div key={med.id} className="medication-row">
                 <div>
                   <strong>{med.name}</strong>
-                  {med.dosage ? ` - ${med.dosage}` : ""}
-                  {medState?.unit ? ` (${medState.unit})` : ""}
-                  {typeof medState?.dose === "number" && (
+                  {med.dosage ? ` - ${med.dosage}` : ''}
+                  {medState?.unit ? ` (${medState.unit})` : ''}
+                  {typeof medState?.dose === 'number' && (
                     <p className="medication-meta">
-                      Current Dose: {medState.dose} {medState.unit || ""}
+                      Current Dose: {medState.dose} {medState.unit || ''}
                     </p>
                   )}
-                  {typeof medState?.min === "number" &&
-                    typeof medState?.max === "number" && (
-                      <p className="medication-meta">
-                        Range: {medState.min} - {medState.max} {medState.unit || ""}
-                      </p>
-                    )}
+                  {typeof medState?.min === 'number' &&
+                    typeof medState?.max === 'number' && (
+                    <p className="medication-meta">
+                        Range: {medState.min} - {medState.max} {medState.unit || ''}
+                    </p>
+                  )}
                 </div>
                 {medState && (
                   <div className="medication-controls">
                     <input
                       type="number"
                       step={medState.step ?? 1}
-                      value={doseInputs[med.id] ?? ""}
+                      value={doseInputs[med.id] ?? ''}
                       onChange={(event) =>
                         onDoseChange?.(med.id, event.target.value)
                       }
@@ -169,7 +169,7 @@ function ActiveSimulationPanel({
             type="submit"
             disabled={noteSubmitting || !noteContent.trim()}
           >
-            {noteSubmitting ? "Saving..." : "Add Note"}
+            {noteSubmitting ? 'Saving...' : 'Add Note'}
           </button>
         </form>
         {noteError && <div className="notes-error">{noteError}</div>}
@@ -191,7 +191,7 @@ function ActiveSimulationPanel({
                       onClick={() => onDeleteNote?.(note.id)}
                       disabled={noteDeletingId === note.id}
                     >
-                      {noteDeletingId === note.id ? "Deleting..." : "Delete"}
+                      {noteDeletingId === note.id ? 'Deleting...' : 'Delete'}
                     </button>
                   </div>
                 )}
@@ -219,7 +219,7 @@ function ActiveSimulationPanel({
         </div>
       )}
 
-      {activeSession.state.status === "ended" && (
+      {activeSession.state.status === 'ended' && (
         <div className="summary-panel">
           <div className="summary-header">
             <h3>Session Summary</h3>
@@ -233,7 +233,7 @@ function ActiveSimulationPanel({
           {!sessionSummaryLoading && !sessionSummaryError && (
             <pre className="summary-content">
               {sessionSummary?.summary ||
-                "No summary available for this session yet."}
+                'No summary available for this session yet.'}
             </pre>
           )}
         </div>

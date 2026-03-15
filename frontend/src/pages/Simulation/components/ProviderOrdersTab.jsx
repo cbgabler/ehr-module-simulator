@@ -4,7 +4,7 @@ function ProviderOrdersTab({ orders }) {
   }
 
   const formatDateTime = (dateStr) => {
-    if (!dateStr) return "N/A";
+    if (!dateStr) return 'N/A';
     try {
       return new Date(dateStr).toLocaleString();
     } catch {
@@ -13,11 +13,11 @@ function ProviderOrdersTab({ orders }) {
   };
 
   const getPriorityClass = (priority) => {
-    if (!priority) return "routine";
+    if (!priority) return 'routine';
     const p = priority.toLowerCase();
-    if (p === "stat" || p === "emergency") return "stat";
-    if (p === "urgent" || p === "asap") return "urgent";
-    return "routine";
+    if (p === 'stat' || p === 'emergency') return 'stat';
+    if (p === 'urgent' || p === 'asap') return 'urgent';
+    return 'routine';
   };
 
   return (
@@ -25,7 +25,7 @@ function ProviderOrdersTab({ orders }) {
       {orders.map((order, index) => (
         <div key={order.id || index} className="order-card">
           <div className="order-header">
-            <span className="order-type">{order.type || "Order"}</span>
+            <span className="order-type">{order.type || 'Order'}</span>
             {order.priority && (
               <span className={`order-priority ${getPriorityClass(order.priority)}`}>
                 {order.priority}

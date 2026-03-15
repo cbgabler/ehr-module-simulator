@@ -4,14 +4,14 @@ import {
   Route,
   Routes,
   useLocation,
-} from "react-router-dom";
-import Navigation from "./pages/Combined/Navigation.jsx";
-import SignInPage from "./pages/Auth/SignInPage.jsx";
-import HomePage from "./pages/Home/HomePage.jsx";
-import SimulationPage from "./pages/Simulation/SimulationPage.jsx";
-import QuizzesPage from "./pages/Quizzes/QuizzesPage.jsx";
-import { useAuth } from "./pages/Auth/AuthContext.jsx";
-import "./App.css";
+} from 'react-router-dom';
+import Navigation from './pages/Combined/Navigation.jsx';
+import SignInPage from './pages/Auth/SignInPage.jsx';
+import HomePage from './pages/Home/HomePage.jsx';
+import SimulationPage from './pages/Simulation/SimulationPage.jsx';
+import QuizzesPage from './pages/Quizzes/QuizzesPage.jsx';
+import { useAuth } from './pages/Auth/AuthContext.jsx';
+import './App.css';
 
 function ProtectedRoute({ children }) {
   const location = useLocation();
@@ -26,7 +26,7 @@ function ProtectedRoute({ children }) {
 
 function LandingRoute() {
   const { isAuthenticated } = useAuth();
-  return <Navigate to={isAuthenticated ? "/home" : "/sign-in"} replace />;
+  return <Navigate to={isAuthenticated ? '/home' : '/sign-in'} replace />;
 }
 
 function App() {

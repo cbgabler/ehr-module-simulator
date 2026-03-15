@@ -1,4 +1,4 @@
-import FormInput from "../shared/FormInput.jsx";
+import FormInput from '../shared/FormInput.jsx';
 
 /**
  * Vital Signs Form Section
@@ -22,11 +22,11 @@ function VitalsForm({
   setWeight,
 }) {
   return (
-    <div style={{ marginBottom: "var(--ehr-spacing-lg)" }}>
-      <h3 style={{ color: "var(--ehr-primary)", marginBottom: "var(--ehr-spacing-md)" }}>
+    <div style={{ marginBottom: 'var(--ehr-spacing-lg)' }}>
+      <h3 style={{ color: 'var(--ehr-primary)', marginBottom: 'var(--ehr-spacing-md)' }}>
         Initial Vital Signs
       </h3>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "var(--ehr-spacing-md)" }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--ehr-spacing-md)' }}>
         <FormInput
           label="Systolic BP"
           type="number"

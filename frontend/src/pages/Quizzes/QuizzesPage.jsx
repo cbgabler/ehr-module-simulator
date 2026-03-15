@@ -1,16 +1,16 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useAuth } from "../Auth/AuthContext.jsx";
-import QuizCreatePanel from "./components/QuizCreatePanel.jsx";
-import QuizGrid from "./components/QuizGrid.jsx";
-import QuizHeader from "./components/QuizHeader.jsx";
-import QuizHistory from "./components/QuizHistory.jsx";
-import QuizTakePanel from "./components/QuizTakePanel.jsx";
-import { createEmptyQuestion, normalizeQuizQuestions } from "./quizUtils.js";
-import "./QuizzesPage.css";
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useAuth } from '../Auth/AuthContext.jsx';
+import QuizCreatePanel from './components/QuizCreatePanel.jsx';
+import QuizGrid from './components/QuizGrid.jsx';
+import QuizHeader from './components/QuizHeader.jsx';
+import QuizHistory from './components/QuizHistory.jsx';
+import QuizTakePanel from './components/QuizTakePanel.jsx';
+import { createEmptyQuestion, normalizeQuizQuestions } from './quizUtils.js';
+import './QuizzesPage.css';
 
 function QuizzesPage() {
   const { user, restoring } = useAuth();
-  const isInstructor = user?.role === "instructor" || user?.role === "admin";
+  const isInstructor = user?.role === 'instructor' || user?.role === 'admin';
 
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,8 +26,8 @@ function QuizzesPage() {
   const [actionMessage, setActionMessage] = useState(null);
   const [actionError, setActionError] = useState(null);
   const [newQuiz, setNewQuiz] = useState({
-    title: "",
-    description: "",
+    title: '',
+    description: '',
     isPublic: true,
     assignedStudentIds: [],
     showCorrectAnswers: false,
@@ -51,7 +51,7 @@ function QuizzesPage() {
     setError(null);
     try {
       if (!window.api?.getAllQuizzes) {
-        setError("Quiz API not available. Please run inside Electron.");
+        setError('Quiz API not available. Please run inside Electron.');
         setLoading(false);
         return;
       }
@@ -59,10 +59,10 @@ function QuizzesPage() {
       if (result.success) {
         setQuizzes(result.quizzes || []);
       } else {
-        setError(result.error || "Failed to load quizzes.");
+        setError(result.error || 'Failed to load quizzes.');
       }
     } catch (err) {
-      setError(err.message || "Unable to load quizzes.");
+      setError(err.message || 'Unable to load quizzes.');
     } finally {
       setLoading(false);
     }
@@ -84,7 +84,7 @@ function QuizzesPage() {
     try {
       const result = await window.api.getAllUsers();
       if (result.success) {
-        setStudents((result.users || []).filter((userItem) => userItem.role === "student"));
+        setStudents((result.users || []).filter((userItem) => userItem.role === 'student'));
       } else {
         setStudents([]);
       }
@@ -111,10 +111,10 @@ function QuizzesPage() {
         setSubmissions(result.submissions || []);
         setSubmissionPage(0);
       } else {
-        setSubmissionsError(result.error || "Unable to load quiz history.");
+        setSubmissionsError(result.error || 'Unable to load quiz history.');
       }
     } catch (err) {
-      setSubmissionsError(err.message || "Unable to load quiz history.");
+      setSubmissionsError(err.message || 'Unable to load quiz history.');
     }
   }, [user, restoring]);
 
@@ -140,10 +140,10 @@ function QuizzesPage() {
       if (response.success) {
         setSelectedQuiz(response.quiz);
       } else {
-        setQuizError(response.error || "Unable to load quiz.");
+        setQuizError(response.error || 'Unable to load quiz.');
       }
     } catch (err) {
-      setQuizError(err.message || "Unable to load quiz.");
+      setQuizError(err.message || 'Unable to load quiz.');
     }
   };
 
@@ -176,10 +176,10 @@ function QuizzesPage() {
         loadSubmissions();
         setSubmissionPage(0);
       } else {
-        setSubmitError(response.error || "Unable to submit quiz.");
+        setSubmitError(response.error || 'Unable to submit quiz.');
       }
     } catch (err) {
-      setSubmitError(err.message || "Unable to submit quiz.");
+      setSubmitError(err.message || 'Unable to submit quiz.');
     } finally {
       setSubmitting(false);
     }
@@ -203,8 +203,8 @@ function QuizzesPage() {
     if (showCreate) {
       setEditingQuizId(null);
       setNewQuiz({
-        title: "",
-        description: "",
+        title: '',
+        description: '',
         isPublic: true,
         assignedStudentIds: [],
         showCorrectAnswers: false,
@@ -222,40 +222,40 @@ function QuizzesPage() {
 
     const title = newQuiz.title.trim();
     if (!title) {
-      setCreateError("Quiz title is required.");
+      setCreateError('Quiz title is required.');
       return;
     }
 
     const normalizedQuestions = normalizeQuizQuestions(newQuiz.questions);
 
     if (normalizedQuestions.some((question) => !question.prompt)) {
-      setCreateError("Each question needs a prompt.");
+      setCreateError('Each question needs a prompt.');
       return;
     }
 
     if (
       normalizedQuestions.some(
         (question) =>
-          question.type === "multiple_choice" && question.options.length < 2
+          question.type === 'multiple_choice' && question.options.length < 2
       )
     ) {
-      setCreateError("Multiple choice questions need at least two options.");
+      setCreateError('Multiple choice questions need at least two options.');
       return;
     }
 
     if (
       normalizedQuestions.some(
         (question) =>
-          question.type === "multiple_choice" &&
+          question.type === 'multiple_choice' &&
           question.options.some((option) => option.length === 0)
       )
     ) {
-      setCreateError("Multiple choice options cannot be blank.");
+      setCreateError('Multiple choice options cannot be blank.');
       return;
     }
 
     if (!newQuiz.isPublic && newQuiz.assignedStudentIds.length === 0) {
-      setCreateError("Select at least one student or set the quiz to public.");
+      setCreateError('Select at least one student or set the quiz to public.');
       return;
     }
 
@@ -274,13 +274,13 @@ function QuizzesPage() {
         : await window.api.createQuiz(payload);
       if (response.success) {
         setCreateSuccess(
-          editingQuizId ? "Quiz updated successfully." : "Quiz created successfully."
+          editingQuizId ? 'Quiz updated successfully.' : 'Quiz created successfully.'
         );
         setEditingQuizId(null);
         setShowCreate(false);
         setNewQuiz({
-          title: "",
-          description: "",
+          title: '',
+          description: '',
           isPublic: true,
           assignedStudentIds: [],
           showCorrectAnswers: false,
@@ -289,10 +289,10 @@ function QuizzesPage() {
         await loadQuizzes();
         await loadStudents();
       } else {
-        setCreateError(response.error || "Unable to create quiz.");
+        setCreateError(response.error || 'Unable to create quiz.');
       }
     } catch (err) {
-      setCreateError(err.message || "Unable to create quiz.");
+      setCreateError(err.message || 'Unable to create quiz.');
     } finally {
       setCreating(false);
     }
@@ -303,8 +303,8 @@ function QuizzesPage() {
     setCreateError(null);
     setCreateSuccess(null);
     setNewQuiz({
-      title: "",
-      description: "",
+      title: '',
+      description: '',
       isPublic: true,
       assignedStudentIds: [],
       showCorrectAnswers: false,
@@ -320,52 +320,52 @@ function QuizzesPage() {
     try {
       const response = await window.api.getQuiz(quizId);
       if (!response.success) {
-        setActionError(response.error || "Unable to load quiz.");
+        setActionError(response.error || 'Unable to load quiz.');
         return;
       }
       const quiz = response.quiz;
       setEditingQuizId(quizId);
       setShowCreate(true);
       setNewQuiz({
-        title: quiz.title ?? "",
-        description: quiz.description ?? "",
+        title: quiz.title ?? '',
+        description: quiz.description ?? '',
         isPublic: Boolean(quiz.isPublic),
         assignedStudentIds: quiz.assignedStudentIds || [],
         showCorrectAnswers: Boolean(quiz.showCorrectAnswers),
         questions: (quiz.questions || []).map((question) => ({
           tempId: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-          prompt: question.prompt ?? "",
-          type: question.type ?? "multiple_choice",
-          options: question.options || ["", ""],
+          prompt: question.prompt ?? '',
+          type: question.type ?? 'multiple_choice',
+          options: question.options || ['', ''],
           correctAnswerIndex: question.correctAnswerIndex ?? 0,
-          explanation: question.explanation ?? "",
+          explanation: question.explanation ?? '',
         })),
       });
     } catch (err) {
-      setActionError(err.message || "Unable to load quiz.");
+      setActionError(err.message || 'Unable to load quiz.');
     }
   };
 
   const handleDeleteQuiz = async (quizId) => {
     setActionMessage(null);
     setActionError(null);
-    if (!window.confirm("Delete this quiz? This cannot be undone.")) {
+    if (!window.confirm('Delete this quiz? This cannot be undone.')) {
       return;
     }
     try {
       const response = await window.api.deleteQuiz(quizId);
       if (response.success) {
-        setActionMessage("Quiz deleted.");
+        setActionMessage('Quiz deleted.');
         if (selectedQuiz?.id === quizId) {
           setSelectedQuiz(null);
         }
         await loadQuizzes();
         setSubmissionPage(0);
       } else {
-        setActionError(response.error || "Unable to delete quiz.");
+        setActionError(response.error || 'Unable to delete quiz.');
       }
     } catch (err) {
-      setActionError(err.message || "Unable to delete quiz.");
+      setActionError(err.message || 'Unable to delete quiz.');
     }
   };
 
@@ -375,14 +375,14 @@ function QuizzesPage() {
     try {
       const response = await window.api.copyQuiz(quizId);
       if (response.success) {
-        setActionMessage("Quiz copied.");
+        setActionMessage('Quiz copied.');
         await loadQuizzes();
         setSubmissionPage(0);
       } else {
-        setActionError(response.error || "Unable to copy quiz.");
+        setActionError(response.error || 'Unable to copy quiz.');
       }
     } catch (err) {
-      setActionError(err.message || "Unable to copy quiz.");
+      setActionError(err.message || 'Unable to copy quiz.');
     }
   };
 
@@ -390,14 +390,14 @@ function QuizzesPage() {
     setActionMessage(null);
     setActionError(null);
     if (!window.api?.showSaveDialog || !window.api?.exportQuiz) {
-      setActionError("Quiz export is only available in the desktop app.");
+      setActionError('Quiz export is only available in the desktop app.');
       return;
     }
     try {
       const dialogResult = await window.api.showSaveDialog({
-        title: "Export Quiz",
-        defaultPath: "quiz.json",
-        filters: [{ name: "Quiz JSON", extensions: ["json"] }],
+        title: 'Export Quiz',
+        defaultPath: 'quiz.json',
+        filters: [{ name: 'Quiz JSON', extensions: ['json'] }],
       });
       if (dialogResult.canceled || !dialogResult.filePath) {
         return;
@@ -407,12 +407,12 @@ function QuizzesPage() {
         filePath: dialogResult.filePath,
       });
       if (response.success) {
-        setActionMessage("Quiz exported.");
+        setActionMessage('Quiz exported.');
       } else {
-        setActionError(response.error || "Unable to export quiz.");
+        setActionError(response.error || 'Unable to export quiz.');
       }
     } catch (err) {
-      setActionError(err.message || "Unable to export quiz.");
+      setActionError(err.message || 'Unable to export quiz.');
     }
   };
 
@@ -420,14 +420,14 @@ function QuizzesPage() {
     setActionMessage(null);
     setActionError(null);
     if (!window.api?.showOpenDialog || !window.api?.importQuiz) {
-      setActionError("Quiz import is only available in the desktop app.");
+      setActionError('Quiz import is only available in the desktop app.');
       return;
     }
     try {
       const dialogResult = await window.api.showOpenDialog({
-        title: "Import Quiz",
-        properties: ["openFile"],
-        filters: [{ name: "Quiz JSON", extensions: ["json"] }],
+        title: 'Import Quiz',
+        properties: ['openFile'],
+        filters: [{ name: 'Quiz JSON', extensions: ['json'] }],
       });
       if (dialogResult.canceled || dialogResult.filePaths?.length === 0) {
         return;
@@ -435,14 +435,14 @@ function QuizzesPage() {
       const filePath = dialogResult.filePaths[0];
       const response = await window.api.importQuiz({ filePath });
       if (response.success) {
-        setActionMessage("Quiz imported.");
+        setActionMessage('Quiz imported.');
         await loadQuizzes();
         setSubmissionPage(0);
       } else {
-        setActionError(response.error || "Unable to import quiz.");
+        setActionError(response.error || 'Unable to import quiz.');
       }
     } catch (err) {
-      setActionError(err.message || "Unable to import quiz.");
+      setActionError(err.message || 'Unable to import quiz.');
     }
   };
 
@@ -456,18 +456,18 @@ function QuizzesPage() {
   };
 
   const handleQuestionTypeChange = (tempId, type) => {
-    if (type === "true_false") {
+    if (type === 'true_false') {
       updateQuestion(tempId, {
         type,
-        options: ["True", "False"],
+        options: ['True', 'False'],
         correctAnswerIndex: 0,
       });
       return;
     }
 
     updateQuestion(tempId, {
-      type: "multiple_choice",
-      options: ["", ""],
+      type: 'multiple_choice',
+      options: ['', ''],
       correctAnswerIndex: 0,
     });
   };
@@ -497,7 +497,7 @@ function QuizzesPage() {
         }
         return {
           ...question,
-          options: [...question.options, ""],
+          options: [...question.options, ''],
         };
       }),
     }));

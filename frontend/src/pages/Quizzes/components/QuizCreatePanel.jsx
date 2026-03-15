@@ -18,7 +18,7 @@ function QuizCreatePanel({
 }) {
   return (
     <section className="quiz-create-panel">
-      <h2>{isEditing ? "Edit Quiz" : "Create a Quiz"}</h2>
+      <h2>{isEditing ? 'Edit Quiz' : 'Create a Quiz'}</h2>
       <form onSubmit={onSubmit} className="quiz-create-form">
         <label className="quiz-label">
           Title
@@ -52,11 +52,11 @@ function QuizCreatePanel({
           <label className="quiz-label">
             Visibility
             <select
-              value={newQuiz.isPublic ? "public" : "assigned"}
+              value={newQuiz.isPublic ? 'public' : 'assigned'}
               onChange={(event) =>
                 setNewQuiz((previous) => ({
                   ...previous,
-                  isPublic: event.target.value === "public",
+                  isPublic: event.target.value === 'public',
                 }))
               }
             >
@@ -152,7 +152,7 @@ function QuizCreatePanel({
                 </select>
               </label>
 
-              {question.type === "multiple_choice" && (
+              {question.type === 'multiple_choice' && (
                 <div className="quiz-options">
                   {question.options.map((option, optionIndex) => (
                     <div
@@ -207,7 +207,7 @@ function QuizCreatePanel({
                 </div>
               )}
 
-              {question.type === "true_false" && (
+              {question.type === 'true_false' && (
                 <div className="quiz-true-false">
                   <label className="quiz-inline-label">
                     <input
@@ -242,7 +242,7 @@ function QuizCreatePanel({
                 Explanation (optional)
                 <textarea
                   rows="2"
-                  value={question.explanation || ""}
+                  value={question.explanation || ''}
                   onChange={(event) =>
                     updateQuestion(question.tempId, {
                       explanation: event.target.value,
@@ -275,11 +275,11 @@ function QuizCreatePanel({
           <button type="submit" disabled={creating}>
             {creating
               ? isEditing
-                ? "Saving..."
-                : "Creating..."
+                ? 'Saving...'
+                : 'Creating...'
               : isEditing
-                ? "Save Changes"
-                : "Save Quiz"}
+                ? 'Save Changes'
+                : 'Save Quiz'}
           </button>
         </div>
 
