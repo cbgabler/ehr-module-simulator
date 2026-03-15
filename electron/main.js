@@ -73,6 +73,7 @@ import {
   getSession,
 } from "./database/simulation.js";
 import { seedExampleScenarios } from "./database/exampleScenarios.js";
+import { seedDefaultUsers } from "./database/seedUsers.js";
 
 // Import & Export deps
 import { importData } from "./database/progess/import.js";
@@ -892,13 +893,16 @@ app.whenReady().then(async () => {
 
   initDatabase();
 
-  // Seed example scenarios in development mode
-  if (isDev) {
-    try {
-      await seedExampleScenarios();
-    } catch (error) {
-      console.error("Error seeding example scenarios:", error);
-    }
+  try {
+    await seedDefaultUsers();
+  } catch (error) {
+    console.error("Error seeding default users:", error);
+  }
+
+  try {
+    await seedExampleScenarios();
+  } catch (error) {
+    console.error("Error seeding example scenarios:", error);
   }
 
   createWindow();
