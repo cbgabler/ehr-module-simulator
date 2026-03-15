@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make",
+    "make": "cd electron && npm run make",
     "postinstall": "electron-rebuild -f -w better-sqlite3",
     "dev": "vite",
     "lint": "eslint . --ext js,jsx --max-warnings=0",

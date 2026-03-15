@@ -1,3 +1,6 @@
+import squirrelStartup from "electron-squirrel-startup";
+if (squirrelStartup) app.quit();
+
 import {
   app,
   BrowserWindow,

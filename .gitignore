@@ -27,3 +27,4 @@ dist-ssr
 
 ## local builds
 electron/build/
+electron/out/

@@ -37,6 +37,27 @@ cd ../electron
 npm start
 ```
 
+## Building for Distribution
+
+To produce an installable binary for desktop, run the following from the `electron/` directory:
+
+```bash
+cd electron
+npm run make
+```
+
+This will automatically:
+1. Build the React frontend (`frontend/`)
+2. Copy the built frontend into `electron/build/`
+3. Package the Electron app and produce installers in `electron/out/make/`
+
+**Output files:**
+- **Windows:** `electron/out/make/squirrel.windows/x64/EHR Module Simulator-1.0.0 Setup.exe`
+- **macOS:** `electron/out/make/dmg/EHR Module Simulator-1.0.0.dmg`
+
+**Notes:**
+- Electron cannot cross-compile — Windows installers must be built on Windows, macOS installers on a Mac.
+
 ## Branching Strategy
 
 This project follows a structured branching strategy to ensure efficient collaboration and workflow:
