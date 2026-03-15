@@ -294,6 +294,8 @@ function SimulationPage() {
     }
   };
 
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+
   const handleEnd = async () => {
     if (!sessionId || !window.api?.endSimulation) {
       return;
@@ -410,9 +412,7 @@ function SimulationPage() {
       },
       Escape: () => {
         const ended = sessionState?.status === "ended";
-        if (!ended && window.confirm("End the simulation?")) {
-          handleEnd();
-        }
+        if (!ended) setShowEndConfirm(true);
       },
       ...Object.fromEntries(
         allTabs.map((tab, i) => [
@@ -587,6 +587,31 @@ function SimulationPage() {
         </main>
       </div>
 
+      {showEndConfirm && (
+        <div className="modal-overlay" onClick={() => setShowEndConfirm(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>End Simulation</h2>
+            </div>
+            <div className="modal-body">
+              <p>Are you sure you want to end this simulation? This cannot be undone.</p>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="control-btn secondary" onClick={() => setShowEndConfirm(false)}>
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="control-btn danger"
+                onClick={() => { setShowEndConfirm(false); handleEnd(); }}
+              >
+                End Simulation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* bottom control bar */}
       <footer className="simulation-controls">
         <button
@@ -608,7 +633,7 @@ function SimulationPage() {
             </button>
           )}
           {!isEnded && (
-            <button type="button" className="control-btn danger" onClick={handleEnd}>
+            <button type="button" className="control-btn danger" onClick={() => setShowEndConfirm(true)}>
               End Simulation <span className="keyboard-hint">[Esc]</span>
             </button>
           )}

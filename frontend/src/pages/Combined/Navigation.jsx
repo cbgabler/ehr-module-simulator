@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../pages/Auth/AuthContext.jsx";
 
@@ -6,6 +7,7 @@ const FEEDBACK_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScYWwx7_N7xt
 function Navigation() {
   const navigate = useNavigate();
   const { user, isAuthenticated, signOut } = useAuth();
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   const handleSignOut = () => {
     signOut();
@@ -22,6 +24,27 @@ function Navigation() {
   };
 
   return (
+    <>
+    {showSignOutConfirm && (
+      <div className="modal-overlay" onClick={() => setShowSignOutConfirm(false)}>
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2>Sign Out</h2>
+          </div>
+          <div className="modal-body">
+            <p>Are you sure you want to sign out?</p>
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="control-btn secondary" onClick={() => setShowSignOutConfirm(false)}>
+              Cancel
+            </button>
+            <button type="button" className="control-btn danger" onClick={handleSignOut}>
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     <div className="app-navigation">
       <nav>
         <div className="nav-brand">EHR Simulator</div>
@@ -78,7 +101,7 @@ function Navigation() {
                 <button
                   type="button"
                   className="nav-link nav-button"
-                  onClick={handleSignOut}
+                  onClick={() => setShowSignOutConfirm(true)}
                 >
                   Sign Out
                 </button>
@@ -97,6 +120,7 @@ function Navigation() {
         </ul>
       </nav>
     </div>
+    </>
   );
 }
 
