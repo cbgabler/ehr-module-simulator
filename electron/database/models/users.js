@@ -1,10 +1,10 @@
-import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
-import { getDb } from "../database.js";
+import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
+import { getDb } from '../database.js';
 
 const SALT_LENGTH = 16;
 const KEY_LENGTH = 64;
 
-const VALID_ROLES = new Set(["student", "instructor", "admin"]);
+const VALID_ROLES = new Set(['student', 'instructor', 'admin']);
 
 const sanitizeUser = (user) => {
   if (!user) {
@@ -13,14 +13,14 @@ const sanitizeUser = (user) => {
   return {
     id: user.id,
     username: user.username,
-    role: user.role ?? "student",
+    role: user.role ?? 'student',
   };
 };
 
 const sanitizePasswordInput = (password) => {
-  const normalized = typeof password === "string" ? password.trim() : "";
+  const normalized = typeof password === 'string' ? password.trim() : '';
   if (!normalized) {
-    throw new Error("Password is required");
+    throw new Error('Password is required');
   }
   return normalized;
 };
@@ -28,27 +28,27 @@ const sanitizePasswordInput = (password) => {
 const validateNewPassword = (password) => {
   const normalized = sanitizePasswordInput(password);
   if (normalized.length < 6) {
-    throw new Error("Password must be at least 6 characters long");
+    throw new Error('Password must be at least 6 characters long');
   }
   return normalized;
 };
 
 const generatePasswordHash = (password) => {
-  const salt = randomBytes(SALT_LENGTH).toString("hex");
-  const hash = scryptSync(password, salt, KEY_LENGTH).toString("hex");
+  const salt = randomBytes(SALT_LENGTH).toString('hex');
+  const hash = scryptSync(password, salt, KEY_LENGTH).toString('hex');
   return `${salt}:${hash}`;
 };
 
 const verifyPassword = (password, storedHash) => {
-  if (!storedHash || !storedHash.includes(":")) {
+  if (!storedHash || !storedHash.includes(':')) {
     return false;
   }
   try {
-    const [salt, originalHash] = storedHash.split(":");
-    const derivedHash = scryptSync(password, salt, KEY_LENGTH).toString("hex");
+    const [salt, originalHash] = storedHash.split(':');
+    const derivedHash = scryptSync(password, salt, KEY_LENGTH).toString('hex');
     return timingSafeEqual(
-      Buffer.from(originalHash, "hex"),
-      Buffer.from(derivedHash, "hex")
+      Buffer.from(originalHash, 'hex'),
+      Buffer.from(derivedHash, 'hex')
     );
   } catch {
     return false;
@@ -56,23 +56,23 @@ const verifyPassword = (password, storedHash) => {
 };
 
 const normalizeRole = (role) =>
-  VALID_ROLES.has(role) ? role : "student";
+  VALID_ROLES.has(role) ? role : 'student';
 
-export function registerUser({ username, password, role = "student" } = {}) {
+export function registerUser({ username, password, role = 'student' } = {}) {
   const db = getDb();
-  const normalizedUsername = (username ?? "").trim();
+  const normalizedUsername = (username ?? '').trim();
   if (!normalizedUsername) {
-    throw new Error("Username is required");
+    throw new Error('Username is required');
   }
 
   const normalizedPassword = validateNewPassword(password);
   const passwordHash = generatePasswordHash(normalizedPassword);
 
   const existingUser = db
-    .prepare("SELECT id FROM users WHERE username = ?")
+    .prepare('SELECT id FROM users WHERE username = ?')
     .get(normalizedUsername);
   if (existingUser) {
-    throw new Error("Username already exists");
+    throw new Error('Username already exists');
   }
 
   const stmt = db.prepare(`
@@ -91,26 +91,26 @@ export function registerUser({ username, password, role = "student" } = {}) {
     passwordHash
   );
   const user = db
-    .prepare("SELECT * FROM users WHERE id = ?")
+    .prepare('SELECT * FROM users WHERE id = ?')
     .get(info.lastInsertRowid);
   return sanitizeUser(user);
 }
 
 export function authenticateUser(username, password) {
   const db = getDb();
-  const normalizedUsername = (username ?? "").trim();
+  const normalizedUsername = (username ?? '').trim();
   if (!normalizedUsername) {
-    throw new Error("Username is required");
+    throw new Error('Username is required');
   }
   const user = db
-    .prepare("SELECT * FROM users WHERE username = ?")
+    .prepare('SELECT * FROM users WHERE username = ?')
     .get(normalizedUsername);
   if (!user || !user.passwordHash) {
-    throw new Error("Invalid username or password");
+    throw new Error('Invalid username or password');
   }
   const normalizedPassword = sanitizePasswordInput(password);
   if (!verifyPassword(normalizedPassword, user.passwordHash)) {
-    throw new Error("Invalid username or password");
+    throw new Error('Invalid username or password');
   }
   return sanitizeUser(user);
 }
@@ -118,25 +118,25 @@ export function authenticateUser(username, password) {
 // Gets
 export function getUserById(userId) {
   const db = getDb();
-  return db.prepare("SELECT * FROM users WHERE id = ?").get(userId);
+  return db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
 }
 
 export function getUserByUsername(username) {
   const db = getDb();
-  return db.prepare("SELECT * FROM users WHERE username = ?").get(username);
+  return db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 }
 
 export function getUserByEmail(email) {
   const db = getDb();
-  return db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+  return db.prepare('SELECT * FROM users WHERE email = ?').get(email);
 }
 
 export function getAllUsers() {
   const db = getDb();
-  return db.prepare("SELECT * FROM users").all();
+  return db.prepare('SELECT * FROM users').all();
 }
 
 export function getRoleById(userId) {
   const db = getDb();
-  return db.prepare("SELECT role FROM users WHERE id=?").get(userId);
+  return db.prepare('SELECT role FROM users WHERE id=?').get(userId);
 }

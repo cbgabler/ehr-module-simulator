@@ -1,7 +1,7 @@
-import { app } from "electron";
-import path from "path";
-import fs from "fs";
-import Database from "better-sqlite3";
+import { app } from 'electron';
+import path from 'path';
+import fs from 'fs';
+import Database from 'better-sqlite3';
 
 /* 
 Export current scenario from local db for sharing to students
@@ -10,10 +10,10 @@ scenarioIds: array of scenario IDs to export (e.g., [1, 2, 3])
 Exports scenarios along with their related scenario_tabs and scenario_states to a database file
 */
 export function exportData(filePath, scenarioIds) {
-  const sourceDbPath = path.join(app.getPath("userData"), "ehr_scenarios.db");
+  const sourceDbPath = path.join(app.getPath('userData'), 'ehr_scenarios.db');
 
   if (!fs.existsSync(sourceDbPath)) {
-    throw new Error("Source database file does not exist");
+    throw new Error('Source database file does not exist');
   }
 
   // Validate and sanitize scenarioIds - ensure they are all integers
@@ -22,11 +22,11 @@ export function exportData(filePath, scenarioIds) {
     .filter((id) => !isNaN(id) && id > 0);
 
   if (validIds.length === 0) {
-    throw new Error("scenarioIds must contain valid positive integers");
+    throw new Error('scenarioIds must contain valid positive integers');
   }
 
   // Convert to SQL IN clause format: (1, 2, 3)
-  const scenarioIdsList = validIds.join(",");
+  const scenarioIdsList = validIds.join(',');
 
   // Delete export file if it exists to avoid duplicates
   if (fs.existsSync(filePath)) {
@@ -83,11 +83,11 @@ export function exportData(filePath, scenarioIds) {
       .all();
 
     if (scenarios.length === 0) {
-      throw new Error("No scenarios found with the provided IDs");
+      throw new Error('No scenarios found with the provided IDs');
     }
 
     // Get scenario IDs for related data
-    const scenarioIdsForQuery = scenarios.map((s) => s.id).join(",");
+    const scenarioIdsForQuery = scenarios.map((s) => s.id).join(',');
 
     // Get scenario_tabs from source
     const scenarioTabs = sourceDb
@@ -109,7 +109,7 @@ export function exportData(filePath, scenarioIds) {
 
     // Insert scenarios into export database (exclude id to get new auto-generated IDs)
     const insertScenario = exportDb.prepare(
-      "INSERT INTO scenarios (name, definition) VALUES (?, ?)"
+      'INSERT INTO scenarios (name, definition) VALUES (?, ?)'
     );
     const idMap = new Map(); // oldId -> newId
 
@@ -120,7 +120,7 @@ export function exportData(filePath, scenarioIds) {
 
     // Insert scenario_tabs
     const insertTab = exportDb.prepare(
-      "INSERT INTO scenario_tabs (scenarioId, name, content, orderIndex) VALUES (?, ?, ?, ?)"
+      'INSERT INTO scenario_tabs (scenarioId, name, content, orderIndex) VALUES (?, ?, ?, ?)'
     );
 
     for (const tab of scenarioTabs) {
@@ -132,7 +132,7 @@ export function exportData(filePath, scenarioIds) {
 
     // Insert scenario_states
     const insertState = exportDb.prepare(
-      "INSERT INTO scenario_states (scenarioId, createdBy, isPublished, publishDate) VALUES (?, ?, ?, ?)"
+      'INSERT INTO scenario_states (scenarioId, createdBy, isPublished, publishDate) VALUES (?, ?, ?, ?)'
     );
 
     for (const state of scenarioStates) {

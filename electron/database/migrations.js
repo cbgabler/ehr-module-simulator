@@ -16,7 +16,7 @@ export const CURRENT_VERSION = 4;
 export const migrations = [
   {
     version: 1,
-    description: "Initial schema",
+    description: 'Initial schema',
     up: (db) => {
       db.exec(`
         CREATE TABLE IF NOT EXISTS users (
@@ -77,7 +77,7 @@ export const migrations = [
 
   {
     version: 2,
-    description: "Add session_actions and session_summaries tables",
+    description: 'Add session_actions and session_summaries tables',
     up: (db) => {
       db.exec(`
         CREATE TABLE IF NOT EXISTS session_actions (
@@ -108,7 +108,7 @@ export const migrations = [
   },
   {
     version: 3,
-    description: "Add quizzes tables",
+    description: 'Add quizzes tables',
     up: (db) => {
       db.exec(`
         CREATE TABLE IF NOT EXISTS quizzes (
@@ -156,7 +156,7 @@ export const migrations = [
   },
   {
     version: 4,
-    description: "Extend quizzes with visibility and explanations",
+    description: 'Extend quizzes with visibility and explanations',
     up: (db) => {
       db.exec(`
         ALTER TABLE quizzes ADD COLUMN isPublic BOOLEAN NOT NULL DEFAULT 1;
@@ -200,12 +200,12 @@ export function runMigrations(db) {
   `);
 
   // Get current version
-  let row = db.prepare("SELECT version FROM schema_version WHERE id = 1").get();
+  let row = db.prepare('SELECT version FROM schema_version WHERE id = 1').get();
   let currentVersion = row ? row.version : 0;
 
   // If no version record exists, insert one
   if (!row) {
-    db.prepare("INSERT INTO schema_version (id, version) VALUES (1, 0)").run();
+    db.prepare('INSERT INTO schema_version (id, version) VALUES (1, 0)').run();
   }
 
   // Run pending migrations
@@ -227,7 +227,7 @@ export function runMigrations(db) {
     const runMigration = db.transaction(() => {
       migration.up(db);
       db.prepare(
-        "UPDATE schema_version SET version = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1"
+        'UPDATE schema_version SET version = ?, updated_at = CURRENT_TIMESTAMP WHERE id = 1'
       ).run(migration.version);
     });
 
@@ -250,7 +250,7 @@ export function runMigrations(db) {
  */
 export function getSchemaVersion(db) {
   try {
-    const row = db.prepare("SELECT version FROM schema_version WHERE id = 1").get();
+    const row = db.prepare('SELECT version FROM schema_version WHERE id = 1').get();
     return row ? row.version : 0;
   } catch {
     return 0;

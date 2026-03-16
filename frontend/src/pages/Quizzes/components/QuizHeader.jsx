@@ -18,7 +18,7 @@ function QuizHeader({
             Import Quiz
           </button>
           <button type="button" onClick={onToggleCreate}>
-            {showCreate ? "Close Creator" : "Create Quiz"}
+            {showCreate ? 'Close Creator' : 'Create Quiz'}
           </button>
         </div>
       )}

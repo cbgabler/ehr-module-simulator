@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 
 /**
  * ScenarioFilters Component
@@ -21,10 +20,10 @@ function ScenarioFilters({
   const hasActiveFilters = searchQuery || selectedDifficulty || selectedSpecialty || selectedTag;
 
   const handleClearFilters = () => {
-    setSearchQuery("");
-    setSelectedDifficulty("");
-    setSelectedSpecialty("");
-    setSelectedTag("");
+    setSearchQuery('');
+    setSelectedDifficulty('');
+    setSelectedSpecialty('');
+    setSelectedTag('');
   };
 
   return (
@@ -55,7 +54,7 @@ function ScenarioFilters({
           <button
             type="button"
             className="clear-search-button"
-            onClick={() => setSearchQuery("")}
+            onClick={() => setSearchQuery('')}
             aria-label="Clear search"
           >
             ×
@@ -122,12 +121,12 @@ function ScenarioFilters({
       <div className="filter-results">
         {filteredCount !== totalCount ? (
           <p>
-            Showing <strong>{filteredCount}</strong> of{" "}
+            Showing <strong>{filteredCount}</strong> of{' '}
             <strong>{totalCount}</strong> scenarios
           </p>
         ) : (
           <p>
-            <strong>{totalCount}</strong> scenario{totalCount !== 1 ? "s" : ""}{" "}
+            <strong>{totalCount}</strong> scenario{totalCount !== 1 ? 's' : ''}{' '}
             available
           </p>
         )}

@@ -1,11 +1,11 @@
-import { jest } from "@jest/globals";
-import path from "path";
+import { jest } from '@jest/globals';
+import path from 'path';
 
 const setupModule = async (saveResult) => {
   jest.resetModules();
 
   const mockWriteFile = jest.fn();
-  const mockPrintToPDF = jest.fn().mockResolvedValue(Buffer.from("pdf"));
+  const mockPrintToPDF = jest.fn().mockResolvedValue(Buffer.from('pdf'));
   const mockLoadURL = jest.fn();
   const mockWindowInstance = {
     loadURL: mockLoadURL,
@@ -17,20 +17,20 @@ const setupModule = async (saveResult) => {
     showSaveDialog: jest.fn().mockResolvedValue(saveResult),
   };
   const mockApp = {
-    getPath: jest.fn(() => "/tmp"),
+    getPath: jest.fn(() => '/tmp'),
   };
 
-  await jest.unstable_mockModule("electron", () => ({
+  await jest.unstable_mockModule('electron', () => ({
     app: mockApp,
     BrowserWindow: mockBrowserWindow,
     dialog: mockDialog,
   }));
 
-  await jest.unstable_mockModule("fs/promises", () => ({
+  await jest.unstable_mockModule('fs/promises', () => ({
     writeFile: mockWriteFile,
   }));
 
-  const module = await import("../utils/summaryExport.js");
+  const module = await import('../utils/summaryExport.js');
 
   return {
     module,
@@ -43,14 +43,14 @@ const setupModule = async (saveResult) => {
   };
 };
 
-describe("exportSessionSummaryPdf", () => {
-  test("returns canceled when save dialog is dismissed", async () => {
+describe('exportSessionSummaryPdf', () => {
+  test('returns canceled when save dialog is dismissed', async () => {
     const { module, mockWriteFile, mockBrowserWindow } = await setupModule({
       canceled: true,
     });
 
     const result = await module.exportSessionSummaryPdf({
-      summaryText: "Summary",
+      summaryText: 'Summary',
     });
 
     expect(result).toEqual({ canceled: true });
@@ -58,50 +58,50 @@ describe("exportSessionSummaryPdf", () => {
     expect(mockBrowserWindow).not.toHaveBeenCalled();
   });
 
-  test("writes pdf when dialog provides a file path", async () => {
+  test('writes pdf when dialog provides a file path', async () => {
     const { module, mockWriteFile, mockPrintToPDF, mockDialog, mockLoadURL } =
       await setupModule({
         canceled: false,
-        filePath: "/tmp/session-summary.pdf",
+        filePath: '/tmp/session-summary.pdf',
       });
 
     const result = await module.exportSessionSummaryPdf({
-      summaryText: "Summary",
-      scenarioName: "Case Alpha",
+      summaryText: 'Summary',
+      scenarioName: 'Case Alpha',
       sessionId: 12,
-      userName: "Demo User",
-      fileName: "Custom Name.pdf",
+      userName: 'Demo User',
+      fileName: 'Custom Name.pdf',
     });
 
     expect(mockDialog.showSaveDialog).toHaveBeenCalledWith(
       expect.objectContaining({
-        title: "Save Session Summary",
-        defaultPath: path.join("/tmp", "Custom_Name.pdf"),
+        title: 'Save Session Summary',
+        defaultPath: path.join('/tmp', 'Custom_Name.pdf'),
       })
     );
     expect(mockLoadURL).toHaveBeenCalledTimes(1);
     expect(mockPrintToPDF).toHaveBeenCalledWith({
       printBackground: true,
-      pageSize: "A4",
+      pageSize: 'A4',
     });
     expect(mockWriteFile).toHaveBeenCalledWith(
-      "/tmp/session-summary.pdf",
+      '/tmp/session-summary.pdf',
       expect.any(Buffer)
     );
     expect(result).toEqual({
       success: true,
-      filePath: "/tmp/session-summary.pdf",
+      filePath: '/tmp/session-summary.pdf',
     });
   });
 
-  test("throws when summary text is missing", async () => {
+  test('throws when summary text is missing', async () => {
     const { module } = await setupModule({
       canceled: false,
-      filePath: "/tmp/session-summary.pdf",
+      filePath: '/tmp/session-summary.pdf',
     });
 
     await expect(
-      module.exportSessionSummaryPdf({ summaryText: "   " })
-    ).rejects.toThrow("summaryText is required");
+      module.exportSessionSummaryPdf({ summaryText: '   ' })
+    ).rejects.toThrow('summaryText is required');
   });
 });

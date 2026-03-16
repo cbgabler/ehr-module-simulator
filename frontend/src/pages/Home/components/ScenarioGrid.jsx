@@ -1,4 +1,4 @@
-import ScenarioCard from "./ScenarioCard.jsx";
+import ScenarioCard from './ScenarioCard.jsx';
 
 function ScenarioGrid({ scenarios, onSelect }) {
   if (!Array.isArray(scenarios) || scenarios.length === 0) {

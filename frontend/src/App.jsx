@@ -1,21 +1,23 @@
 import {
-  BrowserRouter,
+  HashRouter,
   Navigate,
   Route,
   Routes,
   useLocation,
-} from "react-router-dom";
-import Navigation from "./pages/Combined/Navigation.jsx";
-import SignInPage from "./pages/Auth/SignInPage.jsx";
-import HomePage from "./pages/Home/HomePage.jsx";
-import SimulationPage from "./pages/Simulation/SimulationPage.jsx";
-import QuizzesPage from "./pages/Quizzes/QuizzesPage.jsx";
-import { useAuth } from "./pages/Auth/AuthContext.jsx";
-import "./App.css";
+} from 'react-router-dom';
+import Navigation from './pages/Combined/Navigation.jsx';
+import SignInPage from './pages/Auth/SignInPage.jsx';
+import HomePage from './pages/Home/HomePage.jsx';
+import SimulationPage from './pages/Simulation/SimulationPage.jsx';
+import QuizzesPage from './pages/Quizzes/QuizzesPage.jsx';
+import { useAuth } from './pages/Auth/AuthContext.jsx';
+import './App.css';
 
 function ProtectedRoute({ children }) {
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, restoring } = useAuth();
+
+  if (restoring) return null;
 
   if (!isAuthenticated) {
     return <Navigate to="/sign-in" replace state={{ from: location }} />;
@@ -25,13 +27,14 @@ function ProtectedRoute({ children }) {
 }
 
 function LandingRoute() {
-  const { isAuthenticated } = useAuth();
-  return <Navigate to={isAuthenticated ? "/home" : "/sign-in"} replace />;
+  const { isAuthenticated, restoring } = useAuth();
+  if (restoring) return null;
+  return <Navigate to={isAuthenticated ? '/home' : '/sign-in'} replace />;
 }
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Navigation />
       <div className="app-content">
         <Routes>
@@ -64,7 +67,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

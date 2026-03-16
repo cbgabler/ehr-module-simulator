@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make",
+    "make": "cd electron && npm run make",
     "postinstall": "electron-rebuild -f -w better-sqlite3",
     "dev": "vite",
     "lint": "eslint . --ext js,jsx --max-warnings=0",
@@ -21,7 +21,7 @@
     "@electron-forge/cli": "^7.4.0",
     "@electron/rebuild": "^3.6.0",
     "@eslint/js": "^9.39.1",
-    "electron": "^32.0.0",
+    "electron": "^41.0.2",
     "electron-builder": "^26.0.12",
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",

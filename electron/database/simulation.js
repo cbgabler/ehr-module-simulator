@@ -282,7 +282,6 @@ function createInitialState({
   scenario,
   userId,
   startedAt,
-  simulationConfig,
 }) {
   const currentVitals = deepClone(
     scenario.definition?.vitals?.current ?? {

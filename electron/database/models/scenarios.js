@@ -1,4 +1,4 @@
-import { getDb } from "../database.js";
+import { getDb } from '../database.js';
 
 export function createScenario(name, definition) {
   const db = getDb();
@@ -14,7 +14,7 @@ export function createScenario(name, definition) {
 export function getScenarioById(scenarioId) {
   const db = getDb();
   const scenario = db
-    .prepare("SELECT * FROM scenarios WHERE id = ?")
+    .prepare('SELECT * FROM scenarios WHERE id = ?')
     .get(scenarioId);
   if (scenario && scenario.definition) {
     scenario.definition = JSON.parse(scenario.definition);
@@ -24,7 +24,7 @@ export function getScenarioById(scenarioId) {
 
 export function getAllScenarios() {
   const db = getDb();
-  const scenarios = db.prepare("SELECT * FROM scenarios ORDER BY id").all();
+  const scenarios = db.prepare('SELECT * FROM scenarios ORDER BY id').all();
   return scenarios.map((scenario) => {
     if (scenario.definition) {
       scenario.definition = JSON.parse(scenario.definition);
@@ -46,17 +46,15 @@ export function updateScenario(scenarioId, name, definition) {
 
 export function deleteScenario(scenarioId) {
   const db = getDb();
-  const info = db.prepare("DELETE FROM scenarios WHERE id = ?").run(scenarioId);
+  const info = db.prepare('DELETE FROM scenarios WHERE id = ?').run(scenarioId);
   return info.changes > 0;
 }
 
 export function duplicateScenario(scenarioId) {
-  const db = getDb();
-  
   // Get the original scenario
   const original = getScenarioById(scenarioId);
   if (!original) {
-    throw new Error("Scenario not found");
+    throw new Error('Scenario not found');
   }
   
   // Create new name with " (Copy)" suffix

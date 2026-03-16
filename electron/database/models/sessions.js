@@ -1,12 +1,12 @@
-import { getDb } from "../database.js";
-import { logSessionAction } from "./sessionLogs.js";
+import { getDb } from '../database.js';
+import { logSessionAction } from './sessionLogs.js';
 
 const NOTE_PREVIEW_LIMIT = 140;
 
 function buildNotePreview(content) {
-  const sanitized = (content ?? "").trim().replace(/\s+/g, " ");
+  const sanitized = (content ?? '').trim().replace(/\s+/g, ' ');
   if (!sanitized) {
-    return "";
+    return '';
   }
   if (sanitized.length <= NOTE_PREVIEW_LIMIT) {
     return sanitized;
@@ -21,9 +21,9 @@ export function addSessionNote({
   vitalsSnapshot = null,
 }) {
   const db = getDb();
-  const sanitizedContent = (content ?? "").trim();
+  const sanitizedContent = (content ?? '').trim();
   if (!sanitizedContent) {
-    throw new Error("Note content is required");
+    throw new Error('Note content is required');
   }
 
   const createdAt = new Date().toISOString();
@@ -53,8 +53,8 @@ export function addSessionNote({
   logSessionAction({
     sessionId,
     userId,
-    actionType: "note_added",
-    actionLabel: preview ? `Added note: ${preview}` : "Added note",
+    actionType: 'note_added',
+    actionLabel: preview ? `Added note: ${preview}` : 'Added note',
     details: {
       noteId: note.id,
       preview: preview || null,
@@ -88,15 +88,15 @@ export function getSessionNotes(sessionId) {
 export function deleteSessionNote({ noteId, userId }) {
   const db = getDb();
   const note = db
-    .prepare("SELECT * FROM notes WHERE id = ?")
+    .prepare('SELECT * FROM notes WHERE id = ?')
     .get(noteId);
   if (!note) {
-    throw new Error("Note not found");
+    throw new Error('Note not found');
   }
   if (userId && note.userId !== userId) {
-    throw new Error("You do not have permission to delete this note");
+    throw new Error('You do not have permission to delete this note');
   }
-  db.prepare("DELETE FROM notes WHERE id = ?").run(noteId);
+  db.prepare('DELETE FROM notes WHERE id = ?').run(noteId);
   const deletedNote = {
     ...note,
     vitalsSnapshot: note.vitalsSnapshot
@@ -108,8 +108,8 @@ export function deleteSessionNote({ noteId, userId }) {
   logSessionAction({
     sessionId: note.sessionId,
     userId: note.userId,
-    actionType: "note_deleted",
-    actionLabel: preview ? `Deleted note: ${preview}` : "Deleted note",
+    actionType: 'note_deleted',
+    actionLabel: preview ? `Deleted note: ${preview}` : 'Deleted note',
     details: {
       noteId,
       preview: preview || null,

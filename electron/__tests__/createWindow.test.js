@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { jest } from '@jest/globals';
 
 async function loadMainModule({ isPackaged = false } = {}) {
   jest.resetModules();
@@ -8,6 +8,8 @@ async function loadMainModule({ isPackaged = false } = {}) {
     loadFile: jest.fn(),
     webContents: {
       openDevTools: jest.fn(),
+      on: jest.fn(),
+      setWindowOpenHandler: jest.fn(),
     },
   };
   const mockBrowserWindow = jest.fn(() => mockWindowInstance);
@@ -17,13 +19,13 @@ async function loadMainModule({ isPackaged = false } = {}) {
     whenReady: jest.fn(() => Promise.resolve()),
     on: jest.fn(),
     quit: jest.fn(),
-    getPath: jest.fn(() => "/tmp/test-user-data"),
+    getPath: jest.fn(() => '/tmp/test-user-data'),
   };
-  Object.defineProperty(mockApp, "isPackaged", {
+  Object.defineProperty(mockApp, 'isPackaged', {
     get: () => isPackaged,
   });
 
-  await jest.unstable_mockModule("electron", () => ({
+  await jest.unstable_mockModule('electron', () => ({
     app: mockApp,
     BrowserWindow: mockBrowserWindow,
     ipcMain: {
@@ -33,17 +35,28 @@ async function loadMainModule({ isPackaged = false } = {}) {
       showOpenDialog: jest.fn(),
       showSaveDialog: jest.fn(),
     },
+    Menu: {
+      setApplicationMenu: jest.fn(),
+    },
+    session: {
+      defaultSession: {
+        webRequest: {
+          onHeadersReceived: jest.fn(),
+        },
+        setPermissionRequestHandler: jest.fn(),
+      },
+    },
     shell: {
       openExternal: jest.fn(() => Promise.resolve()),
     },
   }));
 
-  await jest.unstable_mockModule("../database/database.js", () => ({
+  await jest.unstable_mockModule('../database/database.js', () => ({
     initDatabase: jest.fn(),
     getDb: jest.fn(),
   }));
 
-  await jest.unstable_mockModule("../database/models/users.js", () => ({
+  await jest.unstable_mockModule('../database/models/users.js', () => ({
     registerUser: jest.fn(),
     authenticateUser: jest.fn(),
     getRoleById: jest.fn(),
@@ -51,7 +64,7 @@ async function loadMainModule({ isPackaged = false } = {}) {
     getUserById: jest.fn(),
   }));
 
-  await jest.unstable_mockModule("../database/models/scenarios.js", () => ({
+  await jest.unstable_mockModule('../database/models/scenarios.js', () => ({
     getAllScenarios: jest.fn(),
     getScenarioById: jest.fn(),
     deleteScenario: jest.fn(),
@@ -59,13 +72,13 @@ async function loadMainModule({ isPackaged = false } = {}) {
     duplicateScenario: jest.fn(),
   }));
 
-  await jest.unstable_mockModule("../database/models/sessions.js", () => ({
+  await jest.unstable_mockModule('../database/models/sessions.js', () => ({
     addSessionNote: jest.fn(),
     getSessionNotes: jest.fn(),
     deleteSessionNote: jest.fn(),
   }));
 
-  await jest.unstable_mockModule("../database/models/quizzes.js", () => ({
+  await jest.unstable_mockModule('../database/models/quizzes.js', () => ({
     createQuiz: jest.fn(),
     getAllQuizzes: jest.fn(),
     getQuizById: jest.fn(),
@@ -77,28 +90,28 @@ async function loadMainModule({ isPackaged = false } = {}) {
     copyQuiz: jest.fn(),
   }));
 
-  await jest.unstable_mockModule("../database/models/sessionLogs.js", () => ({
+  await jest.unstable_mockModule('../database/models/sessionLogs.js', () => ({
     getSessionSummaryBySessionId: jest.fn(),
     getUserSessionSummaries: jest.fn(),
   }));
 
-  await jest.unstable_mockModule("../utils/summaryExport.js", () => ({
+  await jest.unstable_mockModule('../utils/summaryExport.js', () => ({
     exportSessionSummaryPdf: jest.fn(),
   }));
 
-  await jest.unstable_mockModule("../database/exampleScenarios.js", () => ({
+  await jest.unstable_mockModule('../database/exampleScenarios.js', () => ({
     seedExampleScenarios: jest.fn(),
   }));
 
-  await jest.unstable_mockModule("../database/progess/import.js", () => ({
+  await jest.unstable_mockModule('../database/progess/import.js', () => ({
     importData: jest.fn(),
   }));
 
-  await jest.unstable_mockModule("../database/progess/export.js", () => ({
+  await jest.unstable_mockModule('../database/progess/export.js', () => ({
     exportData: jest.fn(),
   }));
 
-  await jest.unstable_mockModule("../database/simulation.js", () => ({
+  await jest.unstable_mockModule('../database/simulation.js', () => ({
     startSession: jest.fn(),
     getSessionState: jest.fn(),
     adjustMedication: jest.fn(),
@@ -108,8 +121,8 @@ async function loadMainModule({ isPackaged = false } = {}) {
     getSession: jest.fn(),
   }));
 
-  const electron = await import("electron");
-  const mainModule = await import("../main.js");
+  const electron = await import('electron');
+  const mainModule = await import('../main.js');
 
   mockBrowserWindow.mockClear();
   mockWindowInstance.loadURL.mockClear();
@@ -124,8 +137,8 @@ async function loadMainModule({ isPackaged = false } = {}) {
   };
 }
 
-describe("createWindow", () => {
-  test("loads the dev server when running in development", async () => {
+describe('createWindow', () => {
+  test('loads the dev server when running in development', async () => {
     const { createWindow, mockBrowserWindow, mockWindowInstance } =
       await loadMainModule({ isPackaged: false });
 
@@ -133,12 +146,12 @@ describe("createWindow", () => {
 
     expect(mockBrowserWindow).toHaveBeenCalledTimes(1);
     expect(mockWindowInstance.loadURL).toHaveBeenCalledWith(
-      "http://localhost:5173"
+      'http://localhost:5173'
     );
     expect(mockWindowInstance.webContents.openDevTools).toHaveBeenCalled();
   });
 
-  test("loads the bundled files when running in production", async () => {
+  test('loads the bundled files when running in production', async () => {
     const { createWindow, mockWindowInstance } = await loadMainModule({
       isPackaged: true,
     });
