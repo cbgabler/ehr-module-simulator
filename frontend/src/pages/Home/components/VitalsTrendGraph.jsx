@@ -24,9 +24,9 @@ const GRAPH_PADDING = { top: 20, right: 20, bottom: 30, left: 50 };
  * @param {string[]} [props.selectedVitals=["heartRate", "oxygenSaturation"]] - Array of vital keys to render lines for.
  * @returns {JSX.Element|null} The SVG chart component, or null if insufficient history exists.
  */
-function VitalsTrendGraph({ history = [], selectedVitals = ["heartRate", "oxygenSaturation"] }) {
-    const [hiddenVitals, setHiddenVitals] = useState(new Set());
-    const [hoveredPoint, setHoveredPoint] = useState(null);
+function VitalsTrendGraph({ history = [], selectedVitals = ['heartRate', 'oxygenSaturation'] }) {
+  const [hiddenVitals, setHiddenVitals] = useState(new Set());
+  const [hoveredPoint, setHoveredPoint] = useState(null);
 
   const normalizedData = useMemo(() => {
     return history.map((entry) => {
