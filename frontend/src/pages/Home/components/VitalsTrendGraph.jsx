@@ -12,6 +12,18 @@ const VITAL_CONFIG = {
 const GRAPH_HEIGHT = 180;
 const GRAPH_PADDING = { top: 20, right: 20, bottom: 30, left: 50 };
 
+/**
+ * VitalsTrendGraph Component
+ * 
+ * Renders a real-time, pure SVG line chart displaying the patient's vital signs history over the
+ * course of the simulation. Allows for toggling specific vitals via the legend and shows exact
+ * values on hover.
+ * 
+ * @param {Object} props
+ * @param {Array<{tick: number, vitals: Object}>} [props.history=[]] - Array of historical vital sign snapshots.
+ * @param {string[]} [props.selectedVitals=["heartRate", "oxygenSaturation"]] - Array of vital keys to render lines for.
+ * @returns {JSX.Element|null} The SVG chart component, or null if insufficient history exists.
+ */
 function VitalsTrendGraph({ history = [], selectedVitals = ["heartRate", "oxygenSaturation"] }) {
     const [hiddenVitals, setHiddenVitals] = useState(new Set());
     const [hoveredPoint, setHoveredPoint] = useState(null);

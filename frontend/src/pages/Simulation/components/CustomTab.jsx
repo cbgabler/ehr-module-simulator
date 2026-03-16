@@ -1,5 +1,19 @@
 import { useCallback } from "react";
 
+/**
+ * CustomTab Component
+ * 
+ * Renders a dynamically generated form section based on the scenario's custom section definition.
+ * Used during an active simulation session to allow students to input data for custom fields
+ * (e.g., Urine Output, Wound Assessment) defined by the scenario author.
+ * 
+ * @param {Object} props
+ * @param {Object} props.tab - The custom tab configuration object (id, label, fields array).
+ * @param {Object} props.values - Current values for the fields in this tab, keyed by field.key.
+ * @param {Function} [props.onChange] - Callback fired when a field value changes: onChange(tabId, fieldKey, newValue).
+ * @param {boolean} [props.disabled] - If true, disables all input fields in the tab.
+ * @returns {JSX.Element} The rendered custom tab section.
+ */
 function CustomTab({ tab, values, onChange, disabled }) {
     if (!tab || !tab.fields || tab.fields.length === 0) {
         return (

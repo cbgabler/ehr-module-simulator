@@ -3,6 +3,15 @@ import { useAuth } from "../../pages/Auth/AuthContext.jsx";
 
 const FEEDBACK_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScYWwx7_N7xtM6iyEJtOtsEtQyiroWIUEwemN_s1W-8Bk2JWg/viewform?usp=header";
 
+/**
+ * Navigation Component
+ * 
+ * Renders the top application navigation bar. Includes links to Home and Quizzes for
+ * authenticated users, a sign-in/out button, and a Feedback link that securely opens
+ * an external Google Form via Electron's shell API.
+ * 
+ * @returns {JSX.Element} The navigation bar component.
+ */
 function Navigation() {
   const navigate = useNavigate();
   const { user, isAuthenticated, signOut } = useAuth();
