@@ -4,6 +4,7 @@ This is the documentation folder for the EHR Simulation project. Please referenc
 
 ## Getting Started
 
+- [installation-guide.md](./installation-guide.md) - End-user installation guide for Windows
 - [contributions.md](./contributions.md) - Guidelines for contributing to the project
 
 ## Database
@@ -24,3 +25,6 @@ Documentation for scenario sharing features.
 ## Features
 
 - [scenario-filters.md](./features/scenario-filters.md) - Scenario filtering functionality
+- [duplicate-scenario.md](./features/duplicate-scenario.md) - Duplicate scenario functionality
+- [scenario-authoring.md](./features/scenario-authoring.md) - Creating scenarios with the multi-section form
+- [session-summary-pdf-export.md](./features/session-summary-pdf-export.md) - Session action logging, summaries, and PDF export
