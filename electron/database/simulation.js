@@ -399,8 +399,7 @@ function applyMedicationEffects(vitals, session) {
       return;
     }
 
-    const delta =
-      medState.dose - (effect.referenceDose ?? medState.dose ?? 0);
+    const delta = (medState.dose ?? 0) - (effect.referenceDose ?? 0);
     const perUnitChange = effect.perUnitChange ?? {};
     accumulateShifts(targetShifts, perUnitChange, delta);
   });
@@ -481,7 +480,10 @@ function clampVitals(vitals, ranges = {}) {
       );
       const MIN_PULSE_PRESSURE = 10;
       if (vitals.bloodPressure.diastolic > vitals.bloodPressure.systolic - MIN_PULSE_PRESSURE) {
-        vitals.bloodPressure.diastolic = vitals.bloodPressure.systolic - MIN_PULSE_PRESSURE;
+        vitals.bloodPressure.diastolic = Math.max(
+          vitals.bloodPressure.systolic - MIN_PULSE_PRESSURE,
+          limits.diastolic?.min ?? 0
+        );
       }
       return;
     }
@@ -560,9 +562,11 @@ function formatDose(value, unit) {
 // Pulls reusable simulation config (drift, ranges, targets, etc.).
 function buildSimulationConfig(definition = {}) {
   const simulation = definition?.simulation ?? {};
+  const rawRate = simulation.convergenceRate ?? 0.15;
+  const convergenceRate = Math.min(Math.max(rawRate, 0.01), 1);
   return {
     tickIntervalMs: simulation.tickIntervalMs ?? DEFAULT_TICK_INTERVAL_MS,
-    convergenceRate: simulation.convergenceRate ?? 0.15,
+    convergenceRate,
     baselineDrift: simulation.baselineDrift ?? {},
     medicationEffects: simulation.medicationEffects ?? {},
     vitalRanges: simulation.vitalRanges ?? {},
