@@ -76,8 +76,8 @@ import { seedExampleScenarios } from './database/exampleScenarios.js';
 import { seedDefaultUsers } from './database/seedUsers.js';
 
 // Import & Export deps
-import { importData } from './database/progess/import.js';
-import { exportData } from './database/progess/export.js';
+import { importData } from './database/progress/import.js';
+import { exportData } from './database/progress/export.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
