@@ -422,7 +422,7 @@ function SimulationPage() {
       ),
       n: () => notesTextareaRef.current?.focus(),
     }),
-    [sessionState?.status, allTabs]
+    [sessionState?.status, allTabs, handlePause, handleResume]
   );
 
   useKeyboardShortcuts(shortcuts, { ignoreInputs: true, enabled: !loading && !error });
