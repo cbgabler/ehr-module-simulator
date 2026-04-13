@@ -4,6 +4,7 @@ This is the documentation folder for the EHR Simulation project. Please referenc
 
 ## Getting Started
 
+- [installation-guide.md](./installation-guide.md) - End-user installation guide for Windows
 - [contributions.md](./contributions.md) - Guidelines for contributing to the project
 
 ## Database
