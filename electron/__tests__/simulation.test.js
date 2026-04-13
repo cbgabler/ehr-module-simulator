@@ -165,7 +165,10 @@ describe('simulation session manager', () => {
 
     const state = getSessionState(sessionId);
     expect(state.medicationState['med-linear'].dose).toBe(15);
-    expect(state.currentVitals.bloodPressure.systolic).toBeCloseTo(145.5, 2);
+    // Convergence model: target shift = (15-10)*-0.5 = -2.5
+    // First tick converges 15% of the way: step = -2.5 * 0.15 = -0.375
+    // drift (-2) + convergence step (-0.375) = 150 - 2.375 = 147.625
+    expect(state.currentVitals.bloodPressure.systolic).toBeCloseTo(147.625, 1);
   });
 
   test('pause and resume correctly control tick processing', () => {
@@ -229,6 +232,39 @@ describe('simulation session manager', () => {
     );
     expect(args.summary).toContain('Actions (1):');
     expect(args.summary).toContain('Paused simulation');
+  });
+
+  test('diastolic is clamped below systolic with minimum pulse pressure', () => {
+    const scenario = cloneScenario();
+    scenario.definition.vitals.current.bloodPressure = {
+      systolic: 130,
+      diastolic: 125,
+    };
+    scenario.definition.simulation.baselineDrift = {};
+    mockGetScenarioById.mockReturnValueOnce(scenario);
+
+    const { state } = startSession(22, 7);
+    // Diastolic must be at least 10 below systolic
+    expect(state.currentVitals.bloodPressure.diastolic).toBeLessThanOrEqual(
+      state.currentVitals.bloodPressure.systolic - 10
+    );
+  });
+
+  test('convergence approaches steady state over multiple ticks', () => {
+    const { sessionId } = startSession(22, 7);
+    adjustMedication(sessionId, 'med-linear', 15);
+
+    jest.advanceTimersByTime(1000);
+    const after1 = getSessionState(sessionId);
+    jest.advanceTimersByTime(1000);
+    const after2 = getSessionState(sessionId);
+    jest.advanceTimersByTime(1000);
+
+    // Each tick the medication effect should converge — the per-tick
+    // medication contribution shrinks as applied shift approaches target
+    const medDelta1 = after1.currentVitals.bloodPressure.systolic - 150 + 2;
+    const medDelta2 = after2.currentVitals.bloodPressure.systolic - after1.currentVitals.bloodPressure.systolic + 2;
+    expect(Math.abs(medDelta2)).toBeLessThan(Math.abs(medDelta1));
   });
 
   test('customTabs from scenario are available in session state', () => {

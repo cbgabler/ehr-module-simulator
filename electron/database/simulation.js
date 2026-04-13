@@ -61,6 +61,7 @@ export function startSession(scenarioId, userId) {
     startedAt,
     simulationConfig,
   });
+  clampVitals(state.currentVitals, simulationConfig.vitalRanges);
 
   const interval = startTickLoop(sessionId, simulationConfig.tickIntervalMs);
   sessions.set(sessionId, {
@@ -383,9 +384,15 @@ function applyBaselineDrift(vitals, drift = {}) {
   });
 }
 
-// Applies medication effect deltas based on current dose.
+// Applies medication effects using convergence toward a target shift.
+// Instead of accumulating a flat delta every tick, each medication defines
+// a per-unit shift from the reference dose. The vital converges toward the
+// total shift at a configurable rate (default 0.15 = 15% of remaining gap
+// per tick), producing a natural pharmacokinetic-like curve.
 function applyMedicationEffects(vitals, session) {
   const effects = session.simulationConfig.medicationEffects ?? {};
+  const targetShifts = {};
+
   Object.entries(effects).forEach(([medicationId, effect]) => {
     const medState = session.medicationState[medicationId];
     if (!medState) {
@@ -395,25 +402,65 @@ function applyMedicationEffects(vitals, session) {
     const delta =
       medState.dose - (effect.referenceDose ?? medState.dose ?? 0);
     const perUnitChange = effect.perUnitChange ?? {};
-    applyDelta(vitals, perUnitChange, delta);
+    accumulateShifts(targetShifts, perUnitChange, delta);
   });
+
+  const convergenceRate = session.simulationConfig.convergenceRate ?? 0.15;
+  applyConvergence(vitals, session, targetShifts, convergenceRate);
 }
 
-// Recursively adds deltaDefinition * multiplier into the target object.
-function applyDelta(target, deltaDefinition, multiplier = 1) {
+// Sums all medication target shifts into a single object.
+function accumulateShifts(accumulator, deltaDefinition, multiplier = 1) {
   Object.entries(deltaDefinition).forEach(([key, value]) => {
     if (typeof value === 'object' && !Array.isArray(value)) {
-      if (!target[key]) {
-        target[key] = {};
+      if (!accumulator[key]) {
+        accumulator[key] = {};
       }
-      applyDelta(target[key], value, multiplier);
+      accumulateShifts(accumulator[key], value, multiplier);
       return;
     }
 
-    if (typeof value === 'number' && typeof target[key] === 'number') {
-      target[key] += value * multiplier;
+    if (typeof value === 'number') {
+      accumulator[key] = (accumulator[key] ?? 0) + value * multiplier;
     }
   });
+}
+
+// Moves vitals toward the target shift using exponential convergence.
+// Tracks the already-applied shift in session.appliedMedShifts so we
+// converge from the current applied amount toward the new target.
+function applyConvergence(vitals, session, targetShifts, rate) {
+  if (!session.appliedMedShifts) {
+    session.appliedMedShifts = {};
+  }
+  convergeLevel(vitals, session.appliedMedShifts, targetShifts, rate);
+}
+
+function convergeLevel(vitals, applied, targets, rate) {
+  const allKeys = new Set([...Object.keys(targets), ...Object.keys(applied)]);
+  for (const key of allKeys) {
+    const targetVal = targets[key];
+    const appliedVal = applied[key];
+
+    if (typeof targetVal === 'object' && targetVal !== null && !Array.isArray(targetVal)) {
+      if (!applied[key] || typeof applied[key] !== 'object') {
+        applied[key] = {};
+      }
+      if (vitals[key] && typeof vitals[key] === 'object') {
+        convergeLevel(vitals[key], applied[key], targetVal, rate);
+      }
+      continue;
+    }
+
+    const target = typeof targetVal === 'number' ? targetVal : 0;
+    const current = typeof appliedVal === 'number' ? appliedVal : 0;
+    const step = (target - current) * rate;
+
+    if (typeof vitals[key] === 'number') {
+      vitals[key] += step;
+      applied[key] = current + step;
+    }
+  }
 }
 
 // Prevents vitals from going outside defined physiological ranges.
@@ -432,6 +479,10 @@ function clampVitals(vitals, ranges = {}) {
         vitals.bloodPressure.diastolic,
         limits.diastolic
       );
+      const MIN_PULSE_PRESSURE = 10;
+      if (vitals.bloodPressure.diastolic > vitals.bloodPressure.systolic - MIN_PULSE_PRESSURE) {
+        vitals.bloodPressure.diastolic = vitals.bloodPressure.systolic - MIN_PULSE_PRESSURE;
+      }
       return;
     }
 
@@ -511,6 +562,7 @@ function buildSimulationConfig(definition = {}) {
   const simulation = definition?.simulation ?? {};
   return {
     tickIntervalMs: simulation.tickIntervalMs ?? DEFAULT_TICK_INTERVAL_MS,
+    convergenceRate: simulation.convergenceRate ?? 0.15,
     baselineDrift: simulation.baselineDrift ?? {},
     medicationEffects: simulation.medicationEffects ?? {},
     vitalRanges: simulation.vitalRanges ?? {},
