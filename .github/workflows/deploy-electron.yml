@@ -87,4 +87,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: package-${{ matrix.os }}
-          path: electron/out/make/**/*
+          path: |
+            electron/out/make/**/*.exe
+            electron/out/make/**/*.dmg
+            !electron/out/make/**/*.nupkg
