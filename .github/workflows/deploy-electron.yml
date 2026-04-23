@@ -59,8 +59,8 @@ jobs:
       - run: npm test
         working-directory: electron
 
-  package:
-    name: Package (${{ matrix.os }})
+  verify-package:
+    name: Verify Package
     needs: [lint, build-frontend, test-electron]
     runs-on: ${{ matrix.os }}
     strategy:
