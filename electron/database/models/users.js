@@ -126,11 +126,6 @@ export function getUserByUsername(username) {
   return db.prepare('SELECT * FROM users WHERE username = ?').get(username);
 }
 
-export function getUserByEmail(email) {
-  const db = getDb();
-  return db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-}
-
 export function getAllUsers() {
   const db = getDb();
   return db.prepare('SELECT * FROM users').all();
