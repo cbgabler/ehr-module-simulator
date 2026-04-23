@@ -59,7 +59,7 @@ CREATE TABLE scenario_states (
 
 ### Export Location
 
-The code is in `electron/database/progess/export.js`.
+The code is in `electron/database/progress/export.js`.
 
 ### Process
 
