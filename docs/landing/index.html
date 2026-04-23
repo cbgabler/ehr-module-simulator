@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EHR Module Simulator — Practice Clinical Decision-Making in a Simulated EHR</title>
+  <meta name="description" content="A desktop application that lets nursing students practice clinical decision-making and documentation in a realistic simulated Electronic Health Record environment.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body id="top">
+
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Navigation -->
+  <nav class="nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner container">
+      <a href="#top" class="nav-logo" aria-label="EHR Module Simulator home">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        <span>EHR Module Simulator</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#get-started">Get Started</a>
+        <a href="#team">Team</a>
+        <a href="https://github.com/cbgabler/ehr-module-simulator" class="btn btn-sm" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          View on GitHub
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <main id="main-content">
+  <header class="hero">
+    <div class="container hero-inner">
+      <div class="hero-badge">Built for OHSU Nursing Education</div>
+      <h1 class="hero-title">Practice Clinical Decisions<br>in a Simulated EHR</h1>
+      <p class="hero-subtitle">
+        A desktop application that gives nursing students hands-on experience with realistic patient charts, medication titration, vital sign monitoring, and clinical documentation — just like a real Electronic Health Record.
+      </p>
+      <div class="hero-actions">
+        <a href="https://github.com/cbgabler/ehr-module-simulator/releases/latest" class="btn btn-primary btn-lg" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download for Desktop
+        </a>
+        <a href="https://github.com/cbgabler/ehr-module-simulator" class="btn btn-outline btn-lg" target="_blank" rel="noopener noreferrer">
+          View Source Code
+        </a>
+      </div>
+      <p class="hero-platforms">Available for Windows 10+ and macOS 10.15+ &middot; Runs fully offline &middot; No account required to install</p>
+    </div>
+  </header>
+
+  <!-- Problem / Value -->
+  <section class="section section-alt" id="why">
+    <div class="container">
+      <div class="value-grid">
+        <div class="value-card">
+          <div class="value-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <h3>The Problem</h3>
+          <p>Nursing students need practice with EHR workflows before clinical rotations, but real EHR systems are inaccessible for training and too risky for trial-and-error learning.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <h3>Our Solution</h3>
+          <p>A safe, offline desktop app that simulates real patient scenarios. Students titrate medications, watch vitals respond in real time, and document their reasoning — building clinical judgment before touching a real chart.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <h3>Who It's For</h3>
+          <p>Built in partnership with Oregon Health & Science University for nursing faculty and students in clinical learning labs. Instructors author scenarios; students practice and get graded.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="section" id="features">
+    <div class="container">
+      <h2 class="section-title">Key Features</h2>
+      <p class="section-subtitle">Everything students and instructors need to practice clinical reasoning</p>
+
+      <div class="features-grid">
+
+        <div class="feature-card">
+          <div class="feature-number" aria-hidden="true">01</div>
+          <h3>Real-Time Patient Simulation</h3>
+          <p>Patient vitals respond dynamically to your medication changes. A convergence-based pharmacokinetic model produces realistic vital sign curves — titrate an IV drip and watch blood pressure respond naturally over time.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-number" aria-hidden="true">02</div>
+          <h3>Interactive Vitals Trend Graph</h3>
+          <p>Track heart rate, blood pressure, SpO2, respiratory rate, and temperature on a live SVG chart. Hover for exact values, click the legend to filter, and watch how your clinical decisions affect outcomes tick by tick.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-number" aria-hidden="true">03</div>
+          <h3>Instructor Scenario Authoring</h3>
+          <p>Build custom patient scenarios with a guided form: set demographics, initial vitals, medication lists, provider orders, learning objectives, simulation parameters, and custom documentation tabs — no code required.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-number" aria-hidden="true">04</div>
+          <h3>Session Summaries & PDF Export</h3>
+          <p>Every action is logged automatically. When a session ends, students get a detailed timeline of their decisions — medication adjustments, pauses, completion reason — downloadable as a formatted PDF for submission or review.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-number" aria-hidden="true">05</div>
+          <h3>Quizzes & Assessment</h3>
+          <p>Instructors can create multiple-choice quizzes tied to learning objectives, assign them to students, and review scored submissions. Students complete quizzes in-app and see their results immediately.</p>
+        </div>
+
+      </div>
+
+      <!-- Additional capabilities -->
+      <div class="capabilities">
+        <h3 class="capabilities-title">Also included</h3>
+        <div class="capabilities-grid">
+          <div class="capability">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <span>Keyboard shortcuts for simulation control and tab navigation</span>
+          </div>
+          <div class="capability">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Import and export scenarios as portable files between installations</span>
+          </div>
+          <div class="capability">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+            <span>Duplicate existing scenarios to create variations quickly</span>
+          </div>
+          <div class="capability">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Role-based access: students, instructors, and admins</span>
+          </div>
+          <div class="capability">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+            <span>Fully offline — all data stored locally with SQLite</span>
+          </div>
+          <div class="capability">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+            <span>Auto-completion when vitals reach instructor-defined target ranges</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tech Stack -->
+  <section class="section section-alt" id="tech">
+    <div class="container">
+      <h2 class="section-title">Built With</h2>
+      <div class="tech-grid">
+        <div class="tech-item">
+          <strong>Electron</strong>
+          <span>Cross-platform desktop runtime</span>
+        </div>
+        <div class="tech-item">
+          <strong>React 19</strong>
+          <span>Component-based UI framework</span>
+        </div>
+        <div class="tech-item">
+          <strong>Vite</strong>
+          <span>Fast frontend build tooling</span>
+        </div>
+        <div class="tech-item">
+          <strong>SQLite</strong>
+          <span>Embedded local database</span>
+        </div>
+        <div class="tech-item">
+          <strong>Bootstrap 5</strong>
+          <span>Responsive layout and components</span>
+        </div>
+        <div class="tech-item">
+          <strong>Electron Forge</strong>
+          <span>Packaging and distribution</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Get Started -->
+  <section class="section" id="get-started">
+    <div class="container">
+      <h2 class="section-title">Get Started</h2>
+      <p class="section-subtitle">Up and running in under 2 minutes</p>
+
+      <div class="steps-grid">
+        <div class="step">
+          <div class="step-number" aria-hidden="true">1</div>
+          <h3>Download</h3>
+          <p>Grab the latest installer from the <a href="https://github.com/cbgabler/ehr-module-simulator/releases/latest" target="_blank" rel="noopener noreferrer">GitHub Releases page</a>. Choose the <code>.exe</code> for Windows or <code>.dmg</code> for macOS.</p>
+        </div>
+        <div class="step">
+          <div class="step-number" aria-hidden="true">2</div>
+          <h3>Install</h3>
+          <p>Run the installer. On Windows, you may need to click "More info" then "Run anyway" on the SmartScreen prompt. The app launches automatically when finished.</p>
+        </div>
+        <div class="step">
+          <div class="step-number" aria-hidden="true">3</div>
+          <h3>Sign In</h3>
+          <p>Use the built-in demo accounts to get started, or register a new one. Two default accounts are created on first launch — one instructor, one student.</p>
+        </div>
+      </div>
+
+      <div class="requirements">
+        <h3>System Requirements</h3>
+        <div class="requirements-grid">
+          <div class="req">
+            <strong>OS</strong>
+            <span>Windows 10 (64-bit)+ or macOS 10.15+</span>
+          </div>
+          <div class="req">
+            <strong>RAM</strong>
+            <span>4 GB minimum</span>
+          </div>
+          <div class="req">
+            <strong>Disk</strong>
+            <span>400 MB</span>
+          </div>
+          <div class="req">
+            <strong>Internet</strong>
+            <span>Not required — runs fully offline</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-center">
+        <a href="https://github.com/cbgabler/ehr-module-simulator/releases/latest" class="btn btn-primary btn-lg" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Latest Release
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Team -->
+  <section class="section section-alt" id="team">
+    <div class="container">
+      <h2 class="section-title">Team</h2>
+      <p class="section-subtitle">Oregon State University &middot; CS 463 Software Engineering Capstone &middot; Spring 2026</p>
+
+      <div class="team-grid">
+        <div class="team-card">
+          <div class="team-avatar" aria-hidden="true">CG</div>
+          <h3>Carson Gabler</h3>
+          <p class="team-role">Project Manager</p>
+          <div class="team-links">
+            <a href="https://github.com/cbgabler" target="_blank" rel="noopener noreferrer" aria-label="Carson Gabler's GitHub profile">GitHub</a>
+            <a href="https://www.linkedin.com/in/carsongabler" target="_blank" rel="noopener noreferrer" aria-label="Carson Gabler's LinkedIn profile">LinkedIn</a>
+            <a href="mailto:gablerc@oregonstate.edu" aria-label="Email Carson Gabler">Email</a>
+          </div>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar" aria-hidden="true">AJ</div>
+          <h3>AJ Paumier</h3>
+          <p class="team-role">Backend Developer</p>
+          <div class="team-links">
+            <a href="https://github.com/20apaumier" target="_blank" rel="noopener noreferrer" aria-label="AJ Paumier's GitHub profile">GitHub</a>
+            <a href="mailto:paumiera@oregonstate.edu" aria-label="Email AJ Paumier">Email</a>
+          </div>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar" aria-hidden="true">TT</div>
+          <h3>Thien Tu</h3>
+          <p class="team-role">Backend Developer</p>
+          <div class="team-links">
+            <a href="https://github.com/thientu745" target="_blank" rel="noopener noreferrer" aria-label="Thien Tu's GitHub profile">GitHub</a>
+            <a href="mailto:tuthi@oregonstate.edu" aria-label="Email Thien Tu">Email</a>
+          </div>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar" aria-hidden="true">TS</div>
+          <h3>Trey Springer</h3>
+          <p class="team-role">Frontend Developer</p>
+          <div class="team-links">
+            <a href="https://github.com/treyspringer" target="_blank" rel="noopener noreferrer" aria-label="Trey Springer's GitHub profile">GitHub</a>
+            <a href="https://www.linkedin.com/in/treysp/" target="_blank" rel="noopener noreferrer" aria-label="Trey Springer's LinkedIn profile">LinkedIn</a>
+            <a href="mailto:springet@oregonstate.edu" aria-label="Email Trey Springer">Email</a>
+          </div>
+        </div>
+        <div class="team-card">
+          <div class="team-avatar" aria-hidden="true">KC</div>
+          <h3>Kristy Chen</h3>
+          <p class="team-role">Frontend Developer</p>
+          <div class="team-links">
+            <a href="https://github.com/Kwispy7876" target="_blank" rel="noopener noreferrer" aria-label="Kristy Chen's GitHub profile">GitHub</a>
+            <a href="mailto:chenkr@oregonstate.edu" aria-label="Email Kristy Chen">Email</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="feedback-box">
+        <h3>Feedback & Issues</h3>
+        <p>Found a bug or have a suggestion? Open an issue on GitHub or reach out to the team directly.</p>
+        <div class="feedback-links">
+          <a href="https://github.com/cbgabler/ehr-module-simulator/issues" class="btn btn-outline" target="_blank" rel="noopener noreferrer">
+            Report an Issue
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="container footer-inner">
+      <div class="footer-left">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+        <span>EHR Module Simulator</span>
+      </div>
+      <p class="footer-copy">Oregon State University &middot; CS 463 Capstone &middot; Built in partnership with OHSU</p>
+      <div class="footer-links">
+        <a href="https://github.com/cbgabler/ehr-module-simulator" target="_blank" rel="noopener noreferrer" aria-label="View project on GitHub">GitHub</a>
+        <a href="https://github.com/cbgabler/ehr-module-simulator/releases/latest" target="_blank" rel="noopener noreferrer">Releases</a>
+        <a href="https://github.com/cbgabler/ehr-module-simulator/issues" target="_blank" rel="noopener noreferrer">Issues</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
