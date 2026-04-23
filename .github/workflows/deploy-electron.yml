@@ -61,6 +61,13 @@ jobs:
 
   verify-package:
     name: Verify Package
+    needs: [package]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Package verification complete"
+
+  package:
+    name: Package (${{ matrix.os }})
     needs: [lint, build-frontend, test-electron]
     runs-on: ${{ matrix.os }}
     strategy:
