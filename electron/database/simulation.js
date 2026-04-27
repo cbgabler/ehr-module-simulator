@@ -30,7 +30,7 @@ const DEFAULT_TARGET_STATUS = {
 };
 
 // Creates a simulation session in memory + DB, then starts the tick loop.
-export function startSession(scenarioId, userId) {
+export function startSession(scenarioId, userId, options = {}) {
   const db = getDb();
 
   const user = db
@@ -54,6 +54,9 @@ export function startSession(scenarioId, userId) {
 
   const sessionId = Number(result.lastInsertRowid);
   const simulationConfig = buildSimulationConfig(scenario.definition);
+  if (options.mode === 'realistic' || options.mode === 'training') {
+    simulationConfig.mode = options.mode;
+  }
   const state = createInitialState({
     sessionId,
     scenario,
@@ -384,13 +387,40 @@ function applyBaselineDrift(vitals, drift = {}) {
   });
 }
 
-// Applies medication effects using convergence toward a target shift.
-// Instead of accumulating a flat delta every tick, each medication defines
-// a per-unit shift from the reference dose. The vital converges toward the
-// total shift at a configurable rate (default 0.15 = 15% of remaining gap
-// per tick), producing a natural pharmacokinetic-like curve.
+// Applies medication effects. Two modes are available:
+//
+// "training" (default) — linear per-tick deltas so vitals stabilize in
+//   roughly 5 ticks, keeping simulations short and interactive.
+//
+// "realistic" — exponential convergence toward a target shift, producing
+//   pharmacokinetic-like curves that take longer to stabilize.
 function applyMedicationEffects(vitals, session) {
   const effects = session.simulationConfig.medicationEffects ?? {};
+  const mode = session.simulationConfig.mode ?? 'training';
+
+  if (mode === 'realistic') {
+    applyMedicationEffectsRealistic(vitals, session, effects);
+  } else {
+    applyMedicationEffectsTraining(vitals, session, effects);
+  }
+}
+
+// Training mode: apply perUnitChange * delta directly each tick.
+function applyMedicationEffectsTraining(vitals, _session, effects) {
+  Object.entries(effects).forEach(([medicationId, effect]) => {
+    const medState = _session.medicationState[medicationId];
+    if (!medState) {
+      return;
+    }
+
+    const delta = (medState.dose ?? 0) - (effect.referenceDose ?? 0);
+    const perUnitChange = effect.perUnitChange ?? {};
+    applyDelta(vitals, perUnitChange, delta);
+  });
+}
+
+// Realistic mode: converge toward a target shift at a configurable rate.
+function applyMedicationEffectsRealistic(vitals, session, effects) {
   const targetShifts = {};
 
   Object.entries(effects).forEach(([medicationId, effect]) => {
@@ -406,6 +436,23 @@ function applyMedicationEffects(vitals, session) {
 
   const convergenceRate = session.simulationConfig.convergenceRate ?? 0.15;
   applyConvergence(vitals, session, targetShifts, convergenceRate);
+}
+
+// Recursively adds deltaDefinition * multiplier into the target vitals object.
+function applyDelta(target, deltaDefinition, multiplier = 1) {
+  Object.entries(deltaDefinition).forEach(([key, value]) => {
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      if (!target[key]) {
+        target[key] = {};
+      }
+      applyDelta(target[key], value, multiplier);
+      return;
+    }
+
+    if (typeof value === 'number' && typeof target[key] === 'number') {
+      target[key] += value * multiplier;
+    }
+  });
 }
 
 // Sums all medication target shifts into a single object.
@@ -562,10 +609,12 @@ function formatDose(value, unit) {
 // Pulls reusable simulation config (drift, ranges, targets, etc.).
 function buildSimulationConfig(definition = {}) {
   const simulation = definition?.simulation ?? {};
+  const mode = simulation.mode === 'realistic' ? 'realistic' : 'training';
   const rawRate = simulation.convergenceRate ?? 0.15;
   const convergenceRate = Math.min(Math.max(rawRate, 0.01), 1);
   return {
     tickIntervalMs: simulation.tickIntervalMs ?? DEFAULT_TICK_INTERVAL_MS,
+    mode,
     convergenceRate,
     baselineDrift: simulation.baselineDrift ?? {},
     medicationEffects: simulation.medicationEffects ?? {},
@@ -592,6 +641,7 @@ function formatState(session) {
     endedAt: session.endedAt ?? null,
     tickCount: session.tickCount,
     tickIntervalMs: session.simulationConfig.tickIntervalMs,
+    simulationMode: session.simulationConfig.mode ?? 'training',
     currentVitals: deepClone(session.currentVitals),
     medications: deepClone(session.medications),
     medicationState: deepClone(session.medicationState),

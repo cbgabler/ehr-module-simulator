@@ -165,10 +165,10 @@ describe('simulation session manager', () => {
 
     const state = getSessionState(sessionId);
     expect(state.medicationState['med-linear'].dose).toBe(15);
-    // Convergence model: target shift = (15-10)*-0.5 = -2.5
-    // First tick converges 15% of the way: step = -2.5 * 0.15 = -0.375
-    // drift (-2) + convergence step (-0.375) = 150 - 2.375 = 147.625
-    expect(state.currentVitals.bloodPressure.systolic).toBeCloseTo(147.625, 1);
+    // Training mode (default): linear delta applied directly each tick
+    // delta = 15 - 10 = 5, perUnitChange = -0.5, effect = -2.5
+    // drift (-2) + medication (-2.5) = 150 - 4.5 = 145.5
+    expect(state.currentVitals.bloodPressure.systolic).toBeCloseTo(145.5, 1);
   });
 
   test('pause and resume correctly control tick processing', () => {
@@ -250,7 +250,11 @@ describe('simulation session manager', () => {
     );
   });
 
-  test('convergence approaches steady state over multiple ticks', () => {
+  test('realistic mode: convergence approaches steady state over multiple ticks', () => {
+    const scenario = cloneScenario();
+    scenario.definition.simulation.mode = 'realistic';
+    mockGetScenarioById.mockReturnValueOnce(scenario);
+
     const { sessionId } = startSession(22, 7);
     adjustMedication(sessionId, 'med-linear', 15);
 
@@ -265,6 +269,27 @@ describe('simulation session manager', () => {
     const medDelta1 = after1.currentVitals.bloodPressure.systolic - 150 + 2;
     const medDelta2 = after2.currentVitals.bloodPressure.systolic - after1.currentVitals.bloodPressure.systolic + 2;
     expect(Math.abs(medDelta2)).toBeLessThan(Math.abs(medDelta1));
+  });
+
+  test('training mode applies linear medication effects directly', () => {
+    const scenario = cloneScenario();
+    scenario.definition.simulation.baselineDrift = {};
+    mockGetScenarioById.mockReturnValueOnce(scenario);
+
+    const { sessionId } = startSession(22, 7);
+    adjustMedication(sessionId, 'med-linear', 15);
+
+    jest.advanceTimersByTime(1000);
+    const after1 = getSessionState(sessionId);
+    jest.advanceTimersByTime(1000);
+    const after2 = getSessionState(sessionId);
+
+    // Linear mode: same delta applied every tick (no convergence decay)
+    // delta = 5 * -0.5 = -2.5 per tick
+    const delta1 = after1.currentVitals.bloodPressure.systolic - 150;
+    const delta2 = after2.currentVitals.bloodPressure.systolic - after1.currentVitals.bloodPressure.systolic;
+    expect(delta1).toBeCloseTo(-2.5, 1);
+    expect(delta2).toBeCloseTo(-2.5, 1);
   });
 
   test('customTabs from scenario are available in session state', () => {

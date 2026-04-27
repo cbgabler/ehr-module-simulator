@@ -327,17 +327,19 @@ export function getExampleHypertensionScenario() {
     // Simulation Parameters
     simulation: {
       tickIntervalMs: 3000,
-      convergenceRate: 0.12,
+      // mode: 'training' (default) — vitals respond quickly for interactive learning
+      // mode: 'realistic' — slower convergence for pharmacokinetically accurate behavior
       baselineDrift: {
-        bloodPressure: { systolic: 0.15, diastolic: 0.08 },
-        heartRate: 0.02,
+        bloodPressure: { systolic: 0.5, diastolic: 0.25 },
+        heartRate: 0.1,
       },
+      convergenceRate: 0.12,
       medicationEffects: {
         'med-001': {
           referenceDose: 5,
           perUnitChange: {
-            bloodPressure: { systolic: -3, diastolic: -1.5 },
-            heartRate: -0.3,
+            bloodPressure: { systolic: -0.8, diastolic: -0.4 },
+            heartRate: -0.05,
           },
         },
       },
@@ -493,14 +495,14 @@ export function getExampleDiabetesScenario() {
       tickIntervalMs: 3000,
       convergenceRate: 0.15,
       baselineDrift: {
-        bloodGlucose: -0.3,
-        heartRate: -0.02,
+        bloodGlucose: -1.5,
+        heartRate: -0.1,
       },
       medicationEffects: {
         'med-103': {
           referenceDose: 0,
           perUnitChange: {
-            bloodGlucose: 2.5,
+            bloodGlucose: 3,
             heartRate: -0.5,
           },
         },
