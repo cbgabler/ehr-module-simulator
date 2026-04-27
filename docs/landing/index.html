@@ -26,6 +26,7 @@
       <div class="nav-links">
         <a href="#features">Features</a>
         <a href="#get-started">Get Started</a>
+        <a href="#faq">FAQ</a>
         <a href="#team">Team</a>
         <a href="https://github.com/cbgabler/ehr-module-simulator" class="btn btn-sm" target="_blank" rel="noopener noreferrer">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -243,6 +244,79 @@
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Download Latest Release
         </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="container">
+      <h2 class="section-title">Frequently Asked Questions</h2>
+      <p class="section-subtitle">Common questions about how the simulator works</p>
+
+      <div class="faq-list">
+
+        <details class="faq-item">
+          <summary>What is a "tick"?</summary>
+          <p>A tick is one simulation step. Each tick, the engine updates all vital signs: it applies baseline drift, calculates medication effects, clamps vitals to safe ranges, and checks whether target goals have been met. By default, a tick occurs every 5 seconds, but instructors can configure this from 1 to 60 seconds when authoring a scenario.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>What is the difference between Training and Realistic mode?</summary>
+          <p><strong>Training mode</strong> (default) applies medication effects directly each tick, so vitals respond quickly and stabilize in roughly 5 ticks. This keeps simulations short and interactive for learning.</p>
+          <p><strong>Realistic mode</strong> uses an exponential convergence model where vitals gradually approach a target shift over many ticks, producing pharmacokinetically accurate response curves. This takes longer to stabilize but mirrors how real medications behave in a patient. You can choose the mode when starting a simulation from the scenario details screen.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>How does the simulation decide when I've "passed"?</summary>
+          <p>If the scenario has target vital sign ranges configured, the simulation tracks how many consecutive ticks your patient's vitals stay within those ranges. Once the required number of consecutive ticks is reached (typically 2&ndash;3), the session auto-completes with a "Target Met" status. If no targets are configured, the simulation runs until you manually end it.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>What is "baseline drift"?</summary>
+          <p>Baseline drift is the natural change in vital signs that occurs each tick even without any medication adjustments. For example, a hypertension scenario might have blood pressure gradually rising over time, requiring the student to intervene with medications. Drift values are set by the scenario author.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>What can instructors do that students cannot?</summary>
+          <p>Instructors can create, edit, duplicate, and delete scenarios. They can also create and manage quizzes, assign quizzes to specific students, and view all user accounts. Students can start simulations, take quizzes, view their session summaries, and import/export scenario files.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>What are the default login credentials?</summary>
+          <p>Two accounts are created on first launch: <code>instructor1</code> and <code>student1</code>, both with password <code>password123</code>. These are shared demo accounts &mdash; for real use, create individual accounts through the registration screen.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>Does the app require an internet connection?</summary>
+          <p>No. The app runs entirely offline. All data (scenarios, user accounts, quiz submissions, session summaries) is stored locally in a SQLite database on your computer.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>Where is my data stored?</summary>
+          <p>On Windows: <code>C:\Users\&lt;YourName&gt;\AppData\Roaming\ehr-module-simulator\</code>. On macOS: <code>~/Library/Application Support/ehr-module-simulator/</code>. Uninstalling the app does not delete this folder &mdash; remove it manually if you want to clear all data.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>Can I share scenarios with other users?</summary>
+          <p>Yes. Use the Export button on the Home page to save selected scenarios as a portable <code>.db</code> file. Another user can then use the Import button to load those scenarios into their installation. Duplicate scenarios (same name and definition) are automatically skipped during import.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>What are custom tabs?</summary>
+          <p>Custom tabs are instructor-defined documentation sections that appear alongside the standard simulation tabs (Vitals, Medications, Orders, etc.). They can include fields like urine output, wound assessment, or any structured data the instructor wants students to document. Custom tab values do not affect the simulation engine &mdash; they serve as a documentation workspace.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>What keyboard shortcuts are available?</summary>
+          <p><strong>Space</strong> &mdash; pause or resume the simulation. <strong>1&ndash;9</strong> &mdash; switch between tabs (Vitals, Medications, Orders, etc.). <strong>N</strong> &mdash; focus the notes text area. <strong>Escape</strong> &mdash; end the simulation (opens confirmation). Shortcuts are disabled while typing in an input field.</p>
+        </details>
+
+        <details class="faq-item">
+          <summary>I see a blank white screen when the app launches. What do I do?</summary>
+          <p>This occasionally happens on the very first launch while the database initializes. Close the app and reopen it &mdash; the issue should not recur.</p>
+        </details>
+
       </div>
     </div>
   </section>
