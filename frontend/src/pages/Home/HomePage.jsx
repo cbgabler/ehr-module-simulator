@@ -199,7 +199,7 @@ function HomePage() {
     );
   };
 
-  const handleStartScenario = async (scenario) => {
+  const handleStartScenario = async (scenario, mode) => {
     if (!scenario) {
       setStartError('Select a scenario to start.');
       return false;
@@ -221,6 +221,7 @@ function HomePage() {
       const response = await window.api.startSimulation({
         scenarioId: scenario.id,
         userId: parsedUserId,
+        mode,
       });
       if (response.success) {
         setSelectedScenario(null);
