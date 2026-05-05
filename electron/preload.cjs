@@ -178,9 +178,9 @@ contextBridge.exposeInMainWorld('api', {
       return { success: false, error: error.message };
     }
   },
-  startSimulation: async ({ scenarioId, userId }) => {
+  startSimulation: async ({ scenarioId, userId, mode }) => {
     try {
-      return await ipcRenderer.invoke('start-sim', { scenarioId, userId });
+      return await ipcRenderer.invoke('start-sim', { scenarioId, userId, mode });
     } catch (error) {
       console.error('IPC error:', error);
       return { success: false, error: error.message };

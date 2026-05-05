@@ -371,7 +371,7 @@ describe('simulation IPC handlers', () => {
     const handler = findHandler(mockIpcHandle, 'start-sim');
     const result = await handler(mockEvent, { scenarioId: 3, userId: 9 });
 
-    expect(simulationMocks.startSession).toHaveBeenCalledWith(3, 9);
+    expect(simulationMocks.startSession).toHaveBeenCalledWith(3, 9, { mode: undefined });
     expect(result).toEqual({
       success: true,
       sessionId: 12,
