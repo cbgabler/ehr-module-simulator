@@ -1,4 +1,6 @@
-function VitalSignsTab({ vitals }) {
+import VitalsTrendGraph from '../../Home/components/VitalsTrendGraph.jsx';
+
+function VitalSignsTab({ vitals, vitalsHistory = [] }) {
   if (!vitals) {
     return <div className="no-vitals">No vital signs available</div>;
   }
@@ -155,7 +157,20 @@ function VitalSignsTab({ vitals }) {
     return <div className="no-vitals">No vital signs recorded</div>;
   }
 
-  return <div className="vitals-tab">{vitalCards}</div>;
+  return (
+    <div className="vitals-tab">
+      {vitalCards}
+      {vitalsHistory.length >= 2 && (
+        <div className="vitals-trend-section">
+          <h3>Vitals Trend</h3>
+          <VitalsTrendGraph
+            history={vitalsHistory}
+            selectedVitals={['heartRate', 'oxygenSaturation', 'systolic', 'diastolic']}
+          />
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default VitalSignsTab;
