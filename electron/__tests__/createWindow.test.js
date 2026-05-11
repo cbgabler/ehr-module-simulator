@@ -103,11 +103,11 @@ async function loadMainModule({ isPackaged = false } = {}) {
     seedExampleScenarios: jest.fn(),
   }));
 
-  await jest.unstable_mockModule('../database/progess/import.js', () => ({
+  await jest.unstable_mockModule('../database/progress/import.js', () => ({
     importData: jest.fn(),
   }));
 
-  await jest.unstable_mockModule('../database/progess/export.js', () => ({
+  await jest.unstable_mockModule('../database/progress/export.js', () => ({
     exportData: jest.fn(),
   }));
 

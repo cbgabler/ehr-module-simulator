@@ -44,7 +44,7 @@ Imported scenarios receive new IDs in your local database. Related records (tabs
 
 ### Import Location
 
-The code is in `electron/database/progess/import.js`.
+The code is in `electron/database/progress/import.js`.
 
 ### Process
 

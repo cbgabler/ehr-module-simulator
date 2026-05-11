@@ -24,7 +24,12 @@ Documentation for scenario sharing features.
 
 ## Features
 
+- [authentication.md](./features/authentication.md) - Sign in, registration, roles, and session management
+- [scenario-authoring.md](./features/scenario-authoring.md) - Creating scenarios with the multi-section form
 - [scenario-filters.md](./features/scenario-filters.md) - Scenario filtering functionality
 - [duplicate-scenario.md](./features/duplicate-scenario.md) - Duplicate scenario functionality
-- [scenario-authoring.md](./features/scenario-authoring.md) - Creating scenarios with the multi-section form
+- [custom-tabs.md](./features/custom-tabs.md) - Instructor-defined custom tabs for simulations
+- [vitals-trend-graph.md](./features/vitals-trend-graph.md) - Real-time SVG vital signs visualization
+- [keyboard-shortcuts.md](./features/keyboard-shortcuts.md) - Global keyboard shortcuts system
 - [session-summary-pdf-export.md](./features/session-summary-pdf-export.md) - Session action logging, summaries, and PDF export
+- [quizzes.md](./features/quizzes.md) - Quiz creation, assignment, grading, and history
