@@ -500,11 +500,11 @@ ipcMain.handle('start-sim', async (event, payload = {}) => {
   if (!validateSender(event.senderFrame))
     return { success: false, error: 'Unauthorized' };
   try {
-    const { scenarioId, userId } = payload ?? {};
+    const { scenarioId, userId, mode } = payload ?? {};
     if (!scenarioId || !userId) {
       throw new Error('scenarioId and userId are required');
     }
-    const { sessionId, state } = startSession(scenarioId, userId);
+    const { sessionId, state } = startSession(scenarioId, userId, { mode });
     return { success: true, sessionId, state };
   } catch (error) {
     console.error('Error starting simulation:', error);

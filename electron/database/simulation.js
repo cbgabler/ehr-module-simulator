@@ -30,7 +30,7 @@ const DEFAULT_TARGET_STATUS = {
 };
 
 // Creates a simulation session in memory + DB, then starts the tick loop.
-export function startSession(scenarioId, userId) {
+export function startSession(scenarioId, userId, options = {}) {
   const db = getDb();
 
   const user = db
@@ -54,6 +54,9 @@ export function startSession(scenarioId, userId) {
 
   const sessionId = Number(result.lastInsertRowid);
   const simulationConfig = buildSimulationConfig(scenario.definition);
+  if (options.mode === 'realistic' || options.mode === 'training') {
+    simulationConfig.mode = options.mode;
+  }
   const state = createInitialState({
     sessionId,
     scenario,
@@ -61,6 +64,7 @@ export function startSession(scenarioId, userId) {
     startedAt,
     simulationConfig,
   });
+  clampVitals(state.currentVitals, simulationConfig.vitalRanges);
 
   const interval = startTickLoop(sessionId, simulationConfig.tickIntervalMs);
   sessions.set(sessionId, {
@@ -383,23 +387,58 @@ function applyBaselineDrift(vitals, drift = {}) {
   });
 }
 
-// Applies medication effect deltas based on current dose.
+// Applies medication effects. Two modes are available:
+//
+// "training" (default) — linear per-tick deltas so vitals stabilize in
+//   roughly 5 ticks, keeping simulations short and interactive.
+//
+// "realistic" — exponential convergence toward a target shift, producing
+//   pharmacokinetic-like curves that take longer to stabilize.
 function applyMedicationEffects(vitals, session) {
   const effects = session.simulationConfig.medicationEffects ?? {};
+  const mode = session.simulationConfig.mode ?? 'training';
+
+  if (mode === 'realistic') {
+    applyMedicationEffectsRealistic(vitals, session, effects);
+  } else {
+    applyMedicationEffectsTraining(vitals, session, effects);
+  }
+}
+
+// Training mode: apply perUnitChange * delta directly each tick.
+function applyMedicationEffectsTraining(vitals, _session, effects) {
+  Object.entries(effects).forEach(([medicationId, effect]) => {
+    const medState = _session.medicationState[medicationId];
+    if (!medState) {
+      return;
+    }
+
+    const delta = (medState.dose ?? 0) - (effect.referenceDose ?? 0);
+    const perUnitChange = effect.perUnitChange ?? {};
+    applyDelta(vitals, perUnitChange, delta);
+  });
+}
+
+// Realistic mode: converge toward a target shift at a configurable rate.
+function applyMedicationEffectsRealistic(vitals, session, effects) {
+  const targetShifts = {};
+
   Object.entries(effects).forEach(([medicationId, effect]) => {
     const medState = session.medicationState[medicationId];
     if (!medState) {
       return;
     }
 
-    const delta =
-      medState.dose - (effect.referenceDose ?? medState.dose ?? 0);
+    const delta = (medState.dose ?? 0) - (effect.referenceDose ?? 0);
     const perUnitChange = effect.perUnitChange ?? {};
-    applyDelta(vitals, perUnitChange, delta);
+    accumulateShifts(targetShifts, perUnitChange, delta);
   });
+
+  const convergenceRate = session.simulationConfig.convergenceRate ?? 0.15;
+  applyConvergence(vitals, session, targetShifts, convergenceRate);
 }
 
-// Recursively adds deltaDefinition * multiplier into the target object.
+// Recursively adds deltaDefinition * multiplier into the target vitals object.
 function applyDelta(target, deltaDefinition, multiplier = 1) {
   Object.entries(deltaDefinition).forEach(([key, value]) => {
     if (typeof value === 'object' && !Array.isArray(value)) {
@@ -414,6 +453,60 @@ function applyDelta(target, deltaDefinition, multiplier = 1) {
       target[key] += value * multiplier;
     }
   });
+}
+
+// Sums all medication target shifts into a single object.
+function accumulateShifts(accumulator, deltaDefinition, multiplier = 1) {
+  Object.entries(deltaDefinition).forEach(([key, value]) => {
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      if (!accumulator[key]) {
+        accumulator[key] = {};
+      }
+      accumulateShifts(accumulator[key], value, multiplier);
+      return;
+    }
+
+    if (typeof value === 'number') {
+      accumulator[key] = (accumulator[key] ?? 0) + value * multiplier;
+    }
+  });
+}
+
+// Moves vitals toward the target shift using exponential convergence.
+// Tracks the already-applied shift in session.appliedMedShifts so we
+// converge from the current applied amount toward the new target.
+function applyConvergence(vitals, session, targetShifts, rate) {
+  if (!session.appliedMedShifts) {
+    session.appliedMedShifts = {};
+  }
+  convergeLevel(vitals, session.appliedMedShifts, targetShifts, rate);
+}
+
+function convergeLevel(vitals, applied, targets, rate) {
+  const allKeys = new Set([...Object.keys(targets), ...Object.keys(applied)]);
+  for (const key of allKeys) {
+    const targetVal = targets[key];
+    const appliedVal = applied[key];
+
+    if (typeof targetVal === 'object' && targetVal !== null && !Array.isArray(targetVal)) {
+      if (!applied[key] || typeof applied[key] !== 'object') {
+        applied[key] = {};
+      }
+      if (vitals[key] && typeof vitals[key] === 'object') {
+        convergeLevel(vitals[key], applied[key], targetVal, rate);
+      }
+      continue;
+    }
+
+    const target = typeof targetVal === 'number' ? targetVal : 0;
+    const current = typeof appliedVal === 'number' ? appliedVal : 0;
+    const step = (target - current) * rate;
+
+    if (typeof vitals[key] === 'number') {
+      vitals[key] += step;
+      applied[key] = current + step;
+    }
+  }
 }
 
 // Prevents vitals from going outside defined physiological ranges.
@@ -432,6 +525,13 @@ function clampVitals(vitals, ranges = {}) {
         vitals.bloodPressure.diastolic,
         limits.diastolic
       );
+      const MIN_PULSE_PRESSURE = 10;
+      if (vitals.bloodPressure.diastolic > vitals.bloodPressure.systolic - MIN_PULSE_PRESSURE) {
+        vitals.bloodPressure.diastolic = Math.max(
+          vitals.bloodPressure.systolic - MIN_PULSE_PRESSURE,
+          limits.diastolic?.min ?? 0
+        );
+      }
       return;
     }
 
@@ -509,8 +609,13 @@ function formatDose(value, unit) {
 // Pulls reusable simulation config (drift, ranges, targets, etc.).
 function buildSimulationConfig(definition = {}) {
   const simulation = definition?.simulation ?? {};
+  const mode = simulation.mode === 'realistic' ? 'realistic' : 'training';
+  const rawRate = simulation.convergenceRate ?? 0.15;
+  const convergenceRate = Math.min(Math.max(rawRate, 0.01), 1);
   return {
     tickIntervalMs: simulation.tickIntervalMs ?? DEFAULT_TICK_INTERVAL_MS,
+    mode,
+    convergenceRate,
     baselineDrift: simulation.baselineDrift ?? {},
     medicationEffects: simulation.medicationEffects ?? {},
     vitalRanges: simulation.vitalRanges ?? {},
@@ -536,6 +641,7 @@ function formatState(session) {
     endedAt: session.endedAt ?? null,
     tickCount: session.tickCount,
     tickIntervalMs: session.simulationConfig.tickIntervalMs,
+    simulationMode: session.simulationConfig.mode ?? 'training',
     currentVitals: deepClone(session.currentVitals),
     medications: deepClone(session.medications),
     medicationState: deepClone(session.medicationState),
