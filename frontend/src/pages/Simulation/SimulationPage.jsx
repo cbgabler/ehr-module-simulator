@@ -49,6 +49,8 @@ function SimulationPage() {
   // custom tab input values  { [tabId]: { [fieldKey]: value } }
   const [customTabValues, setCustomTabValues] = useState({});
 
+  const [vitalsHistory, setVitalsHistory] = useState([]);
+
   const pollingRef = useRef(null);
   const notesTextareaRef = useRef(null);
 
@@ -161,6 +163,29 @@ function SimulationPage() {
       loadNotes();
     }
   }, [sessionId, loadNotes]);
+
+  // accumulate vitals history each tick for the trend graph
+  useEffect(() => {
+    if (
+      sessionState?.currentVitals &&
+      sessionState?.status === 'running' &&
+      typeof sessionState?.tickCount === 'number'
+    ) {
+      setVitalsHistory((prev) => {
+        if (prev.length > 0 && prev[prev.length - 1].tick === sessionState.tickCount) {
+          return prev;
+        }
+        return [
+          ...prev,
+          {
+            tick: sessionState.tickCount,
+            timestamp: sessionState.updatedAt,
+            vitals: { ...sessionState.currentVitals },
+          },
+        ].slice(-100);
+      });
+    }
+  }, [sessionState?.tickCount, sessionState?.status]);
 
   // load session summary when ended
   useEffect(() => {
@@ -509,7 +534,7 @@ function SimulationPage() {
           {/* tab content */}
           <div className="simulation-content">
             {activeTab === 'vitals' && (
-              <VitalSignsTab vitals={sessionState?.currentVitals} />
+              <VitalSignsTab vitals={sessionState?.currentVitals} vitalsHistory={vitalsHistory} />
             )}
             {activeTab === 'medications' && (
               <ActiveMedicationsTab medications={sessionState?.medications || []} />

@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 function ScenarioDetailsModal({
   scenario,
   onClose,
@@ -12,6 +14,7 @@ function ScenarioDetailsModal({
   isDuplicating,
   duplicateError,
 }) {
+  const [simulationMode, setSimulationMode] = useState('training');
   const isInstructor = currentUser?.role === 'instructor' || currentUser?.role === 'admin';
   const definition = scenario.definition || {};
   const patient = definition.patient || {};
@@ -219,6 +222,61 @@ function ScenarioDetailsModal({
             )}
             {startError && <p className="start-error">{startError}</p>}
           </div>
+
+          <div className="simulation-mode-selector" style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '8px 0',
+          }}>
+            <label htmlFor="simulation-mode" style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+              Simulation Speed:
+            </label>
+            <div style={{
+              display: 'inline-flex',
+              borderRadius: '6px',
+              border: '1px solid var(--ehr-border, #d1d5db)',
+              overflow: 'hidden',
+            }}>
+              <button
+                type="button"
+                onClick={() => setSimulationMode('training')}
+                style={{
+                  padding: '6px 14px',
+                  fontSize: '0.85rem',
+                  fontWeight: 500,
+                  border: 'none',
+                  cursor: 'pointer',
+                  backgroundColor: simulationMode === 'training' ? 'var(--ehr-primary, #2563eb)' : 'transparent',
+                  color: simulationMode === 'training' ? '#fff' : 'inherit',
+                }}
+              >
+                Training
+              </button>
+              <button
+                type="button"
+                onClick={() => setSimulationMode('realistic')}
+                style={{
+                  padding: '6px 14px',
+                  fontSize: '0.85rem',
+                  fontWeight: 500,
+                  border: 'none',
+                  borderLeft: '1px solid var(--ehr-border, #d1d5db)',
+                  cursor: 'pointer',
+                  backgroundColor: simulationMode === 'realistic' ? 'var(--ehr-primary, #2563eb)' : 'transparent',
+                  color: simulationMode === 'realistic' ? '#fff' : 'inherit',
+                }}
+              >
+                Realistic
+              </button>
+            </div>
+            <span style={{ fontSize: '0.8rem', color: 'var(--ehr-text-muted, #6b7280)' }}>
+              {simulationMode === 'training'
+                ? 'Vitals respond quickly (~5 ticks to stabilize)'
+                : 'Pharmacokinetically accurate response curves'}
+            </span>
+          </div>
+
           <div className="modal-actions">
             {isInstructor && (
               <>
@@ -255,7 +313,7 @@ function ScenarioDetailsModal({
             <button
               className="modal-button primary"
               type="button"
-              onClick={() => onStartScenario?.(scenario)}
+              onClick={() => onStartScenario?.(scenario, simulationMode)}
               disabled={isStarting || isDeleting || isDuplicating}
             >
               {isStarting ? 'Starting...' : 'Start Scenario'}

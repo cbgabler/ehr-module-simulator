@@ -78,22 +78,32 @@ export function getExampleHypertensionScenario() {
     medications: [
       {
         id: 'med-001',
+        name: 'Nicardipine',
+        dosage: '5 mg/hr',
+        route: 'IV drip',
+        frequency: 'Continuous infusion',
+        startDate: '2024-01-15T14:30:00Z',
+        status: 'Active',
+        indication: 'Acute post-operative hypertension',
+        titration: {
+          min: 0,
+          max: 15,
+          step: 2.5,
+          unit: 'mg/hr',
+          current: 5,
+        },
+      },
+      {
+        id: 'med-004',
         name: 'Lisinopril',
         dosage: '10 mg',
         route: 'PO',
         frequency: 'Once daily',
         startDate: '2024-01-15T08:00:00Z',
         status: 'Active',
-        indication: 'Hypertension',
+        indication: 'Hypertension (long-term)',
         lastGiven: '2024-01-15T08:15:00Z',
         nextDue: '2024-01-16T08:00:00Z',
-        titration: {
-          min: 5,
-          max: 40,
-          step: 5,
-          unit: 'mg',
-          current: 10,
-        },
       },
       {
         id: 'med-002',
@@ -127,7 +137,16 @@ export function getExampleHypertensionScenario() {
       {
         id: 'order-001',
         type: 'Medication',
-        description: 'Lisinopril 10 mg PO daily',
+        description: 'Nicardipine 5-15 mg/hr IV drip, titrate to SBP < 145',
+        orderedBy: 'Dr. Sarah Chen',
+        orderedAt: '2024-01-15T14:30:00Z',
+        status: 'Active',
+        priority: 'STAT',
+      },
+      {
+        id: 'order-006',
+        type: 'Medication',
+        description: 'Lisinopril 10 mg PO daily (continue home medication)',
         orderedBy: 'Dr. Sarah Chen',
         orderedAt: '2024-01-15T08:00:00Z',
         status: 'Active',
@@ -308,13 +327,16 @@ export function getExampleHypertensionScenario() {
     // Simulation Parameters
     simulation: {
       tickIntervalMs: 3000,
+      // mode: 'training' (default) — vitals respond quickly for interactive learning
+      // mode: 'realistic' — slower convergence for pharmacokinetically accurate behavior
       baselineDrift: {
-        bloodPressure: { systolic: 0.6, diastolic: 0.3 },
+        bloodPressure: { systolic: 0.5, diastolic: 0.25 },
         heartRate: 0.1,
       },
+      convergenceRate: 0.12,
       medicationEffects: {
         'med-001': {
-          referenceDose: 10,
+          referenceDose: 5,
           perUnitChange: {
             bloodPressure: { systolic: -0.8, diastolic: -0.4 },
             heartRate: -0.05,
@@ -323,8 +345,8 @@ export function getExampleHypertensionScenario() {
       },
       vitalRanges: {
         bloodPressure: {
-          systolic: { min: 110, max: 200 },
-          diastolic: { min: 60, max: 120 },
+          systolic: { min: 80, max: 200 },
+          diastolic: { min: 50, max: 120 },
         },
         heartRate: { min: 50, max: 140 },
         respiratoryRate: { min: 10, max: 30 },
@@ -340,30 +362,6 @@ export function getExampleHypertensionScenario() {
           heartRate: { max: 95 },
         },
       },
-      startTime: '2024-01-15T14:30:00Z',
-      simulatedTime: '2024-01-15T14:30:00Z', // Can advance independently
-      timeMultiplier: 1, // 1 = real time, 60 = 1 minute real = 1 hour simulated
-      events: [
-        {
-          id: 'event-001',
-          type: 'vital_change',
-          scheduledTime: '2024-01-15T18:30:00Z',
-          description:
-            'Blood pressure expected to decrease to 145/85 after medication',
-          action: {
-            vitals: {
-              bloodPressure: { systolic: 145, diastolic: 85 },
-            },
-          },
-        },
-        {
-          id: 'event-002',
-          type: 'medication_due',
-          scheduledTime: '2024-01-15T18:00:00Z',
-          description: 'Acetaminophen due',
-          medicationId: 'med-002',
-        },
-      ],
     },
 
     // Learning Objectives (for instructors/students)
@@ -437,7 +435,7 @@ export function getExampleDiabetesScenario() {
         dosage: '1000 mg',
         route: 'PO',
         frequency: 'Twice daily with meals',
-        status: 'Active',
+        status: 'HOLD',
         indication: 'Type 2 Diabetes',
       },
       {
@@ -446,14 +444,30 @@ export function getExampleDiabetesScenario() {
         dosage: '5 mg',
         route: 'PO',
         frequency: 'Once daily before breakfast',
-        status: 'Active',
+        status: 'HOLD',
         indication: 'Type 2 Diabetes',
         titration: {
-          min: 2.5,
+          min: 0,
           max: 10,
           step: 2.5,
           unit: 'mg',
-          current: 5,
+          current: 0,
+        },
+      },
+      {
+        id: 'med-103',
+        name: 'Dextrose 50% (D50)',
+        dosage: '25 g',
+        route: 'IV push',
+        frequency: 'PRN',
+        status: 'Active',
+        indication: 'Hypoglycemia rescue',
+        titration: {
+          min: 0,
+          max: 50,
+          step: 12.5,
+          unit: 'g',
+          current: 0,
         },
       },
     ],
@@ -478,29 +492,37 @@ export function getExampleDiabetesScenario() {
       },
     ],
     simulation: {
-      tickIntervalMs: 2000,
+      tickIntervalMs: 3000,
+      convergenceRate: 0.15,
       baselineDrift: {
         bloodGlucose: -1.5,
         heartRate: -0.1,
       },
       medicationEffects: {
-        'med-102': {
-          referenceDose: 5,
+        'med-103': {
+          referenceDose: 0,
           perUnitChange: {
-            bloodGlucose: -3,
+            bloodGlucose: 3,
+            heartRate: -0.5,
+          },
+        },
+        'med-102': {
+          referenceDose: 0,
+          perUnitChange: {
+            bloodGlucose: -1.5,
           },
         },
       },
       vitalRanges: {
-        bloodGlucose: { min: 50, max: 250 },
+        bloodGlucose: { min: 30, max: 400 },
         heartRate: { min: 50, max: 140 },
       },
       targets: {
-        description: 'Normalize blood glucose between 90-110 mg/dL for 2 ticks',
-        holdTicks: 2,
+        description: 'Normalize blood glucose between 90-130 mg/dL for 3 ticks',
+        holdTicks: 3,
         vitals: {
-          bloodGlucose: { min: 90, max: 110 },
-          heartRate: { min: 70, max: 110 },
+          bloodGlucose: { min: 90, max: 130 },
+          heartRate: { min: 60, max: 100 },
         },
       },
     },
