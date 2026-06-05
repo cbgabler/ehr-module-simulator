@@ -19,6 +19,7 @@ function Navigation() {
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   const handleSignOut = () => {
+    setShowSignOutConfirm(false);
     signOut();
     navigate('/sign-in', { replace: true });
   };
